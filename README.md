@@ -62,15 +62,18 @@ specs/      # Spec Kit feature specs & plans
 
 ## Getting started
 
-**Prerequisites**: Node.js 22, pnpm (via `corepack enable`), Docker (for the
-integration test database / local Postgres + Redis), and a Google OAuth 2.0 client.
-Copy `.env.example` to `.env` and fill in the values.
+**Prerequisites**: Node.js 22, pnpm (via `corepack enable`), Docker, and a Google
+OAuth 2.0 client. The backend reads `backend/.env` — copy `.env.example` there and
+fill in `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `SESSION_SIGNING_KEY`
+(generate with `openssl rand -hex 32`); the DB/Redis URLs already match the compose
+file below.
 
 ```bash
 corepack enable                                   # provides pnpm
-pnpm install                                      # install workspace deps
-pnpm --filter @dml/backend exec prisma generate   # generate Prisma client
-pnpm --filter @dml/backend exec prisma migrate dev --name init   # create schema (needs a DB)
+docker compose up -d                              # local Postgres + Redis
+cp .env.example backend/.env                      # then edit backend/.env
+pnpm install                                      # install deps (runs prisma generate)
+pnpm --filter @dml/backend exec prisma migrate dev --name init   # create schema
 
 pnpm dev          # run API (:8080) + SPA (:5173, proxies /api)
 
