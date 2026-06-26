@@ -1,0 +1,80 @@
+# ---- OS ----
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ---- Claude Code ----
+# Commit shared config (.claude/settings.json, commands, agents);
+# ignore only personal/local overrides.
+.claude/settings.local.json
+
+# ---- Editors / IDEs ----
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-workspace
+
+# ---- Environment / secrets ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets.*
+
+# ---- Logs ----
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---- Node / JS ----
+node_modules/
+dist/
+build/
+.cache/
+coverage/
+*.tsbuildinfo
+.next/
+.nuxt/
+.svelte-kit/
+.turbo/
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ---- Media / generated assets ----
+# Uncomment to ignore large/uploaded media if it shouldn't be versioned
+# media/
+# uploads/
+# *.mp4
+# *.mov
+# *.mp3
+# *.wav
+
+# ---- Misc ----
+tmp/
+temp/
+*.tmp
+*.bak
+.tool-versions
