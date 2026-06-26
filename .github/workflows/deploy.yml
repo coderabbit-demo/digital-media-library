@@ -23,6 +23,9 @@ jobs:
       IMAGE: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.ARTIFACT_REPO }}/api:${{ inputs.image_tag }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Don't leave the workflow token in git config; build steps run here.
+          persist-credentials: false
 
       - uses: google-github-actions/auth@v2
         with:
