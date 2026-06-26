@@ -70,9 +70,9 @@ export function PostUpdateForm() {
       <h2 className="post-form__heading">Share what you’re into right now</h2>
 
       <div className="post-form__row">
-        <label className="post-form__field post-form__field--media">
-          <span>Media type</span>
+        <div className="post-form__field post-form__field--media md3-field">
           <select
+            id="pf-media"
             value={mediaType}
             onChange={(e) => setMediaType(e.target.value as MediaType)}
             aria-label="Media type"
@@ -83,32 +83,41 @@ export function PostUpdateForm() {
               </option>
             ))}
           </select>
-        </label>
+          <span className="md3-field__label" aria-hidden="true">
+            Media type
+          </span>
+        </div>
 
-        <label className="post-form__field post-form__field--title">
-          <span>Title</span>
+        <div className="post-form__field post-form__field--title md3-field">
           <input
+            id="pf-title"
             type="text"
             value={title}
             maxLength={TITLE_MAX_LENGTH}
-            placeholder="e.g. The Left Hand of Darkness"
+            placeholder=" "
             onChange={(e) => setTitle(e.target.value)}
             aria-label="Title"
           />
-        </label>
+          <span className="md3-field__label" aria-hidden="true">
+            Title
+          </span>
+        </div>
       </div>
 
-      <label className="post-form__field">
-        <span>Author / artist (optional)</span>
+      <div className="post-form__field md3-field">
         <input
+          id="pf-author"
           type="text"
           value={itemAuthor}
           maxLength={ITEM_AUTHOR_MAX_LENGTH}
-          placeholder="e.g. Ursula K. Le Guin"
+          placeholder=" "
           onChange={(e) => setItemAuthor(e.target.value)}
           aria-label="Author or artist"
         />
-      </label>
+        <span className="md3-field__label" aria-hidden="true">
+          Author / artist (optional)
+        </span>
+      </div>
 
       {validationError ? (
         <p className="post-form__error" role="alert">

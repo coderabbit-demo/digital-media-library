@@ -28,11 +28,15 @@ export function HomeFeed() {
             <span className="app-header__name">{me.displayName}</span>
             <button
               type="button"
-              className="btn btn-ghost"
+              className="md3-icon-button"
               onClick={() => logout.mutate()}
               disabled={logout.isPending}
+              aria-label="Sign out"
+              title="Sign out"
             >
-              {logout.isPending ? 'Signing out…' : 'Sign out'}
+              <span className="material-symbols-outlined" aria-hidden="true">
+                logout
+              </span>
             </button>
           </div>
         </div>
@@ -42,6 +46,21 @@ export function HomeFeed() {
         <PostUpdateForm />
         <FeedList />
       </main>
+
+      <button
+        type="button"
+        className="md3-fab"
+        aria-label="Compose an update"
+        onClick={() => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          document.getElementById('pf-title')?.focus();
+        }}
+      >
+        <span className="material-symbols-outlined" aria-hidden="true">
+          edit
+        </span>
+        Post
+      </button>
     </div>
   );
 }
