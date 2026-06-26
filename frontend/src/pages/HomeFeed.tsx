@@ -50,7 +50,7 @@ export function HomeFeed() {
       <button
         type="button"
         className="md3-fab"
-        aria-label="Compose an update"
+        aria-label="Post an update"
         onClick={() => {
           window.scrollTo({ top: 0, behavior: 'smooth' });
           document.getElementById('pf-title')?.focus();
