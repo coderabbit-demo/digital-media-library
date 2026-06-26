@@ -1,0 +1,39 @@
+# Copy to terraform.tfvars and fill in. Only project_id is strictly required;
+# everything else has cost-aware defaults sized for ~100 concurrent users.
+
+# --- Required ---
+project_id = "your-gcp-project-id"
+
+# --- Common ---
+region = "us-central1"
+env    = "dev"
+
+# --- Cloud Run (API) ---
+# image_tag must match an image pushed to the Artifact Registry repo (output:
+# artifact_registry_repo). min_instances = 0 scales to zero (cheapest).
+image_tag               = "latest"
+cloud_run_min_instances = 0
+cloud_run_max_instances = 4
+cloud_run_cpu           = "1"
+cloud_run_memory        = "512Mi"
+
+# --- CloudSQL ---
+cloudsql_tier = "db-f1-micro" # smallest; use db-custom-1-3840 for a dedicated vCPU
+cloudsql_ha   = false         # set true (REGIONAL) for production HA (~2x cost)
+
+# --- Memorystore (Redis) ---
+enable_redis         = true # set false for cheap demo environments
+redis_memory_size_gb = 1
+
+# --- TLS / domain ---
+# Leave empty to expose plain HTTP on the LB IP. Set to enable a Google-managed
+# cert + HTTP->HTTPS redirect; then point DNS at output load_balancer_ip.
+domain = ""
+
+# --- Google OIDC ---
+# The client ID is non-secret config. The client SECRET is added out-of-band to
+# Secret Manager (see README) and is NOT set here.
+google_client_id = "your-client-id.apps.googleusercontent.com"
+
+# --- Logging ---
+log_retention_days = 30
