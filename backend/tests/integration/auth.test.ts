@@ -77,7 +77,7 @@ describe('integration: auth', () => {
       url: '/api/auth/google/callback?error=access_denied',
     });
     expect(res.statusCode).toBe(302);
-    expect(res.headers.location).toContain('auth_error=access_denied');
+    expect(res.headers.location).toContain('/signin?error=access_denied');
     expect(await dbh.prisma.userProfile.count()).toBe(0);
     expect(await dbh.prisma.session.count()).toBe(0);
   });

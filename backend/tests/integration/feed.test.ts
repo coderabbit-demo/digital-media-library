@@ -15,14 +15,16 @@ import { SESSION_COOKIE_NAME } from '../../src/plugins/session.js';
 describe('integration: feed', () => {
   let dbh: IntegrationDb;
   let app: FastifyInstance;
+  let cache: InMemoryCacheService;
   const signer = new Signer(TEST_SIGNING_KEY);
 
   beforeAll(async () => {
     dbh = await startIntegrationDb();
+    cache = new InMemoryCacheService();
     app = await buildApp({
       config: testConfig({ DATABASE_URL: dbh.databaseUrl }),
       prisma: dbh.prisma,
-      cache: new InMemoryCacheService(),
+      cache,
       oidc: new StubOidcService(),
     });
     await app.ready();
@@ -30,6 +32,9 @@ describe('integration: feed', () => {
 
   afterEach(async () => {
     await resetDb(dbh.prisma);
+    // Tests seed via direct DB inserts (bypassing cache invalidation), so the
+    // shared first-page cache must be cleared between tests to avoid stale reads.
+    await cache.delByPrefix('');
   });
 
   afterAll(async () => {
