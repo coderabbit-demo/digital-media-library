@@ -9,11 +9,12 @@
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:unit": "vitest run --project unit",
-    "test:contract": "vitest run --project contract",
-    "test:integration": "vitest run --project integration",
-    "prisma": "prisma"
+    "test": "vitest run tests/unit tests/contract",
+    "test:unit": "vitest run tests/unit",
+    "test:contract": "vitest run tests/contract",
+    "test:integration": "vitest run tests/integration",
+    "prisma": "prisma",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@dml/shared": "workspace:*",

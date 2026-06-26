@@ -10,7 +10,9 @@
       "Bash(python3 -)",
       "Bash(git add *)",
       "Bash(git restore *)",
-      "Bash(pnpm install *)"
+      "Bash(pnpm install *)",
+      "Bash(gh pr create --repo coderabbit-demo/digital-media-library --base main --head 001-auth-activity-feed --title 'feat\\(001\\): Authentication & Activity Feed' --body ' *)",
+      "Bash(git commit -q -m ' *)"
     ]
   }
 }
