@@ -56,12 +56,15 @@ export function ActivityCard({ activity, onDelete, deleting = false }: ActivityC
           {canDelete && onDelete ? (
             <button
               type="button"
-              className="btn btn-ghost activity-card__delete"
+              className="md3-icon-button activity-card__delete"
               onClick={() => onDelete(activity.id)}
               disabled={deleting}
               aria-label="Delete this update"
+              title="Delete this update"
             >
-              {deleting ? 'Deleting…' : 'Delete'}
+              <span className="material-symbols-outlined" aria-hidden="true">
+                {deleting ? 'hourglass_empty' : 'delete'}
+              </span>
             </button>
           ) : null}
         </div>
