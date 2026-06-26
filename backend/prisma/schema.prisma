@@ -1,0 +1,78 @@
+// Prisma schema for feature 001-auth-activity-feed.
+//
+// NOTE: The first migration must be generated with `prisma migrate dev`
+// (e.g. `pnpm --filter @dml/backend prisma migrate dev --name init`).
+// This file only declares the schema; the migration SQL is produced by Prisma
+// and lives under prisma/migrations/. We cannot run migrations here, so a
+// human must run the command above once dependencies are installed and a
+// database is reachable via DATABASE_URL.
+//
+// Mirrors specs/001-auth-activity-feed/data-model.md exactly:
+//   - UUID primary keys (gen_random_uuid via PostgreSQL)
+//   - google_sub UNIQUE (dedup key, FR-003)
+//   - idx_activity_feed on (createdAt DESC, id DESC) for keyset pagination
+//   - idx_activity_user on (userId)
+//   - idx_session_user on (userId)
+//   - ON DELETE CASCADE from UserProfile to Activity and Session
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MediaType {
+  book
+  music
+  audiobook
+}
+
+model UserProfile {
+  id          String   @id @default(uuid()) @db.Uuid
+  googleSub   String   @unique @map("google_sub")
+  email       String?
+  displayName String   @map("display_name")
+  avatarUrl   String?  @map("avatar_url")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  activities Activity[]
+  sessions   Session[]
+
+  @@map("user_profile")
+}
+
+model Activity {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  mediaType MediaType @map("media_type")
+  title     String
+  // Optional author/artist of the item. Column is `author` per data-model.md;
+  // the API surfaces it as `itemAuthor` to avoid clashing with the post author.
+  author    String?
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Keyset feed pagination ordering key (FR-008/FR-011).
+  @@index([createdAt(sort: Desc), id(sort: Desc)], name: "idx_activity_feed")
+  // Author lookups and cascade efficiency.
+  @@index([userId], name: "idx_activity_user")
+  @@map("activity")
+}
+
+model Session {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(6)
+  lastSeenAt DateTime @map("last_seen_at") @db.Timestamptz(6)
+
+  user UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], name: "idx_session_user")
+  @@map("session")
+}

@@ -1,0 +1,209 @@
+openapi: 3.1.0
+info:
+  title: Digital Media Library API — Auth & Activity Feed
+  version: 0.1.0
+  description: >
+    Contract for feature 001-auth-activity-feed. Covers Google OIDC sign-in,
+    session/profile, and the global activity feed (list, post, delete).
+    All endpoints are served under the single origin at /api.
+servers:
+  - url: /api
+
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: dml_session
+      description: Signed, httpOnly, Secure session cookie issued on OIDC callback.
+
+  schemas:
+    Profile:
+      type: object
+      required: [id, displayName]
+      properties:
+        id: { type: string, format: uuid }
+        displayName: { type: string }
+        avatarUrl: { type: string, format: uri, nullable: true }
+      description: google_sub, email, and session ids are never exposed.
+
+    Activity:
+      type: object
+      required: [id, author, mediaType, title, createdAt, canDelete]
+      properties:
+        id: { type: string, format: uuid }
+        author:
+          type: object
+          required: [id, displayName]
+          properties:
+            id: { type: string, format: uuid }
+            displayName: { type: string }
+            avatarUrl: { type: string, format: uri, nullable: true }
+        mediaType: { type: string, enum: [book, music, audiobook] }
+        title: { type: string }
+        itemAuthor: { type: string, nullable: true, description: Author/artist of the item }
+        createdAt: { type: string, format: date-time }
+        canDelete:
+          type: boolean
+          description: True when the current user authored this activity.
+
+    CreateActivityRequest:
+      type: object
+      required: [mediaType, title]
+      properties:
+        mediaType: { type: string, enum: [book, music, audiobook] }
+        title: { type: string, minLength: 1, maxLength: 300 }
+        itemAuthor: { type: string, maxLength: 200, nullable: true }
+
+    FeedPage:
+      type: object
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/Activity' }
+        nextCursor:
+          type: string
+          nullable: true
+          description: Opaque keyset cursor; null when no older items remain.
+
+    Error:
+      type: object
+      required: [error, message]
+      properties:
+        error: { type: string }
+        message: { type: string }
+
+paths:
+  /auth/google/login:
+    get:
+      summary: Begin Google OIDC sign-in
+      description: >
+        Starts the Authorization Code + PKCE flow and redirects the browser to
+        Google's consent screen.
+      security: []
+      responses:
+        '302':
+          description: Redirect to Google's authorization endpoint.
+
+  /auth/google/callback:
+    get:
+      summary: OIDC redirect callback
+      description: >
+        Handles Google's redirect. Validates state/PKCE, upserts the profile by
+        google_sub (creating one on first sign-in), creates a session, sets the
+        session cookie, and redirects to the SPA. Declined/failed consent
+        redirects to the app unauthenticated with an error indicator.
+      security: []
+      parameters:
+        - { name: code, in: query, schema: { type: string } }
+        - { name: state, in: query, schema: { type: string } }
+        - { name: error, in: query, schema: { type: string } }
+      responses:
+        '302':
+          description: Redirect to the SPA (authenticated on success).
+
+  /auth/logout:
+    post:
+      summary: Sign out
+      description: Deletes the server-side session and clears the cookie.
+      security: [{ sessionCookie: [] }]
+      responses:
+        '204': { description: Session ended. }
+
+  /me:
+    get:
+      summary: Current user's profile
+      security: [{ sessionCookie: [] }]
+      responses:
+        '200':
+          description: The authenticated user's profile.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Profile' }
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /feed:
+    get:
+      summary: Global activity feed (most recent first)
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - name: cursor
+          in: query
+          required: false
+          schema: { type: string }
+          description: Opaque keyset cursor from a prior FeedPage.nextCursor.
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+      responses:
+        '200':
+          description: A page of activity updates, newest first.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FeedPage' }
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /activities:
+    post:
+      summary: Post a "currently reading/listening" update
+      security: [{ sessionCookie: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateActivityRequest' }
+      responses:
+        '201':
+          description: Created activity, attributed to the current user.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Activity' }
+        '400':
+          description: Validation failed (missing mediaType/title, too long).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '429':
+          description: Rate limit exceeded (anti-spam, FR-019).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /activities/{id}:
+    delete:
+      summary: Delete one of the current user's own activities
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '204': { description: Deleted; no longer appears in any feed. }
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '403':
+          description: Activity belongs to another user (FR-017).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '404':
+          description: Activity not found.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }

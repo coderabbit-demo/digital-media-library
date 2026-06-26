@@ -5,8 +5,10 @@ sharing what you're currently reading or listening to — a Goodreads-style acti
 feed where the community's updates appear on the home page.
 
 > **Status**: Early development. Built spec-first with [GitHub Spec Kit](https://github.com/github/spec-kit).
-> The first feature (authentication + activity feed) is fully specified and planned;
-> implementation has not started yet.
+> The first feature (authentication + activity feed) is **implemented** — backend API,
+> SPA, shared types, and Terraform infra are in place. Unit + contract tests pass;
+> integration (Testcontainers), e2e (Playwright), and cloud deploy require a
+> provisioned environment.
 
 ## What it does (vision)
 
@@ -43,40 +45,49 @@ The project's non-negotiable principles live in the
 
 | # | Feature | Status | Spec |
 |---|---------|--------|------|
-| 001 | Authentication & Activity Feed | 📋 Planned (spec + plan complete) | [spec](specs/001-auth-activity-feed/spec.md) · [plan](specs/001-auth-activity-feed/plan.md) |
+| 001 | Authentication & Activity Feed | 🛠️ Implemented (in review) | [spec](specs/001-auth-activity-feed/spec.md) · [plan](specs/001-auth-activity-feed/plan.md) |
 
 *Out of scope for 001, planned next: trending-content discovery, comments on feed updates.*
 
 ## Repository layout
 
 ```text
-backend/    # Fastify API (Cloud Run)          — created during implementation
-frontend/   # React + Vite SPA                 — created during implementation
-packages/   # shared types/schemas             — created during implementation
-infra/      # Terraform (GCP resources)        — created during implementation
+backend/    # Fastify API (Cloud Run) — Prisma, OIDC, sessions, feed, activities
+frontend/   # React + Vite SPA — TanStack Query, sign-in, feed, post/delete
+packages/   # @dml/shared — types + zod schemas shared across API and UI
+infra/      # Terraform (GCP resources)
 specs/      # Spec Kit feature specs & plans
 .specify/   # Spec Kit config, templates, constitution
 ```
 
-> The `backend/`, `frontend/`, `packages/`, and `infra/` directories are defined in
-> the plan and will appear once feature 001 implementation begins.
-
 ## Getting started
 
-> ⚠️ Application code does not exist yet. Until implementation begins, the
-> authoritative setup/run/validation steps live in the feature quickstart:
-> [specs/001-auth-activity-feed/quickstart.md](specs/001-auth-activity-feed/quickstart.md).
-
-Once `backend/`, `frontend/`, and `infra/` are scaffolded, this section will document:
+**Prerequisites**: Node.js 22, pnpm (via `corepack enable`), Docker (for the
+integration test database / local Postgres + Redis), and a Google OAuth 2.0 client.
+Copy `.env.example` to `.env` and fill in the values.
 
 ```bash
-pnpm install                 # install workspace deps
-pnpm dev                     # run SPA + API locally
-pnpm test                    # unit + contract + integration
-cd infra && terraform apply  # provision GCP resources
+corepack enable                                   # provides pnpm
+pnpm install                                      # install workspace deps
+pnpm --filter @dml/backend exec prisma generate   # generate Prisma client
+pnpm --filter @dml/backend exec prisma migrate dev --name init   # create schema (needs a DB)
+
+pnpm dev          # run API (:8080) + SPA (:5173, proxies /api)
+
+pnpm lint         # eslint
+pnpm typecheck    # tsc across workspaces
+pnpm build        # build all packages
+pnpm test:unit        # unit tests
+pnpm test:contract    # API contract tests
+pnpm test:integration # integration tests (requires Docker)
+pnpm test:e2e         # Playwright e2e (run `pnpm --filter @dml/frontend exec playwright install` first)
+
+cd infra && terraform init && terraform apply -var project_id=<PROJECT>  # provision GCP
 ```
 
-(See the quickstart for the current, detailed prerequisites and environment variables.)
+See [specs/001-auth-activity-feed/quickstart.md](specs/001-auth-activity-feed/quickstart.md)
+for detailed validation scenarios and environment variables, and
+[infra/README.md](infra/README.md) for cloud provisioning notes.
 
 ## Contributing
 

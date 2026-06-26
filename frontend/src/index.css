@@ -1,0 +1,327 @@
+:root {
+  --bg: #f6f5f1;
+  --surface: #ffffff;
+  --ink: #1f2421;
+  --ink-soft: #5b6560;
+  --line: #e4e1d8;
+  --accent: #2f6f4f;
+  --accent-ink: #ffffff;
+  --danger: #b23b3b;
+  --radius: 12px;
+  --shadow: 0 1px 2px rgba(31, 36, 33, 0.06), 0 6px 18px rgba(31, 36, 33, 0.05);
+  --maxw: 640px;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- Buttons ---- */
+.btn {
+  font: inherit;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  padding: 0.55rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+.btn:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+.btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--ink-soft);
+}
+.btn-ghost:hover:not(:disabled) {
+  color: var(--ink);
+  background: rgba(31, 36, 33, 0.05);
+}
+
+/* ---- Card ---- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.1rem 1.25rem;
+}
+
+/* ---- App shell ---- */
+.app-header {
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+.app-header__inner {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0.85rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.app-header__brand {
+  font-size: 1.1rem;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+.app-header__user {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.app-header__name {
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+}
+.app-main {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 1.25rem 1rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ---- Post form ---- */
+.post-form__heading {
+  margin: 0 0 0.9rem;
+  font-size: 1rem;
+}
+.post-form__row {
+  display: flex;
+  gap: 0.75rem;
+}
+.post-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.75rem;
+}
+.post-form__field > span {
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.post-form__field--media {
+  flex: 0 0 9.5rem;
+}
+.post-form__field--title {
+  flex: 1;
+}
+.post-form input,
+.post-form select {
+  font: inherit;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--ink);
+}
+.post-form input:focus,
+.post-form select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.post-form__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+.post-form__error {
+  color: var(--danger);
+  font-size: 0.9rem;
+  margin: 0 0 0.6rem;
+}
+
+/* ---- Feed ---- */
+.feed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+.feed-status {
+  text-align: center;
+  color: var(--ink-soft);
+  padding: 2rem 1rem;
+}
+.feed-status--error {
+  color: var(--danger);
+}
+.feed-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--ink-soft);
+}
+.feed-empty h2 {
+  color: var(--ink);
+  margin: 0 0 0.4rem;
+}
+.feed-end {
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+  padding: 0.5rem;
+}
+.feed-load-more {
+  align-self: center;
+}
+
+/* ---- Activity card ---- */
+.activity-card {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+}
+.activity-card__avatar img,
+.avatar-placeholder {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: grid;
+  place-items: center;
+}
+.avatar-placeholder {
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+.activity-card__body {
+  flex: 1;
+  min-width: 0;
+}
+.activity-card__head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.activity-card__author {
+  font-weight: 600;
+}
+.activity-card__verb {
+  color: var(--ink-soft);
+}
+.activity-card__title {
+  margin: 0.35rem 0 0;
+  font-size: 1.05rem;
+  font-weight: 500;
+  word-break: break-word;
+}
+.activity-card__item-author {
+  margin: 0.1rem 0 0;
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+  word-break: break-word;
+}
+.activity-card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.55rem;
+  color: var(--ink-soft);
+  font-size: 0.82rem;
+}
+.badge {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(47, 111, 79, 0.12);
+  color: var(--accent);
+}
+.badge[data-media="music"] {
+  background: rgba(120, 80, 180, 0.14);
+  color: #6a44a8;
+}
+.badge[data-media="audiobook"] {
+  background: rgba(196, 122, 38, 0.16);
+  color: #a96412;
+}
+
+/* ---- Sign-in ---- */
+.signin-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+}
+.signin-card {
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+}
+.signin-card__title {
+  margin: 0 0 0.4rem;
+  letter-spacing: -0.02em;
+}
+.signin-card__tagline {
+  color: var(--ink-soft);
+  margin: 0 0 1.4rem;
+}
+.signin-card__error {
+  color: var(--danger);
+  background: rgba(178, 59, 59, 0.08);
+  border-radius: 8px;
+  padding: 0.65rem 0.8rem;
+  font-size: 0.9rem;
+  margin: 0 0 1rem;
+}
+.signin-card__fineprint {
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+  margin: 1rem 0 0;
+}
+.signin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  justify-content: center;
+}
+.signin-btn__g {
+  display: grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  background: #fff;
+  color: #2f6f4f;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 0.8rem;
+}

@@ -46,8 +46,19 @@ the binding principles.
   Redis for caching and rate-limit counters.
 - **Infra**: Terraform in `infra/`, GCP region `us-central1`, Cloud Logging enabled.
 
-> The stack is authoritative as of feature 001's plan. When a later plan changes it,
-> update this section.
+> The stack is authoritative as of feature 001's plan and is now implemented. When a
+> later plan changes it, update this section.
+
+**Local commands** (run `corepack enable` first for pnpm):
+
+```bash
+pnpm install
+pnpm --filter @dml/backend exec prisma generate
+pnpm dev            # API :8080 + SPA :5173
+pnpm lint && pnpm typecheck && pnpm build
+pnpm test:unit && pnpm test:contract   # offline
+pnpm test:integration                  # needs Docker
+```
 
 ## Conventions
 
