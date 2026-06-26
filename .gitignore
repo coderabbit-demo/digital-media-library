@@ -9,8 +9,10 @@ Thumbs.db
 desktop.ini
 
 # ---- Claude Code ----
-# Commit shared config (.claude/settings.json, commands, agents);
-# ignore only personal/local overrides.
+# settings.json only accumulates locally-approved permissions (personal,
+# environment-specific), so it's ignored along with settings.local.json.
+# Commit deliberate shared config (commands/, agents/, hooks) explicitly if needed.
+.claude/settings.json
 .claude/settings.local.json
 
 # ---- Editors / IDEs ----
