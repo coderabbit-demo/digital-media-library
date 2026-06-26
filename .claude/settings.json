@@ -1,7 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git remote *)"
+      "Bash(git remote *)",
+      "Bash(git push *)",
+      "Bash(.specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks)",
+      "Bash(gh issue *)",
+      "Bash(python3 parse_tasks.py)",
+      "Bash(python3 -c \"import json;d=json.load\\(open\\('tasks.json'\\)\\);print\\('count',len\\(d\\)\\);[print\\(x['id'],'|',', '.join\\(x['labels']\\)\\) for x in d[:5]];print\\('...'\\);print\\(d[0]['title']\\)\")",
+      "Bash(python3 -)",
+      "Bash(git add *)",
+      "Bash(git restore *)"
     ]
   }
 }
