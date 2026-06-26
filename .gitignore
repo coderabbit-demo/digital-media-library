@@ -50,6 +50,7 @@ coverage/
 .nuxt/
 .svelte-kit/
 .turbo/
+.vite/
 
 # ---- Python ----
 __pycache__/
