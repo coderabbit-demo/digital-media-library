@@ -132,7 +132,11 @@ export interface RecommendationDTO {
  * separately via the existing paginated `/feed` endpoint; both are local DB reads.
  */
 export interface HomeData {
-  ownItems: ActivityDTO[];
+  /**
+   * The user's "Currently reading/listening" list — their My Library items on the
+   * `current` shelf, so it always matches My Library (feature 005/UI refresh).
+   */
+  current: LibraryItemDTO[];
   counts: HomeCounts;
   recommendations: RecommendationDTO[];
 }

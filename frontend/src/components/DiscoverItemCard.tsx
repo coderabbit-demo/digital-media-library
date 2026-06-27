@@ -54,27 +54,21 @@ export function DiscoverItemCard({ item, onStartActivity }: DiscoverItemCardProp
       <div className="discover-card__body">
         <p className="discover-card__title">{item.title}</p>
         {item.creator ? <p className="discover-card__creator">{item.creator}</p> : null}
-        <div className="discover-card__actions">
-          <button
-            type="button"
-            className="btn btn-primary discover-card__cta"
-            onClick={startActivity}
-          >
+        <div className="card-links">
+          <button type="button" className="card-link card-link--primary" onClick={startActivity}>
             I’m {verb(item.mediaType)} this
           </button>
           <button
             type="button"
-            className="btn btn-ghost discover-card__recommend"
+            className="card-link"
             disabled={recommended || recommend.isPending}
-            onClick={() =>
-              recommend.mutate(item, { onSuccess: () => setRecommended(true) })
-            }
+            onClick={() => recommend.mutate(item, { onSuccess: () => setRecommended(true) })}
           >
             {recommended ? 'Recommended ✓' : 'Recommend'}
           </button>
           <button
             type="button"
-            className="btn btn-ghost discover-card__wishlist"
+            className="card-link"
             disabled={saved || addToLibrary.isPending}
             onClick={() => addToLibrary.mutate({ item }, { onSuccess: () => setJustSaved(true) })}
           >
