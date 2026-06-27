@@ -27,11 +27,19 @@ export function DiscoverItemCard({ item, onStartActivity }: DiscoverItemCardProp
   const [justSaved, setJustSaved] = useState(false);
   const saved = justSaved || libraryKeys.has(libraryKey(item));
 
-  // "I'm reading/listening to this" shelves the item as Currently Reading (so it
-  // lands in My Library) and opens the compose overlay to optionally share it.
+  // "I'm reading/listening to this" shelves the item as Currently Reading (the
+  // required state change); only once that succeeds do we open the compose overlay
+  // to optionally share it.
   const startActivity = () => {
-    addToLibrary.mutate({ item, shelf: 'current' }, { onSuccess: () => setJustSaved(true) });
-    onStartActivity(item);
+    addToLibrary.mutate(
+      { item, shelf: 'current' },
+      {
+        onSuccess: () => {
+          setJustSaved(true);
+          onStartActivity(item);
+        },
+      },
+    );
   };
 
   return (

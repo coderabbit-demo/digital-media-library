@@ -54,11 +54,15 @@ export function Library() {
     );
   };
 
-  // "I'm reading/listening to this": move onto the Currently Reading shelf (if not
-  // already there) and open the compose overlay to optionally share an update.
+  // "I'm reading/listening to this": move onto the Currently Reading shelf (the
+  // required state change), then open the compose overlay to optionally share an
+  // update. If already on that shelf, just open compose.
   const markCurrent = (item: LibraryItemDTO) => {
-    if (item.shelf !== 'current') move.mutate({ id: item.id, shelf: 'current' });
-    openCompose(item);
+    if (item.shelf === 'current') {
+      openCompose(item);
+      return;
+    }
+    move.mutate({ id: item.id, shelf: 'current' }, { onSuccess: () => openCompose(item) });
   };
 
   const items = data?.items ?? [];
