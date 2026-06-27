@@ -12,8 +12,10 @@ const items: LibraryItemDTO[] = [
 ];
 
 function mockApi() {
+  const calls: { url: string; init?: RequestInit }[] = [];
   vi.spyOn(globalThis, 'fetch').mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);
+    calls.push({ url, init });
     if (init?.method === 'PATCH') {
       return Promise.resolve(new Response(JSON.stringify({ ...items[0], shelf: 'current' }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
     }
@@ -25,6 +27,7 @@ function mockApi() {
     }
     return Promise.resolve(new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } }));
   });
+  return calls;
 }
 
 function renderLibrary() {
@@ -69,5 +72,20 @@ describe('My Library page', () => {
     await userEvent.selectOptions(selects[0]!, 'current');
     // PATCH fired and resolved; no error means move wiring is correct.
     expect(selects[0]).toBeInTheDocument();
+  });
+
+  it('"I\'m reading this" on a non-current item moves it to Currently Reading', async () => {
+    const calls = mockApi();
+    renderLibrary();
+    await screen.findByText('Dune'); // Dune is on the want shelf
+
+    // First card is Dune (want). Click its start-activity CTA.
+    const ctas = screen.getAllByRole('button', { name: /reading this/i });
+    await userEvent.click(ctas[0]!);
+
+    const patch = calls.find((c) => c.init?.method === 'PATCH');
+    expect(patch).toBeTruthy();
+    expect(patch!.url).toContain('/library/l1');
+    expect(JSON.parse(String(patch!.init!.body))).toMatchObject({ shelf: 'current' });
   });
 });

@@ -38,7 +38,7 @@ export function Library() {
   const move = useMoveShelf();
   const remove = useRemoveFromLibrary();
 
-  const startActivity = (item: LibraryItemDTO) =>
+  const openCompose = (item: LibraryItemDTO) =>
     setCompose({ mediaType: item.mediaType, title: item.title, itemAuthor: item.itemAuthor ?? undefined });
 
   const onMove = (item: LibraryItemDTO, next: Shelf) => {
@@ -48,10 +48,17 @@ export function Library() {
       {
         // Bridge: moving to Currently Reading offers to share an update to the feed.
         onSuccess: () => {
-          if (next === 'current') startActivity(item);
+          if (next === 'current') openCompose(item);
         },
       },
     );
+  };
+
+  // "I'm reading/listening to this": move onto the Currently Reading shelf (if not
+  // already there) and open the compose overlay to optionally share an update.
+  const markCurrent = (item: LibraryItemDTO) => {
+    if (item.shelf !== 'current') move.mutate({ id: item.id, shelf: 'current' });
+    openCompose(item);
   };
 
   const items = data?.items ?? [];
@@ -127,7 +134,7 @@ export function Library() {
                       ))}
                     </select>
                   </label>
-                  <button type="button" className="btn btn-primary discover-card__cta" onClick={() => startActivity(item)}>
+                  <button type="button" className="btn btn-primary discover-card__cta" onClick={() => markCurrent(item)}>
                     I’m {verb(item.mediaType)} this
                   </button>
                   <button
