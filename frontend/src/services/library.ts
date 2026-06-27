@@ -5,11 +5,14 @@ import { HOME_QUERY_KEY } from './home';
 
 export const LIBRARY_QUERY_KEY = ['library'] as const;
 
-/** Generic shelf labels for the all-media shelf navigation (Goodreads wording). */
+/**
+ * Shelf labels for the all-media shelf navigation. Combined read/listen wording
+ * because the tabs span every media type (per-item labels use shelfLabel()).
+ */
 export const SHELF_TAB_LABELS: Record<Shelf, string> = {
-  want: 'Want to Read',
-  current: 'Currently Reading',
-  done: 'Read',
+  want: 'Want to Read/Listen',
+  current: 'Currently Reading/Listening',
+  done: 'Read/Listened',
   dnf: 'Did Not Finish',
 };
 

@@ -46,15 +46,15 @@ describe('My Library page', () => {
     renderLibrary();
 
     expect(screen.getByRole('heading', { name: 'My Library' })).toBeInTheDocument();
-    // Shelf tabs present.
-    expect(screen.getByRole('button', { name: 'Want to Read' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Currently Reading' })).toBeInTheDocument();
+    // Shelf tabs present (combined read/listen wording, all-media).
+    expect(screen.getByRole('button', { name: 'Want to Read/Listen' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Currently Reading/Listening' })).toBeInTheDocument();
 
     expect(await screen.findByText('Dune')).toBeInTheDocument();
     expect(screen.getByText('Blue')).toBeInTheDocument();
 
     // Filter to the Currently Reading shelf.
-    await userEvent.click(screen.getByRole('button', { name: 'Currently Reading' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Currently Reading/Listening' }));
     await waitFor(() => expect(screen.queryByText('Dune')).not.toBeInTheDocument());
     expect(screen.getByText('Blue')).toBeInTheDocument();
   });
