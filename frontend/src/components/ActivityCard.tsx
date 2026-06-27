@@ -3,7 +3,7 @@ import { SHELVES, type ActivityDTO, type MediaType, type Shelf, type TrendingIte
 import { relativeTime } from '../utils/time';
 import { ReplyThread } from './ReplyThread';
 import { useAddToLibrary, useLibraryShelves, libraryKey, shelfLabel } from '../services/library';
-import { useRatings, useSetRating, ratingKey } from '../services/ratings';
+import { useRatings, useSetRating, useClearRating, ratingKey } from '../services/ratings';
 import { useToggleLike } from '../services/likes';
 
 /** "X is currently reading / listening to …" verb per media type. */
@@ -45,12 +45,19 @@ export function ActivityCard({ activity, onDelete, deleting = false }: ActivityC
 
   const ratings = useRatings();
   const setRating = useSetRating();
+  const clearRating = useClearRating();
   const myRating = providerId ? (ratings.get(ratingKey({ mediaType, providerId })) ?? 0) : 0;
   const toggleLike = useToggleLike();
 
+  // Optimistic feed inserts have a temporary id until the server reconciles;
+  // like/comment target the activity id, so gate them on a persisted id.
+  const persisted = !activity.id.startsWith('optimistic-');
+
   const rate = (stars: number) => {
     if (!providerId) return;
-    setRating.mutate({ mediaType, providerId, stars, title, creator: itemAuthor, coverUrl });
+    // Clicking the current rating again clears it; otherwise set the new value.
+    if (stars === myRating) clearRating.mutate({ mediaType, providerId });
+    else setRating.mutate({ mediaType, providerId, stars, title, creator: itemAuthor, coverUrl });
   };
 
   const setShelf = (shelf: Shelf) => {
@@ -134,7 +141,7 @@ export function ActivityCard({ activity, onDelete, deleting = false }: ActivityC
                     className={`star${n <= myRating ? ' star--on' : ''}`}
                     aria-label={`${n} star${n > 1 ? 's' : ''}`}
                     aria-pressed={n === myRating}
-                    disabled={setRating.isPending}
+                    disabled={setRating.isPending || clearRating.isPending}
                     onClick={() => rate(n)}
                   >
                     ★
@@ -168,7 +175,7 @@ export function ActivityCard({ activity, onDelete, deleting = false }: ActivityC
             type="button"
             className={`card-link${likedByMe ? ' card-link--active' : ''}`}
             aria-pressed={likedByMe}
-            disabled={toggleLike.isPending}
+            disabled={!persisted || toggleLike.isPending}
             onClick={() => toggleLike.mutate({ activityId: activity.id, liked: likedByMe })}
           >
             {likedByMe ? '♥' : '♡'} {likeCount > 0 ? `Like (${likeCount})` : 'Like'}
@@ -177,6 +184,7 @@ export function ActivityCard({ activity, onDelete, deleting = false }: ActivityC
             type="button"
             className="card-link"
             aria-expanded={showThread}
+            disabled={!persisted}
             onClick={() => setShowThread((v) => !v)}
           >
             {replyCount > 0 ? `Comment (${replyCount})` : 'Comment'}

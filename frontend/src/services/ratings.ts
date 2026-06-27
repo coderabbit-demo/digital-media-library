@@ -35,3 +35,15 @@ export function useSetRating() {
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: RATINGS_QUERY_KEY }),
   });
 }
+
+/** Clear the current user's rating for an item. */
+export function useClearRating() {
+  const queryClient = useQueryClient();
+  return useMutation<void, Error, { mediaType: MediaType; providerId: string }>({
+    mutationFn: ({ mediaType, providerId }) =>
+      apiFetch<void>(`/ratings?mediaType=${mediaType}&providerId=${encodeURIComponent(providerId)}`, {
+        method: 'DELETE',
+      }),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: RATINGS_QUERY_KEY }),
+  });
+}
