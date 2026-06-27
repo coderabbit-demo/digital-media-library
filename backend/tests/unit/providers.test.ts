@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { NytBooksProvider } from '../../src/providers/nyt-books.js';
+import { GoogleBooksProvider } from '../../src/providers/google-books.js';
 import { AppleAudiobookProvider } from '../../src/providers/apple-audiobooks.js';
 import { SpotifyMusicProvider } from '../../src/providers/spotify-music.js';
 import { InMemoryCacheService } from '../../src/services/cache.js';
@@ -79,6 +80,28 @@ describe('provider adapters', () => {
     // Token cached → a second call reuses it (only the releases request).
     await provider.getTrending(10);
     expect(spy).toHaveBeenCalledTimes(3);
+  });
+
+  it('GoogleBooksProvider normalizes volumes (deduped across genres)', async () => {
+    mockFetchOnce({
+      items: [
+        { id: 'g1', volumeInfo: { title: 'Dune', authors: ['Frank Herbert'], imageLinks: { thumbnail: 'http://img/d.jpg' } } },
+      ],
+    });
+    const items = await new GoogleBooksProvider(testConfig()).getTrending(10);
+    // Same item returned for every genre query → deduped to one.
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({
+      mediaType: 'book',
+      title: 'Dune',
+      creator: 'Frank Herbert',
+      providerId: 'g1',
+    });
+  });
+
+  it('GoogleBooksProvider throws when every genre query fails', async () => {
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('network down'));
+    await expect(new GoogleBooksProvider(testConfig()).getTrending(5)).rejects.toThrow();
   });
 
   it('SpotifyMusicProvider throws without credentials', async () => {

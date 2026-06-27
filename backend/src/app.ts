@@ -15,6 +15,8 @@ import { HomeService } from './services/home.js';
 import { TrendingService } from './services/discover.js';
 import type { ContentProvider } from './providers/content-provider.js';
 import { NytBooksProvider } from './providers/nyt-books.js';
+import { GoogleBooksProvider } from './providers/google-books.js';
+import { CompositeBooksProvider } from './providers/composite-books.js';
 import { SpotifyMusicProvider } from './providers/spotify-music.js';
 import { AppleAudiobookProvider } from './providers/apple-audiobooks.js';
 import type { MediaType } from '@dml/shared';
@@ -65,7 +67,8 @@ export async function buildApp(overrides: BuildAppOverrides = {}): Promise<Fasti
   const activities = new ActivityService(prisma, feed);
   const home = new HomeService(prisma);
   const providers: Record<MediaType, ContentProvider> = overrides.providers ?? {
-    book: new NytBooksProvider(config),
+    // Books aggregate NYT (all bestseller genres) + Google Books, deduped.
+    book: new CompositeBooksProvider([new NytBooksProvider(config), new GoogleBooksProvider(config)]),
     music: new SpotifyMusicProvider(config, cache),
     audiobook: new AppleAudiobookProvider(),
   };

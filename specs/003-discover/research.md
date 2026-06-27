@@ -8,8 +8,14 @@ resolved below).
 ## 1. Provider selection (per category)
 
 - **Decision**:
-  - **Books → NYT Books API** (Best Sellers lists). Authoritative "trending" signal,
-    free API key, generous quota, simple JSON, stable/documented.
+  - **Books → NYT Books API (all bestseller lists / every genre) + Google Books**,
+    merged and deduped via a composite book provider. NYT's "best sellers overview"
+    returns all current lists (genres) in one call, interleaved for genre coverage;
+    Google Books adds newest-per-genre recommendations (keyless at low quota, optional
+    `GOOGLE_BOOKS_API_KEY` for headroom). Each source degrades independently — if one
+    fails or is unconfigured, the other still serves. (Amazon was considered but
+    deferred: the Product Advertising/Creators API is credential-gated and no key is
+    available.)
   - **Music → Spotify Web API** (New Releases + Featured/curated charts playlist).
     Client-credentials flow (no user auth), well-documented, predictable limits.
   - **Audiobooks → Apple iTunes** (RSS "top audiobooks" feed + iTunes Search API).

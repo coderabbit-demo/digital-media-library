@@ -5,6 +5,7 @@ import { fetchJson } from './http.js';
 interface NytOverviewResponse {
   results?: {
     lists?: Array<{
+      list_name?: string;
       books?: Array<{
         title?: string;
         author?: string;
@@ -17,9 +18,10 @@ interface NytOverviewResponse {
 }
 
 /**
- * Books trending via the NYT Books API "best sellers overview" (bestseller lists
- * are our trending signal for books). Requires `NYT_API_KEY`; throws when absent
- * or on upstream failure so `TrendingService` falls back to cache.
+ * Books trending via the NYT Books API "best sellers overview", which returns ALL
+ * current bestseller lists (every genre) in one call. Books are interleaved
+ * round-robin across lists so the result spans genres rather than being dominated
+ * by the first list. Requires `NYT_API_KEY`; throws when absent or on failure.
  */
 export class NytBooksProvider implements ContentProvider {
   readonly name = 'nyt-books';
@@ -33,15 +35,14 @@ export class NytBooksProvider implements ContentProvider {
     const url = `https://api.nytimes.com/svc/books/v3/lists/overview.json?api-key=${encodeURIComponent(key)}`;
     const data = await fetchJson<NytOverviewResponse>(url);
 
-    const items: TrendingItem[] = [];
-    const seen = new Set<string>();
+    // Normalize each list (genre) into its own array.
+    const perList: TrendingItem[][] = [];
     for (const list of data.results?.lists ?? []) {
+      const items: TrendingItem[] = [];
       for (const book of list.books ?? []) {
         const title = book.title?.trim();
         if (!title) continue;
         const id = book.primary_isbn13 || book.primary_isbn10 || `${title}:${book.author ?? ''}`;
-        if (seen.has(id)) continue;
-        seen.add(id);
         items.push({
           mediaType: 'book',
           title,
@@ -50,9 +51,23 @@ export class NytBooksProvider implements ContentProvider {
           providerId: id,
           provider: this.name,
         });
-        if (items.length >= limit) return items;
+      }
+      if (items.length > 0) perList.push(items);
+    }
+
+    // Round-robin across lists so every genre is represented, deduping by id.
+    const out: TrendingItem[] = [];
+    const seen = new Set<string>();
+    const maxLen = Math.max(0, ...perList.map((l) => l.length));
+    for (let i = 0; i < maxLen && out.length < limit; i++) {
+      for (const list of perList) {
+        const item = list[i];
+        if (!item || seen.has(item.providerId)) continue;
+        seen.add(item.providerId);
+        out.push(item);
+        if (out.length >= limit) break;
       }
     }
-    return items;
+    return out;
   }
 }

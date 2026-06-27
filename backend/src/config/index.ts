@@ -40,6 +40,8 @@ const envSchema = z.object({
   NYT_API_KEY: z.string().optional(),
   SPOTIFY_CLIENT_ID: z.string().optional(),
   SPOTIFY_CLIENT_SECRET: z.string().optional(),
+  // Google Books works keyless at low quota; a key raises the limit.
+  GOOGLE_BOOKS_API_KEY: z.string().optional(),
 
   // Trending freshness window in seconds (default 3h).
   DISCOVER_TTL_SECONDS: z.coerce.number().int().positive().default(60 * 60 * 3),
