@@ -6,7 +6,7 @@ evolves.
 
 ## What this project is
 
-A multi-user digital media library (trending books/music/audiobooks + a
+A multi-user digital media library (trending books/music/audiobooks/podcasts + a
 Goodreads-style activity feed). See [README.md](README.md) for the high-level
 overview and [.specify/memory/constitution.md](.specify/memory/constitution.md) for
 the binding principles.

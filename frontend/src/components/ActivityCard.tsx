@@ -5,12 +5,14 @@ const MEDIA_LABELS: Record<MediaType, string> = {
   book: 'Reading',
   music: 'Listening to',
   audiobook: 'Listening to',
+  podcast: 'Listening to',
 };
 
 const MEDIA_BADGE: Record<MediaType, string> = {
   book: 'Book',
   music: 'Music',
   audiobook: 'Audiobook',
+  podcast: 'Podcast',
 };
 
 interface ActivityCardProps {

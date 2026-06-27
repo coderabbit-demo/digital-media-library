@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import {
   ITEM_AUTHOR_MAX_LENGTH,
   MEDIA_TYPES,
@@ -13,6 +13,7 @@ const MEDIA_OPTIONS: { value: MediaType; label: string }[] = [
   { value: 'book', label: 'Book' },
   { value: 'music', label: 'Music' },
   { value: 'audiobook', label: 'Audiobook' },
+  { value: 'podcast', label: 'Podcast' },
 ];
 
 /**
@@ -21,14 +22,31 @@ const MEDIA_OPTIONS: { value: MediaType; label: string }[] = [
  * activity is optimistically added to the feed. A 429 rate-limit response
  * (FR-019) surfaces a friendly retry message.
  */
-export function PostUpdateForm({ onPosted }: { onPosted?: () => void } = {}) {
+export interface ComposeInitial {
+  mediaType?: MediaType;
+  title?: string;
+  itemAuthor?: string;
+}
+
+export function PostUpdateForm({
+  onPosted,
+  initial,
+}: { onPosted?: () => void; initial?: ComposeInitial } = {}) {
   const createActivity = useCreateActivity();
 
-  const [mediaType, setMediaType] = useState<MediaType>(MEDIA_TYPES[0]);
-  const [title, setTitle] = useState('');
-  const [itemAuthor, setItemAuthor] = useState('');
+  const [mediaType, setMediaType] = useState<MediaType>(initial?.mediaType ?? MEDIA_TYPES[0]);
+  const [title, setTitle] = useState(initial?.title ?? '');
+  const [itemAuthor, setItemAuthor] = useState(initial?.itemAuthor ?? '');
   const [validationError, setValidationError] = useState<string | null>(null);
   const [rateLimited, setRateLimited] = useState(false);
+
+  // Re-sync when prefilled from a different item (e.g., a new Discover selection),
+  // so distinct items that happen to share a title never reuse the prior values.
+  useEffect(() => {
+    setMediaType(initial?.mediaType ?? MEDIA_TYPES[0]);
+    setTitle(initial?.title ?? '');
+    setItemAuthor(initial?.itemAuthor ?? '');
+  }, [initial?.mediaType, initial?.title, initial?.itemAuthor]);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

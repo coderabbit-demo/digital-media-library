@@ -1,0 +1,100 @@
+openapi: 3.1.0
+info:
+  title: Digital Media Library API — Discover (feature 003)
+  version: 0.1.0
+  description: >
+    Per-category trending Discover endpoint. Trending data is sourced from external
+    providers exclusively through the internal provider-abstraction layer and cached
+    (TTL + stale-on-failure). Auth-guarded; no external calls leak provider details.
+servers:
+  - url: /api
+
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: dml_session
+      description: Signed, httpOnly session cookie issued by feature 001.
+
+  schemas:
+    TrendingItem:
+      type: object
+      required: [mediaType, title, creator, coverUrl, providerId, genre]
+      properties:
+        mediaType: { type: string, enum: [book, music, audiobook, podcast] }
+        title: { type: string }
+        creator:
+          # OpenAPI 3.1 / JSON Schema nullable form (not the 3.0 `nullable: true`).
+          type: [string, "null"]
+          description: Author (books/audiobooks), artist (music), or publisher (podcasts).
+        coverUrl:
+          type: [string, "null"]
+          format: uri
+          description: Cover/art image URL when the provider supplies one.
+        providerId:
+          type: string
+          description: The provider's stable identifier for the item.
+        genre:
+          type: [string, "null"]
+          description: >
+            Genre/list this item came from (NYT list, Google subject, or Apple
+            genre); null when the source has no genre.
+
+    DiscoverPage:
+      type: object
+      required: [category, items, stale]
+      properties:
+        category: { type: string, enum: [book, music, audiobook, podcast] }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/TrendingItem' }
+        stale:
+          type: boolean
+          description: >
+            True when served from the last-known-good snapshot because a fresh fetch
+            was unavailable (the UI indicates results may be out of date).
+
+    Error:
+      type: object
+      required: [error, message]
+      properties:
+        error: { type: string }
+        message: { type: string }
+
+paths:
+  /discover/{category}:
+    get:
+      summary: Trending items for a media category
+      description: >
+        Returns trending items for the category, served from cache when fresh,
+        refreshed lazily on expiry, and falling back to the last-known-good snapshot
+        (stale=true) when the provider is unavailable. On a cold failure, returns an
+        empty list (the client shows an unavailable state).
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - name: category
+          in: path
+          required: true
+          schema: { type: string, enum: [books, music, audiobooks, podcasts] }
+          description: Route segment; mapped to the singular media type internally.
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+      responses:
+        '200':
+          description: A page of trending items (possibly stale).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DiscoverPage' }
+        '400':
+          description: Unknown category or invalid limit.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }

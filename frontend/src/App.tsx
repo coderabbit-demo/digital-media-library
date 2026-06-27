@@ -4,7 +4,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { HomeFeed } from './pages/HomeFeed';
 import { SignIn } from './pages/SignIn';
 import { AuthCallback } from './pages/AuthCallback';
-import { CategoryPlaceholder } from './pages/CategoryPlaceholder';
+import { Discover } from './pages/Discover';
 import { WishlistPlaceholder } from './pages/WishlistPlaceholder';
 
 /** Auth gate + shell wrapping every protected route (FR-001/FR-002). */
@@ -28,9 +28,10 @@ export function App() {
       {/* Everything else requires authentication and renders in the shell. */}
       <Route element={<ProtectedLayout />}>
         <Route path="/" element={<HomeFeed />} />
-        <Route path="/books" element={<CategoryPlaceholder category="book" />} />
-        <Route path="/music" element={<CategoryPlaceholder category="music" />} />
-        <Route path="/audiobooks" element={<CategoryPlaceholder category="audiobook" />} />
+        <Route path="/books" element={<Discover category="books" />} />
+        <Route path="/music" element={<Discover category="music" />} />
+        <Route path="/audiobooks" element={<Discover category="audiobooks" />} />
+        <Route path="/podcasts" element={<Discover category="podcasts" />} />
         <Route path="/wishlist" element={<WishlistPlaceholder />} />
       </Route>
 

@@ -8,7 +8,7 @@ export const TITLE_MAX_LENGTH = 300;
 export const ITEM_AUTHOR_MAX_LENGTH = 200;
 
 /** Media types a user can be reading/listening to. */
-export const MEDIA_TYPES = ['book', 'music', 'audiobook'] as const;
+export const MEDIA_TYPES = ['book', 'music', 'audiobook', 'podcast'] as const;
 export const mediaTypeSchema = z.enum(MEDIA_TYPES);
 export type MediaType = z.infer<typeof mediaTypeSchema>;
 
@@ -89,4 +89,43 @@ export interface HomeData {
   ownItems: ActivityDTO[];
   counts: HomeCounts;
   recommendations: RecommendationDTO[];
+}
+
+/** Discover route segments and their mapping to the singular MediaType. */
+export const DISCOVER_CATEGORIES = ['books', 'music', 'audiobooks', 'podcasts'] as const;
+export type DiscoverCategory = (typeof DISCOVER_CATEGORIES)[number];
+
+const CATEGORY_TO_MEDIA: Record<DiscoverCategory, MediaType> = {
+  books: 'book',
+  music: 'music',
+  audiobooks: 'audiobook',
+  podcasts: 'podcast',
+};
+
+/** Map a Discover route segment to a MediaType, or null if unknown. */
+export function mediaTypeForCategory(segment: string): MediaType | null {
+  // Guard against inherited keys (e.g. "constructor", "toString") matching.
+  if (!Object.prototype.hasOwnProperty.call(CATEGORY_TO_MEDIA, segment)) return null;
+  return CATEGORY_TO_MEDIA[segment as DiscoverCategory];
+}
+
+/** A normalized trending item surfaced in a Discover view. */
+export interface TrendingItemDTO {
+  mediaType: MediaType;
+  title: string;
+  /** Author (books/audiobooks), artist (music), or publisher (podcasts). */
+  creator: string | null;
+  coverUrl: string | null;
+  /** The source provider's stable identifier for the item. */
+  providerId: string;
+  /** Genre/list this item came from (e.g., an NYT list name, Google subject, or Apple genre); null when the source has no genre. */
+  genre: string | null;
+}
+
+/** A page of trending items for one category. */
+export interface DiscoverPageDTO {
+  category: MediaType;
+  items: TrendingItemDTO[];
+  /** True when served from the last-known-good snapshot (results may be out of date). */
+  stale: boolean;
 }

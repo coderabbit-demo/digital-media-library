@@ -1,9 +1,11 @@
 import { useEffect, useRef } from 'react';
-import { PostUpdateForm } from './PostUpdateForm';
+import { PostUpdateForm, type ComposeInitial } from './PostUpdateForm';
 
 interface ComposeDialogProps {
   open: boolean;
   onClose: () => void;
+  /** Optional pre-filled values (e.g., when composing from a Discover item). */
+  initial?: ComposeInitial;
 }
 
 /**
@@ -11,7 +13,7 @@ interface ComposeDialogProps {
  * home left column's "Post an update" action. Closes on a successful post, on
  * Escape, or on a scrim click.
  */
-export function ComposeDialog({ open, onClose }: ComposeDialogProps) {
+export function ComposeDialog({ open, onClose, initial }: ComposeDialogProps) {
   const surfaceRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -56,7 +58,7 @@ export function ComposeDialog({ open, onClose }: ComposeDialogProps) {
             </span>
           </button>
         </div>
-        <PostUpdateForm onPosted={onClose} />
+        <PostUpdateForm onPosted={onClose} initial={initial} />
       </div>
     </div>
   );

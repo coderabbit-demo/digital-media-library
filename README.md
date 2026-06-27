@@ -1,8 +1,8 @@
 # Digital Media Library
 
-A multi-user web app for discovering trending books, music, and audiobooks and
-sharing what you're currently reading or listening to — a Goodreads-style activity
-feed where the community's updates appear on the home page.
+A multi-user web app for discovering trending books, music, audiobooks, and
+podcasts and sharing what you're currently reading or listening to — a
+Goodreads-style activity feed where the community's updates appear on the home page.
 
 > **Status**: Early development. Built spec-first with [GitHub Spec Kit](https://github.com/github/spec-kit).
 > The first feature (authentication + activity feed) is **implemented** — backend API,
@@ -14,8 +14,8 @@ feed where the community's updates appear on the home page.
 
 - **Sign in with Google** — no passwords; a profile is created on first sign-in.
 - **Activity feed** — a home-page feed of what users are currently reading/listening to.
-- **Trending content** *(planned)* — trending books, music, and audiobooks from
-  external providers, cached to stay fast and within API quotas.
+- **Trending content** *(planned)* — trending books, music, audiobooks, and
+  podcasts from external providers, cached to stay fast and within API quotas.
 - **Comments** *(planned)* — discussion on feed updates.
 
 ## Architecture
@@ -46,9 +46,10 @@ The project's non-negotiable principles live in the
 | # | Feature | Status | Spec |
 |---|---------|--------|------|
 | 001 | Authentication & Activity Feed | ✅ Merged | [spec](specs/001-auth-activity-feed/spec.md) · [plan](specs/001-auth-activity-feed/plan.md) |
-| 002 | App shell, auth gate & three-column home | 🛠️ Implemented (in review) | [spec](specs/002-app-shell-home/spec.md) · [plan](specs/002-app-shell-home/plan.md) |
+| 002 | App shell, auth gate & three-column home | ✅ Merged | [spec](specs/002-app-shell-home/spec.md) · [plan](specs/002-app-shell-home/plan.md) |
+| 003 | Discover (trending by category) | 🛠️ Implemented (in review) | [spec](specs/003-discover/spec.md) · [plan](specs/003-discover/plan.md) |
 
-*Content-discovery roadmap (specs drafted): 003 Discover (trending) → 004 Search & recommendations → 005 Wishlist. Comments on feed updates: a later feature.*
+*Content-discovery roadmap: 003 Discover (trending) → 004 Search & recommendations → 005 Wishlist → 006 Conversations (replies). Built on the provider-abstraction + cache layer introduced in 003.*
 
 ## Repository layout
 

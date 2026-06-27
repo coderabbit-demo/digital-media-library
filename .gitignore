@@ -31,7 +31,12 @@ desktop.ini
 !.env.example
 *.pem
 *.key
-secrets.*
+# Ignore secret DATA files (secrets.json/yaml/env) — but NOT Terraform source,
+# which only declares secret containers (no plaintext secrets live in it).
+secrets.json
+secrets.yaml
+secrets.yml
+secrets.env
 
 # ---- Logs ----
 *.log
