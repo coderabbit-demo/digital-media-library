@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest';
 import type { PrismaClient } from '@prisma/client';
 import { HomeService } from '../../src/services/home.js';
 import { RecommendationService } from '../../src/services/recommendations.js';
-import { WishlistService } from '../../src/services/wishlist.js';
+import { LibraryService } from '../../src/services/library.js';
 import { createFakePrisma } from '../helpers/prisma-fake.js';
 
-/** HomeService wired with real Recommendation + Wishlist services over the fake prisma. */
+/** HomeService wired with real Recommendation + Library services over the fake prisma. */
 const makeHome = (client: PrismaClient) =>
-  new HomeService(client, new RecommendationService(client), new WishlistService(client));
+  new HomeService(client, new RecommendationService(client), new LibraryService(client));
 
 /** Unit tests for HomeService aggregation (local data only). */
 describe('HomeService', () => {

@@ -9,7 +9,7 @@ const NAV = [
   { to: '/music', label: 'Music' },
   { to: '/audiobooks', label: 'Audiobooks' },
   { to: '/podcasts', label: 'Podcasts' },
-  { to: '/wishlist', label: 'Wishlist' },
+  { to: '/library', label: 'My Library' },
 ];
 
 /**

@@ -49,9 +49,9 @@ The project's non-negotiable principles live in the
 | 002 | App shell, auth gate & three-column home | ✅ Merged | [spec](specs/002-app-shell-home/spec.md) · [plan](specs/002-app-shell-home/plan.md) |
 | 003 | Discover (trending by category) | ✅ Merged | [spec](specs/003-discover/spec.md) · [plan](specs/003-discover/plan.md) |
 | 004 | Search & recommendations | ✅ Merged | [spec](specs/004-search-recommend/spec.md) · [plan](specs/004-search-recommend/plan.md) |
-| 005 | Wishlist (private, all-media, filtered) | 🛠️ Implemented (in review) | [spec](specs/005-wishlist/spec.md) · [plan](specs/005-wishlist/plan.md) |
+| 005 | My Library (private, Goodreads-style shelves) | 🛠️ Implemented (in review) | [spec](specs/005-wishlist/spec.md) · [plan](specs/005-wishlist/plan.md) |
 
-*Content-discovery roadmap: 003 Discover (trending) → 004 Search & recommendations → 005 Wishlist → 006 Conversations (replies). Built on the provider-abstraction + cache layer introduced in 003. Search is provider-backed + cached: books via Google Books, music/audiobooks/podcasts via the keyless iTunes Search API.*
+*Content-discovery roadmap: 003 Discover (trending) → 004 Search & recommendations → 005 My Library (shelves) → 006 Conversations (replies). Built on the provider-abstraction + cache layer introduced in 003. Search is provider-backed + cached: books via Google Books, music/audiobooks/podcasts via the keyless iTunes Search API.*
 
 ## Repository layout
 

@@ -1,7 +1,7 @@
 import type { PrismaClient } from '@prisma/client';
 import type { ActivityDTO, HomeData } from '@dml/shared';
 import type { RecommendationService } from './recommendations.js';
-import type { WishlistService } from './wishlist.js';
+import type { LibraryService } from './library.js';
 
 /** Number of the user's own recent items shown in the home left column. */
 const OWN_ITEMS_LIMIT = 10;
@@ -9,14 +9,14 @@ const OWN_ITEMS_LIMIT = 10;
 /**
  * Assembles the home payload from **local data only** (our own database) — no
  * external content-provider calls (feature 002 / FR-006). Returns the current
- * user's recent own activities, counts (including their private wishlist size),
+ * user's recent own activities, counts (including their Want to Read shelf size),
  * and recent community recommendations. The community feed is served by `/feed`.
  */
 export class HomeService {
   constructor(
     private readonly prisma: PrismaClient,
     private readonly recommendations: RecommendationService,
-    private readonly wishlist: WishlistService,
+    private readonly library: LibraryService,
   ) {}
 
   async getHome(currentUserId: string): Promise<HomeData> {
@@ -36,7 +36,8 @@ export class HomeService {
       }),
       this.prisma.activity.count({ where: { userId: currentUserId } }),
       this.recommendations.listRecent(currentUserId),
-      this.wishlist.count(currentUserId),
+      // Home "wishlisted" stat = the Want to Read shelf count.
+      this.library.count(currentUserId, 'want'),
     ]);
 
     const ownItems: ActivityDTO[] = rows.map((a) => ({

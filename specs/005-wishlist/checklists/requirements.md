@@ -1,4 +1,4 @@
-# Specification Quality Checklist: Wishlist
+# Specification Quality Checklist: My Library
 
 **Purpose**: Validate specification completeness and quality before planning
 **Created**: 2026-06-26
@@ -31,5 +31,9 @@
 
 ## Notes
 
-- Single all-media Wishlist page with filters; private per user. Items are added from
-  Discover (003) and search (004); nav entry comes from feature 002.
+- Single all-media My Library page with Goodreads-style shelves (Want to Read /
+  Currently Reading / Read / Did Not Finish) + a media-type filter; private per user.
+  Each item sits on exactly one shelf, and moving an item to Currently Reading offers
+  to share an activity to the feed (never auto-posts). Items are added from Discover
+  (003) and search (004); nav entry comes from feature 002. Supersedes the flat
+  wishlist (former wishlist → Want to Read).

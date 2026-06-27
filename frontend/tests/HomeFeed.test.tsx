@@ -58,7 +58,7 @@ describe('HomeFeed (three-column home)', () => {
     expect(await screen.findByText('Dune')).toBeInTheDocument();
     expect(screen.getByText('Currently reading / listening')).toBeInTheDocument();
     expect(screen.getByText('current')).toBeInTheDocument();
-    expect(screen.getByText('wishlisted')).toBeInTheDocument();
+    expect(screen.getByText('want to read')).toBeInTheDocument();
   });
 
   it('renders the recommendations region with an empty state (no auto picks)', async () => {

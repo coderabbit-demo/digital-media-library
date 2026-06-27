@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { TrendingItemDTO } from '@dml/shared';
 import { useRecommend } from '../services/recommendations';
-import { useAddToWishlist, useWishlistKeys, wishlistKey } from '../services/wishlist';
+import { useAddToLibrary, useLibraryKeys, libraryKey } from '../services/library';
 
 /** Verb for the "start an activity" CTA based on media type. */
 function verb(mediaType: TrendingItemDTO['mediaType']): string {
@@ -22,10 +22,10 @@ export function DiscoverItemCard({ item, onStartActivity }: DiscoverItemCardProp
   const recommend = useRecommend();
   const [recommended, setRecommended] = useState(false);
 
-  const addToWishlist = useAddToWishlist();
-  const wishlistKeys = useWishlistKeys();
+  const addToLibrary = useAddToLibrary();
+  const libraryKeys = useLibraryKeys();
   const [justSaved, setJustSaved] = useState(false);
-  const saved = justSaved || wishlistKeys.has(wishlistKey(item));
+  const saved = justSaved || libraryKeys.has(libraryKey(item));
 
   return (
     <article className="discover-card">
@@ -60,10 +60,10 @@ export function DiscoverItemCard({ item, onStartActivity }: DiscoverItemCardProp
           <button
             type="button"
             className="btn btn-ghost discover-card__wishlist"
-            disabled={saved || addToWishlist.isPending}
-            onClick={() => addToWishlist.mutate(item, { onSuccess: () => setJustSaved(true) })}
+            disabled={saved || addToLibrary.isPending}
+            onClick={() => addToLibrary.mutate({ item }, { onSuccess: () => setJustSaved(true) })}
           >
-            {saved ? 'Wishlisted ✓' : 'Add to Wishlist'}
+            {saved ? 'In Library ✓' : 'Add to Library'}
           </button>
         </div>
       </div>
