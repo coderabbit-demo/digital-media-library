@@ -49,7 +49,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ReplyThread' }
         '401': { description: Not authenticated }
-        '404': { description: Unknown activity }
+        # An unknown activity yields an empty ReplyThread (200), not a 404.
     post:
       summary: Reply to an update (or to a parent reply). Rate-limited 10/min per user.
       parameters:
@@ -68,9 +68,9 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Reply' }
-        '400': { description: Invalid body (empty or over-length) }
+        '400': { description: Invalid body (empty/over-length), or parentId not on this activity }
         '401': { description: Not authenticated }
-        '404': { description: Unknown activity, or parentId not on this activity }
+        '404': { description: Unknown activity }
         '429':
           description: Rate limited (per-user reply limit, 10/min)
           headers:
@@ -97,16 +97,26 @@ components:
   schemas:
     Activity:
       type: object
-      required: [id, note, replyCount]
-      description: Feature-001 update, extended with note and replyCount (other fields omitted here).
+      description: Feature-001 update, extended with note and replyCount (feature 006).
+      required: [id, author, mediaType, title, itemAuthor, note, replyCount, createdAt, canDelete]
       properties:
         id: { type: string }
+        author: { $ref: '#/components/schemas/ActivityAuthor' }
+        mediaType: { type: string, enum: [book, music, audiobook, podcast] }
+        title: { type: string }
+        itemAuthor: { type: [string, "null"] }
         note: { type: [string, "null"], maxLength: 1000 }
         replyCount: { type: integer, description: Count of non-deleted replies }
+        createdAt: { type: string, format: date-time }
+        canDelete: { type: boolean }
     CreateActivity:
       type: object
-      description: Feature-001 create-activity body, extended with an optional note (other fields omitted here).
+      description: Feature-001 create-activity body, extended with an optional note (feature 006).
+      required: [mediaType, title]
       properties:
+        mediaType: { type: string, enum: [book, music, audiobook, podcast] }
+        title: { type: string, minLength: 1, maxLength: 300 }
+        itemAuthor: { type: [string, "null"], maxLength: 200 }
         note: { type: [string, "null"], maxLength: 1000 }
     Reply:
       type: object

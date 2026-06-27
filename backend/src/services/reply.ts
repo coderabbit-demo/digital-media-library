@@ -105,13 +105,18 @@ export class ReplyService {
     if (!reply) throw notFound('Reply not found');
     if (reply.userId !== userId) throw forbidden('You can only delete your own replies');
 
-    const childCount = await this.prisma.reply.count({ where: { parentId: replyId } });
-    if (childCount > 0) {
-      // Keep the row as a tombstone so child replies retain context.
-      await this.prisma.reply.update({ where: { id: replyId }, data: { deletedAt: new Date() } });
-    } else {
-      await this.prisma.reply.deleteMany({ where: { id: replyId, userId } });
-    }
+    // Decide tombstone-vs-hard-delete atomically: the child-count check and the
+    // write run in one transaction so a concurrent nested reply can't slip in
+    // between and get orphaned by a hard delete.
+    await this.prisma.$transaction(async (tx) => {
+      const childCount = await tx.reply.count({ where: { parentId: replyId } });
+      if (childCount > 0) {
+        // Keep the row as a tombstone so child replies retain context.
+        await tx.reply.update({ where: { id: replyId }, data: { deletedAt: new Date() } });
+      } else {
+        await tx.reply.deleteMany({ where: { id: replyId, userId } });
+      }
+    });
     await this.feed.invalidate();
   }
 

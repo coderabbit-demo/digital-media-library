@@ -150,6 +150,8 @@ export function createFakePrisma(): FakePrisma {
           if (where.id && row.id !== where.id) continue;
           if (where.userId && row.userId !== where.userId) continue;
           activities.delete(id);
+          // Mirror the DB cascade: deleting an activity removes its conversation.
+          for (const [rid, r] of replies) if (r.activityId === id) replies.delete(rid);
           count++;
         }
         return { count };
@@ -351,6 +353,9 @@ export function createFakePrisma(): FakePrisma {
         return { count };
       },
     },
+    // Interactive transactions run against the same in-memory client (no real
+    // isolation needed for these tests); array form resolves all promises.
+    $transaction: async (arg: any) => (Array.isArray(arg) ? Promise.all(arg) : arg(client)),
     $disconnect: async () => undefined,
   } as unknown as PrismaClient;
 

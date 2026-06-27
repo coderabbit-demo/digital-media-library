@@ -122,7 +122,7 @@ the author or other users.
 - **FR-008**: Reply content MUST be validated (non-empty, length-limited) and rejected with a clear message when invalid.
 - **FR-009**: All reply/note text MUST be treated and rendered as plain text, never as executable markup.
 - **FR-010**: Replies MUST be rate-limited per user (consistent with the posting limit) to protect against spam.
-- **FR-011**: Users MUST be able to delete their own replies, after which the reply no longer appears for any user; users MUST NOT be able to delete others' replies.
+- **FR-011**: Users MUST be able to delete their own replies, and MUST NOT be able to delete others' replies. A deleted reply with no child replies is removed entirely (no longer appears for anyone); a deleted reply that has child replies remains as a "[deleted]" tombstone so the thread stays coherent (its content is gone but its position and children are preserved).
 - **FR-012**: Deleting an update MUST remove its entire conversation (all replies).
 - **FR-013**: Each update SHOULD display a reply count (or equivalent affordance) so users can see there is a conversation.
 

@@ -89,7 +89,8 @@ export interface ReplyThreadDTO {
 /** Request body for creating a reply (feature 006). Plain text only. */
 export const createReplySchema = z.object({
   body: z.string().trim().min(1).max(REPLY_MAX_LENGTH),
-  parentId: z.string().trim().min(1).optional().nullable(),
+  // A malformed parentId is a client error (400), not a server error.
+  parentId: z.string().uuid().optional().nullable(),
 });
 export type CreateReplyInput = z.infer<typeof createReplySchema>;
 
