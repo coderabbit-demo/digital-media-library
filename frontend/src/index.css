@@ -1142,6 +1142,60 @@ body {
   margin-top: 2px;
 }
 
+/* Feed card item block (cover + details) — UI refresh */
+.activity-card__item {
+  display: flex;
+  gap: 12px;
+  margin-top: 6px;
+}
+.activity-card__cover {
+  width: 64px;
+  height: 92px;
+  flex-shrink: 0;
+  object-fit: contain;
+  border-radius: 4px;
+  background: var(--md-sys-color-surface-container-high);
+}
+.activity-card__item-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.activity-card__shelf select {
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--md-sys-shape-corner-small);
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  font-size: 0.8125rem;
+  max-width: 220px;
+}
+.activity-card__desc {
+  margin: 2px 0 0;
+  font-size: 0.875rem;
+  color: var(--md-sys-color-on-surface-variant);
+  white-space: pre-wrap;
+}
+.activity-card__time {
+  margin-left: auto;
+  font-size: 0.75rem;
+}
+.activity-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+.card-link--danger {
+  color: var(--md-sys-color-error);
+}
+
 /* Conversations (feature 006) */
 .activity-card__note {
   margin: 4px 0 0;

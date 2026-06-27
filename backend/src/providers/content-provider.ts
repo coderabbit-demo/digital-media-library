@@ -13,6 +13,10 @@ export interface TrendingItem {
   provider: string;
   /** Genre/list the item came from (e.g., NYT list name, Google subject); null if none. */
   genre: string | null;
+  /** Short synopsis/description when the provider supplies one; null otherwise. */
+  description: string | null;
+  /** Canonical URL to the item on the provider (for a "Preview/View" link); null if none. */
+  providerUrl: string | null;
 }
 
 /**

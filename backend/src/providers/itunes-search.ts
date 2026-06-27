@@ -12,6 +12,10 @@ interface ItunesResponse {
     artistName?: string;
     artworkUrl100?: string;
     primaryGenreName?: string;
+    description?: string;
+    longDescription?: string;
+    trackViewUrl?: string;
+    collectionViewUrl?: string;
   }>;
 }
 
@@ -65,6 +69,8 @@ export class ItunesSearchProvider implements SearchProvider {
         providerId,
         provider: this.name,
         genre: r.primaryGenreName?.trim() || null,
+        description: (r.longDescription ?? r.description)?.trim() || null,
+        providerUrl: r.collectionViewUrl ?? r.trackViewUrl ?? null,
       });
       if (items.length >= limit) break;
     }

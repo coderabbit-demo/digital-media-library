@@ -8,6 +8,8 @@ const LIBRARY_SELECT = {
   creator: true,
   coverUrl: true,
   providerId: true,
+  description: true,
+  providerUrl: true,
   shelf: true,
   createdAt: true,
   updatedAt: true,
@@ -20,6 +22,8 @@ type LibraryRow = {
   creator: string | null;
   coverUrl: string | null;
   providerId: string;
+  description: string | null;
+  providerUrl: string | null;
   shelf: Shelf;
   createdAt: Date;
   updatedAt: Date;
@@ -42,6 +46,8 @@ export class LibraryService {
       itemAuthor: row.creator,
       coverUrl: row.coverUrl ?? null,
       providerId: row.providerId,
+      description: row.description ?? null,
+      providerUrl: row.providerUrl ?? null,
       shelf: row.shelf,
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
@@ -67,6 +73,8 @@ export class LibraryService {
         title: input.title,
         creator: input.creator ?? null,
         coverUrl: input.coverUrl ?? null,
+        description: input.description ?? null,
+        providerUrl: input.providerUrl ?? null,
         // Only change the shelf on re-add when the caller explicitly asked.
         ...(input.shelf ? { shelf: input.shelf } : {}),
       },
@@ -76,6 +84,8 @@ export class LibraryService {
         title: input.title,
         creator: input.creator ?? null,
         coverUrl: input.coverUrl ?? null,
+        description: input.description ?? null,
+        providerUrl: input.providerUrl ?? null,
         providerId: input.providerId,
         shelf,
       },

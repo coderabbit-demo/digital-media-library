@@ -114,6 +114,10 @@ export class FeedService {
         title: true,
         author: true,
         note: true,
+        coverUrl: true,
+        providerId: true,
+        description: true,
+        providerUrl: true,
         createdAt: true,
         user: { select: { id: true, displayName: true, avatarUrl: true } },
         // Conversation size (excluding deleted tombstones) — feature 006.
@@ -128,6 +132,10 @@ export class FeedService {
       itemAuthor: a.author,
       note: a.note,
       replyCount: a._count.replies,
+      coverUrl: a.coverUrl,
+      providerId: a.providerId,
+      description: a.description,
+      providerUrl: a.providerUrl,
       createdAt: a.createdAt.toISOString(),
       author: {
         id: a.user.id,
@@ -145,8 +153,13 @@ export class FeedService {
       mediaType: row.mediaType,
       title: row.title,
       itemAuthor: row.itemAuthor,
-      note: row.note,
-      replyCount: row.replyCount,
+      // Coalesce fields that may be absent in rows cached before they were added.
+      note: row.note ?? null,
+      replyCount: row.replyCount ?? 0,
+      coverUrl: row.coverUrl ?? null,
+      providerId: row.providerId ?? null,
+      description: row.description ?? null,
+      providerUrl: row.providerUrl ?? null,
       createdAt: row.createdAt,
       canDelete: row.author.id === currentUserId,
     };
@@ -161,6 +174,10 @@ interface FeedRow {
   itemAuthor: string | null;
   note: string | null;
   replyCount: number;
+  coverUrl: string | null;
+  providerId: string | null;
+  description: string | null;
+  providerUrl: string | null;
   createdAt: string;
   author: { id: string; displayName: string; avatarUrl: string | null };
 }

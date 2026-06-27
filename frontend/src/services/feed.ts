@@ -64,6 +64,10 @@ export function useCreateActivity() {
         itemAuthor: input.itemAuthor ?? null,
         note: input.note ?? null,
         replyCount: 0,
+        coverUrl: input.coverUrl ?? null,
+        providerId: input.providerId ?? null,
+        description: input.description ?? null,
+        providerUrl: input.providerUrl ?? null,
         createdAt: new Date().toISOString(),
         canDelete: true,
       };

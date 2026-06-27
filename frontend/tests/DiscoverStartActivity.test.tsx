@@ -10,7 +10,7 @@ const page: DiscoverPageDTO = {
   category: 'book',
   stale: false,
   items: [
-    { mediaType: 'book', title: 'Dune', creator: 'Frank Herbert', coverUrl: null, providerId: 'b1', genre: 'Fiction' },
+    { mediaType: 'book', title: 'Dune', creator: 'Frank Herbert', coverUrl: null, providerId: 'b1', genre: 'Fiction', description: null, providerUrl: null },
   ],
 };
 

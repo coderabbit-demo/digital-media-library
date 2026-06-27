@@ -7,8 +7,8 @@ import type { LibraryItemDTO } from '@dml/shared';
 import { Library } from '../src/pages/Library';
 
 const items: LibraryItemDTO[] = [
-  { id: 'l1', mediaType: 'book', title: 'Dune', itemAuthor: 'Frank Herbert', coverUrl: null, providerId: 'b1', shelf: 'want', createdAt: '2026-06-01T00:00:00Z', updatedAt: '2026-06-01T00:00:00Z' },
-  { id: 'l2', mediaType: 'music', title: 'Blue', itemAuthor: 'Joni Mitchell', coverUrl: null, providerId: 'm1', shelf: 'current', createdAt: '2026-06-02T00:00:00Z', updatedAt: '2026-06-02T00:00:00Z' },
+  { id: 'l1', mediaType: 'book', title: 'Dune', itemAuthor: 'Frank Herbert', coverUrl: null, providerId: 'b1', shelf: 'want', description: null, providerUrl: null, createdAt: '2026-06-01T00:00:00Z', updatedAt: '2026-06-01T00:00:00Z' },
+  { id: 'l2', mediaType: 'music', title: 'Blue', itemAuthor: 'Joni Mitchell', coverUrl: null, providerId: 'm1', shelf: 'current', description: null, providerUrl: null, createdAt: '2026-06-02T00:00:00Z', updatedAt: '2026-06-02T00:00:00Z' },
 ];
 
 function mockApi() {

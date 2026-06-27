@@ -23,6 +23,10 @@ export class ActivityService {
         title: input.title,
         author: input.itemAuthor ?? null,
         note: input.note ?? null,
+        coverUrl: input.coverUrl ?? null,
+        providerId: input.providerId ?? null,
+        description: input.description ?? null,
+        providerUrl: input.providerUrl ?? null,
       },
       select: {
         id: true,
@@ -30,6 +34,10 @@ export class ActivityService {
         title: true,
         author: true,
         note: true,
+        coverUrl: true,
+        providerId: true,
+        description: true,
+        providerUrl: true,
         createdAt: true,
         user: { select: { id: true, displayName: true, avatarUrl: true } },
       },
@@ -50,6 +58,10 @@ export class ActivityService {
       note: activity.note,
       // A freshly created activity has no replies yet.
       replyCount: 0,
+      coverUrl: activity.coverUrl,
+      providerId: activity.providerId,
+      description: activity.description,
+      providerUrl: activity.providerUrl,
       createdAt: activity.createdAt.toISOString(),
       // The author is, by definition, the current user.
       canDelete: true,

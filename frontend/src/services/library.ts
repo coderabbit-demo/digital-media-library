@@ -55,6 +55,12 @@ export function useLibraryKeys(): Set<string> {
   return new Set((data?.items ?? []).map((i) => libraryKey(i)));
 }
 
+/** Map of `${mediaType}:${providerId}` → shelf for items in the user's library. */
+export function useLibraryShelves(): Map<string, Shelf> {
+  const { data } = useLibrary();
+  return new Map((data?.items ?? []).map((i) => [libraryKey(i), i.shelf]));
+}
+
 function invalidate(queryClient: ReturnType<typeof useQueryClient>) {
   void queryClient.invalidateQueries({ queryKey: LIBRARY_QUERY_KEY });
   void queryClient.invalidateQueries({ queryKey: HOME_QUERY_KEY });
@@ -73,6 +79,8 @@ export function useAddToLibrary() {
           creator: item.creator,
           coverUrl: item.coverUrl,
           providerId: item.providerId,
+          description: item.description,
+          providerUrl: item.providerUrl,
           ...(shelf ? { shelf } : {}),
         },
       }),

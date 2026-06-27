@@ -50,6 +50,8 @@ export async function registerSearchRoutes(app: FastifyInstance): Promise<void> 
           coverUrl: i.coverUrl,
           providerId: i.providerId,
           genre: i.genre,
+          description: i.description,
+          providerUrl: i.providerUrl,
         }),
       ),
     };

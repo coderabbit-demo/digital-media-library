@@ -8,6 +8,7 @@ interface AppleRssFeed {
       name?: string;
       artistName?: string;
       artworkUrl100?: string;
+      url?: string;
       genres?: Array<{ name?: string }>;
     }>;
   };
@@ -49,6 +50,8 @@ export class ApplePodcastProvider implements ContentProvider {
         providerId: r.id,
         provider: this.name,
         genre: primaryGenre(r.genres),
+        description: null,
+        providerUrl: r.url ?? null,
       });
       if (items.length >= limit) break;
     }

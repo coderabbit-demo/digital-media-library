@@ -19,7 +19,15 @@ export function Discover({ category }: { category: DiscoverCategory }) {
   const [compose, setCompose] = useState<ComposeInitial | null>(null);
 
   const startActivity = (item: TrendingItemDTO) =>
-    setCompose({ mediaType: item.mediaType, title: item.title, itemAuthor: item.creator ?? undefined });
+    setCompose({
+      mediaType: item.mediaType,
+      title: item.title,
+      itemAuthor: item.creator ?? undefined,
+      coverUrl: item.coverUrl,
+      providerId: item.providerId,
+      description: item.description,
+      providerUrl: item.providerUrl,
+    });
 
   return (
     <div className="discover-page">

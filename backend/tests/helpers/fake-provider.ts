@@ -28,6 +28,8 @@ export function makeItems(mediaType: MediaType, count: number): TrendingItem[] {
     providerId: `${mediaType}-${i + 1}`,
     provider: 'fake',
     genre: genres[i % genres.length] ?? null,
+    description: null,
+    providerUrl: null,
   }));
 }
 

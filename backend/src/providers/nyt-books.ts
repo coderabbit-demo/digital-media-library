@@ -9,7 +9,9 @@ interface NytOverviewResponse {
       books?: Array<{
         title?: string;
         author?: string;
+        description?: string;
         book_image?: string;
+        amazon_product_url?: string;
         primary_isbn13?: string;
         primary_isbn10?: string;
       }>;
@@ -52,6 +54,8 @@ export class NytBooksProvider implements ContentProvider {
           providerId: id,
           provider: this.name,
           genre,
+          description: book.description?.trim() || null,
+          providerUrl: book.amazon_product_url ?? null,
         });
       }
       if (items.length > 0) perList.push(items);

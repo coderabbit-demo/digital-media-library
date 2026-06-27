@@ -39,7 +39,15 @@ export function Library() {
   const remove = useRemoveFromLibrary();
 
   const openCompose = (item: LibraryItemDTO) =>
-    setCompose({ mediaType: item.mediaType, title: item.title, itemAuthor: item.itemAuthor ?? undefined });
+    setCompose({
+      mediaType: item.mediaType,
+      title: item.title,
+      itemAuthor: item.itemAuthor ?? undefined,
+      coverUrl: item.coverUrl,
+      providerId: item.providerId,
+      description: item.description,
+      providerUrl: item.providerUrl,
+    });
 
   const onMove = (item: LibraryItemDTO, next: Shelf) => {
     if (next === item.shelf) return;
