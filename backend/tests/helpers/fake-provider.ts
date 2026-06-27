@@ -16,8 +16,9 @@ export class FakeProvider implements ContentProvider {
   }
 }
 
-/** Build `count` normalized items for a media type. */
+/** Build `count` normalized items for a media type (books cycle through genres). */
 export function makeItems(mediaType: MediaType, count: number): TrendingItem[] {
+  const genres = mediaType === 'book' ? ['Fiction', 'Nonfiction', 'Mystery'] : [null];
   return Array.from({ length: count }, (_, i) => ({
     mediaType,
     title: `${mediaType} ${i + 1}`,
@@ -25,6 +26,7 @@ export function makeItems(mediaType: MediaType, count: number): TrendingItem[] {
     coverUrl: `https://img.example/${mediaType}/${i + 1}.jpg`,
     providerId: `${mediaType}-${i + 1}`,
     provider: 'fake',
+    genre: genres[i % genres.length] ?? null,
   }));
 }
 

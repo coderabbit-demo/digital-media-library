@@ -1,8 +1,12 @@
 import type { ContentProvider, TrendingItem } from './content-provider.js';
 
-/** Dedup key across providers: same book may appear from NYT and Google. */
+/**
+ * Dedup key across providers. Includes genre so the same book can legitimately
+ * appear under different genres (e.g., on more than one bestseller list), while
+ * duplicates within the same genre are collapsed.
+ */
 function dedupeKey(item: TrendingItem): string {
-  return `${item.title.toLowerCase().trim()}|${(item.creator ?? '').toLowerCase().trim()}`;
+  return `${(item.genre ?? '').toLowerCase().trim()}|${item.title.toLowerCase().trim()}|${(item.creator ?? '').toLowerCase().trim()}`;
 }
 
 /**

@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { CompositeBooksProvider } from '../../src/providers/composite-books.js';
 import type { ContentProvider, TrendingItem } from '../../src/providers/content-provider.js';
 
-function item(title: string, creator: string, id: string): TrendingItem {
-  return { mediaType: 'book', title, creator, coverUrl: null, providerId: id, provider: 'x' };
+function item(title: string, creator: string, id: string, genre = 'Fiction'): TrendingItem {
+  return { mediaType: 'book', title, creator, coverUrl: null, providerId: id, provider: 'x', genre };
 }
 
 class StubSource implements ContentProvider {

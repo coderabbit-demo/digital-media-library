@@ -38,6 +38,7 @@ export class NytBooksProvider implements ContentProvider {
     // Normalize each list (genre) into its own array.
     const perList: TrendingItem[][] = [];
     for (const list of data.results?.lists ?? []) {
+      const genre = list.list_name?.trim() || 'Bestsellers';
       const items: TrendingItem[] = [];
       for (const book of list.books ?? []) {
         const title = book.title?.trim();
@@ -50,6 +51,7 @@ export class NytBooksProvider implements ContentProvider {
           coverUrl: book.book_image ?? null,
           providerId: id,
           provider: this.name,
+          genre,
         });
       }
       if (items.length > 0) perList.push(items);

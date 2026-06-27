@@ -11,6 +11,8 @@ export interface TrendingItem {
   coverUrl: string | null;
   providerId: string;
   provider: string;
+  /** Genre/list the item came from (e.g., NYT list name, Google subject); null if none. */
+  genre: string | null;
 }
 
 /**

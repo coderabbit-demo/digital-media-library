@@ -8,7 +8,26 @@ interface DiscoverListProps {
   onStartActivity: (item: TrendingItemDTO) => void;
 }
 
-/** Renders trending items for a category with loading/empty/stale/error states. */
+/** Max items shown per genre section. */
+const PER_SECTION = 12;
+
+/** Group items into labeled genre sections (preserving first-seen genre order). */
+function groupByGenre(items: TrendingItemDTO[]): { genre: string; items: TrendingItemDTO[] }[] {
+  const map = new Map<string, TrendingItemDTO[]>();
+  for (const item of items) {
+    if (!item.genre) continue;
+    const bucket = map.get(item.genre) ?? [];
+    if (bucket.length < PER_SECTION) bucket.push(item);
+    map.set(item.genre, bucket);
+  }
+  return [...map.entries()].map(([genre, groupItems]) => ({ genre, items: groupItems }));
+}
+
+/**
+ * Renders trending items for a category. Items carrying a genre (books) are shown
+ * as labeled genre sections; ungrouped items (music/audiobooks) render as one
+ * grid. Includes loading/empty/stale/error states.
+ */
 export function DiscoverList({ category, onStartActivity }: DiscoverListProps) {
   const { data, isLoading, isError, refetch } = useDiscover(category);
 
@@ -40,14 +59,30 @@ export function DiscoverList({ category, onStartActivity }: DiscoverListProps) {
     );
   }
 
+  const sections = groupByGenre(data.items);
+
   return (
     <div>
       {data.stale ? <StaleBanner /> : null}
-      <div className="discover-grid">
-        {data.items.map((item) => (
-          <DiscoverItemCard key={item.providerId} item={item} onStartActivity={onStartActivity} />
-        ))}
-      </div>
+
+      {sections.length > 0 ? (
+        sections.map((section) => (
+          <section key={section.genre} className="discover-section">
+            <h2 className="discover-section__title">{section.genre}</h2>
+            <div className="discover-grid">
+              {section.items.map((item) => (
+                <DiscoverItemCard key={item.providerId} item={item} onStartActivity={onStartActivity} />
+              ))}
+            </div>
+          </section>
+        ))
+      ) : (
+        <div className="discover-grid">
+          {data.items.map((item) => (
+            <DiscoverItemCard key={item.providerId} item={item} onStartActivity={onStartActivity} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

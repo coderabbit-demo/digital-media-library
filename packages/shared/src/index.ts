@@ -117,6 +117,8 @@ export interface TrendingItemDTO {
   coverUrl: string | null;
   /** The source provider's stable identifier for the item. */
   providerId: string;
+  /** Genre/list this item came from (e.g., an NYT list name or Google subject); null when the source has no genre. */
+  genre: string | null;
 }
 
 /** A page of trending items for one category. */

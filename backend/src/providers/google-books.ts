@@ -39,6 +39,8 @@ export class GoogleBooksProvider implements ContentProvider {
     const data = await fetchJson<GoogleVolumesResponse>(
       `https://www.googleapis.com/books/v1/volumes?${params.toString()}`,
     );
+    // Title-case the subject for display as a genre label (e.g., "science fiction" → "Science Fiction").
+    const genre = subject.replace(/\b\w/g, (c) => c.toUpperCase());
     const items: TrendingItem[] = [];
     for (const v of data.items ?? []) {
       const title = v.volumeInfo?.title?.trim();
@@ -50,6 +52,7 @@ export class GoogleBooksProvider implements ContentProvider {
         coverUrl: v.volumeInfo?.imageLinks?.thumbnail ?? v.volumeInfo?.imageLinks?.smallThumbnail ?? null,
         providerId: v.id,
         provider: this.name,
+        genre,
       });
     }
     return items;

@@ -37,6 +37,7 @@ export class AppleAudiobookProvider implements ContentProvider {
         coverUrl: r.artworkUrl100 ?? null,
         providerId: r.id,
         provider: this.name,
+        genre: null,
       });
       if (items.length >= limit) break;
     }

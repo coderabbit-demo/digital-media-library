@@ -26,7 +26,7 @@ const page = (overrides: Partial<DiscoverPageDTO> = {}): DiscoverPageDTO => ({
   category: 'book',
   stale: false,
   items: [
-    { mediaType: 'book', title: 'Dune', creator: 'Frank Herbert', coverUrl: null, providerId: 'b1' },
+    { mediaType: 'book', title: 'Dune', creator: 'Frank Herbert', coverUrl: null, providerId: 'b1', genre: 'Fiction' },
   ],
   ...overrides,
 });
@@ -34,11 +34,13 @@ const page = (overrides: Partial<DiscoverPageDTO> = {}): DiscoverPageDTO => ({
 describe('Discover page', () => {
   afterEach(() => vi.restoreAllMocks());
 
-  it('renders trending items', async () => {
+  it('renders trending items grouped under a genre section heading', async () => {
     mockDiscover(page());
     renderDiscover();
     expect(await screen.findByText('Dune')).toBeInTheDocument();
     expect(screen.getByText('Frank Herbert')).toBeInTheDocument();
+    // Genre section heading is shown.
+    expect(screen.getByRole('heading', { name: 'Fiction' })).toBeInTheDocument();
   });
 
   it('shows the stale banner when results are stale', async () => {

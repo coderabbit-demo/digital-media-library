@@ -4,6 +4,8 @@ import { badRequest } from '../plugins/errors.js';
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
+// Books span many genres (NYT lists + Google subjects); fetch enough to fill sections.
+const BOOKS_BATCH = 96;
 
 /**
  * GET /api/discover/{category} — authenticated trending for a media category,
@@ -19,7 +21,9 @@ export async function registerDiscoverRoutes(app: FastifyInstance): Promise<void
     if (!Number.isFinite(rawLimit) || rawLimit < 1 || rawLimit > MAX_LIMIT) {
       throw badRequest(`limit must be between 1 and ${MAX_LIMIT}`);
     }
-    const limit = Math.floor(rawLimit);
+    // Books are grouped into genre sections in the UI, so fetch a generous batch
+    // to span many genres; other categories use the requested limit.
+    const limit = mediaType === 'book' ? BOOKS_BATCH : Math.floor(rawLimit);
 
     const { items, stale, cacheHit } = await app.ctx.discover.getDiscover(mediaType, limit);
 
@@ -38,6 +42,7 @@ export async function registerDiscoverRoutes(app: FastifyInstance): Promise<void
           creator: i.creator,
           coverUrl: i.coverUrl,
           providerId: i.providerId,
+          genre: i.genre,
         }),
       ),
     };

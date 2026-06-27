@@ -22,12 +22,12 @@ describe('contract: discover', () => {
     expect(res.statusCode).toBe(401);
   });
 
-  it('returns 200 DiscoverPage with normalized items and stale flag', async () => {
+  it('returns 200 DiscoverPage with genre-tagged items and stale flag', async () => {
     const user = db.seedProfile();
     const session = db.seedSession(user.id);
     const res = await t.app.inject({
       method: 'GET',
-      url: '/api/discover/books?limit=5',
+      url: '/api/discover/books',
       headers: { cookie: t.sessionCookie(session.id) },
     });
 
@@ -35,13 +35,16 @@ describe('contract: discover', () => {
     const body = res.json();
     expect(body).toMatchObject({ category: 'book', stale: false });
     expect(Array.isArray(body.items)).toBe(true);
-    expect(body.items.length).toBe(5);
+    expect(body.items.length).toBeGreaterThan(0);
     const item = body.items[0];
     expect(item).toMatchObject({ mediaType: 'book' });
     expect(item).toHaveProperty('title');
     expect(item).toHaveProperty('creator');
     expect(item).toHaveProperty('coverUrl');
     expect(item).toHaveProperty('providerId');
+    expect(item).toHaveProperty('genre');
+    // Items span multiple genres (for the UI's genre sections).
+    expect(new Set(body.items.map((i: { genre: string | null }) => i.genre)).size).toBeGreaterThan(1);
     // Internal `provider` field must not leak to the API.
     expect(item).not.toHaveProperty('provider');
   });

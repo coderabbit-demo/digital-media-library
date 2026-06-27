@@ -20,6 +20,7 @@ describe('provider adapters', () => {
       results: {
         lists: [
           {
+            list_name: 'Hardcover Fiction',
             books: [
               { title: 'Dune', author: 'Frank Herbert', book_image: 'http://img/d.jpg', primary_isbn13: '111' },
               { title: 'Dune', author: 'Frank Herbert', primary_isbn13: '111' }, // dup
@@ -31,7 +32,12 @@ describe('provider adapters', () => {
     });
     const items = await new NytBooksProvider(testConfig({ NYT_API_KEY: 'k' })).getTrending(10);
     expect(items.map((i) => i.title)).toEqual(['Dune', 'Sapiens']);
-    expect(items[0]).toMatchObject({ mediaType: 'book', creator: 'Frank Herbert', providerId: '111' });
+    expect(items[0]).toMatchObject({
+      mediaType: 'book',
+      creator: 'Frank Herbert',
+      providerId: '111',
+      genre: 'Hardcover Fiction',
+    });
   });
 
   it('NytBooksProvider throws when no API key is configured', async () => {
@@ -97,6 +103,8 @@ describe('provider adapters', () => {
       creator: 'Frank Herbert',
       providerId: 'g1',
     });
+    // Genre is the title-cased subject (first query is "fiction" → "Fiction").
+    expect(items[0]!.genre).toBe('Fiction');
   });
 
   it('GoogleBooksProvider throws when every genre query fails', async () => {

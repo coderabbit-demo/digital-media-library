@@ -75,6 +75,7 @@ export class SpotifyMusicProvider implements ContentProvider {
         coverUrl: album.images?.[0]?.url ?? null,
         providerId: album.id,
         provider: this.name,
+        genre: null,
       });
       if (items.length >= limit) break;
     }
