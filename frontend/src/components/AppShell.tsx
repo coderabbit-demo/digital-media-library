@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useLogout, useMe } from '../services/auth';
+import { Avatar } from './Avatar';
 
 const NAV = [
   { to: '/books', label: 'Books' },
@@ -41,7 +42,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </nav>
 
           <div className="app-header__user">
-            {me ? <span className="app-header__name">{me.displayName}</span> : null}
+            {me ? <Avatar displayName={me.displayName} avatarUrl={me.avatarUrl} /> : null}
             <button
               type="button"
               className="md3-icon-button"

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import type { HomeData } from '@dml/shared';
@@ -72,5 +73,18 @@ describe('HomeFeed (three-column home)', () => {
     expect(container.querySelector('img.home-hero')).not.toBeNull();
     // Community feed empty state (from feature 001 FeedList).
     expect(await screen.findByText(/Your feed is quiet/i)).toBeInTheDocument();
+  });
+
+  it('opens the compose overlay when "Post an update" is clicked', async () => {
+    mockApi();
+    renderHome();
+    // The compose form is not mounted until the overlay opens.
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+    await userEvent.click(await screen.findByRole('button', { name: /post an update/i }));
+
+    const dialog = await screen.findByRole('dialog', { name: /share what you’re doing now/i });
+    expect(dialog).toBeInTheDocument();
+    expect(screen.getByLabelText('Title')).toBeInTheDocument();
   });
 });
