@@ -1,0 +1,121 @@
+openapi: 3.1.0
+info:
+  title: Digital Media Library — My Library (005)
+  version: 0.1.0
+  description: >
+    A personal, private library of Goodreads-style shelves. All routes require the
+    feature-001 session cookie and operate only on the current user's items. Each
+    item sits on exactly one shelf (want | current | done | dnf). Text is plain
+    text only.
+servers:
+  - url: /api
+security:
+  - sessionCookie: []
+paths:
+  /library:
+    get:
+      summary: List the current user's library (optionally filtered by shelf and/or media type).
+      parameters:
+        - in: query
+          name: shelf
+          required: false
+          schema: { type: string, enum: [want, current, done, dnf] }
+        - in: query
+          name: mediaType
+          required: false
+          schema: { type: string, enum: [book, music, audiobook, podcast] }
+      responses:
+        '200':
+          description: The user's library items, most recent first.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LibraryPage' }
+        '401': { description: Not authenticated }
+    post:
+      summary: Add an item to the library (idempotent per user+item; defaults to the want shelf).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateLibraryItem' }
+      responses:
+        '201':
+          description: Created (or already present — idempotent).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LibraryItem' }
+        '400': { description: Invalid body }
+        '401': { description: Not authenticated }
+  /library/{id}:
+    patch:
+      summary: Move an item to another shelf (owner-only).
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateLibraryItem' }
+      responses:
+        '200':
+          description: The moved item.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LibraryItem' }
+        '400': { description: Invalid body }
+        '401': { description: Not authenticated }
+        '404': { description: Not found / not owned }
+    delete:
+      summary: Remove an item from the current user's library.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '204': { description: Removed (or not present / not owned — no-op) }
+        '401': { description: Not authenticated }
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: dml_session
+  schemas:
+    LibraryItem:
+      type: object
+      required: [id, mediaType, title, itemAuthor, coverUrl, providerId, shelf, createdAt]
+      properties:
+        id: { type: string }
+        mediaType: { type: string, enum: [book, music, audiobook, podcast] }
+        title: { type: string }
+        itemAuthor: { type: [string, "null"] }
+        coverUrl: { type: [string, "null"], format: uri }
+        providerId: { type: string }
+        shelf: { type: string, enum: [want, current, done, dnf] }
+        createdAt: { type: string, format: date-time }
+    LibraryPage:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/LibraryItem' }
+    CreateLibraryItem:
+      type: object
+      required: [mediaType, title, providerId]
+      properties:
+        mediaType: { type: string, enum: [book, music, audiobook, podcast] }
+        title: { type: string, minLength: 1, maxLength: 300 }
+        creator: { type: [string, "null"], maxLength: 200 }
+        coverUrl: { type: [string, "null"], format: uri }
+        providerId: { type: string }
+        shelf: { type: string, enum: [want, current, done, dnf] }
+    UpdateLibraryItem:
+      type: object
+      required: [shelf]
+      properties:
+        shelf: { type: string, enum: [want, current, done, dnf] }

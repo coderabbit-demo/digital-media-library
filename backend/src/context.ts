@@ -9,6 +9,7 @@ import type { HomeService } from './services/home.js';
 import type { TrendingService } from './services/discover.js';
 import type { SearchService } from './services/search.js';
 import type { RecommendationService } from './services/recommendations.js';
+import type { LibraryService } from './services/library.js';
 import type { SessionManager } from './plugins/session.js';
 import type { ProfileDTO } from '@dml/shared';
 
@@ -30,6 +31,7 @@ export interface AppContext {
   discover: TrendingService;
   search: SearchService;
   recommendations: RecommendationService;
+  library: LibraryService;
 }
 
 declare module 'fastify' {

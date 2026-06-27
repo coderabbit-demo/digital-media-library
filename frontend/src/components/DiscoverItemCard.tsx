@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { TrendingItemDTO } from '@dml/shared';
 import { useRecommend } from '../services/recommendations';
+import { useAddToLibrary, useLibraryKeys, libraryKey } from '../services/library';
 
 /** Verb for the "start an activity" CTA based on media type. */
 function verb(mediaType: TrendingItemDTO['mediaType']): string {
@@ -21,6 +22,26 @@ export function DiscoverItemCard({ item, onStartActivity }: DiscoverItemCardProp
   const recommend = useRecommend();
   const [recommended, setRecommended] = useState(false);
 
+  const addToLibrary = useAddToLibrary();
+  const libraryKeys = useLibraryKeys();
+  const [justSaved, setJustSaved] = useState(false);
+  const saved = justSaved || libraryKeys.has(libraryKey(item));
+
+  // "I'm reading/listening to this" shelves the item as Currently Reading (the
+  // required state change); only once that succeeds do we open the compose overlay
+  // to optionally share it.
+  const startActivity = () => {
+    addToLibrary.mutate(
+      { item, shelf: 'current' },
+      {
+        onSuccess: () => {
+          setJustSaved(true);
+          onStartActivity(item);
+        },
+      },
+    );
+  };
+
   return (
     <article className="discover-card">
       {item.coverUrl ? (
@@ -37,7 +58,7 @@ export function DiscoverItemCard({ item, onStartActivity }: DiscoverItemCardProp
           <button
             type="button"
             className="btn btn-primary discover-card__cta"
-            onClick={() => onStartActivity(item)}
+            onClick={startActivity}
           >
             I’m {verb(item.mediaType)} this
           </button>
@@ -50,6 +71,14 @@ export function DiscoverItemCard({ item, onStartActivity }: DiscoverItemCardProp
             }
           >
             {recommended ? 'Recommended ✓' : 'Recommend'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-ghost discover-card__wishlist"
+            disabled={saved || addToLibrary.isPending}
+            onClick={() => addToLibrary.mutate({ item }, { onSuccess: () => setJustSaved(true) })}
+          >
+            {saved ? 'In Library ✓' : 'Add to Library'}
           </button>
         </div>
       </div>

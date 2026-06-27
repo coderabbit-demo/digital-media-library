@@ -75,9 +75,9 @@ pnpm test:integration                  # needs Docker
 |------|----------|
 | Project overview & setup | [README.md](README.md) |
 | Binding principles | [.specify/memory/constitution.md](.specify/memory/constitution.md) |
-| Current feature spec/plan | [specs/004-search-recommend/](specs/004-search-recommend/) |
-| API contract | [specs/004-search-recommend/contracts/openapi.yaml](specs/004-search-recommend/contracts/openapi.yaml) |
-| Local run & validation | [specs/004-search-recommend/quickstart.md](specs/004-search-recommend/quickstart.md) |
+| Current feature spec/plan | [specs/005-wishlist/](specs/005-wishlist/) |
+| API contract | [specs/005-wishlist/contracts/openapi.yaml](specs/005-wishlist/contracts/openapi.yaml) |
+| Local run & validation | [specs/005-wishlist/quickstart.md](specs/005-wishlist/quickstart.md) |
 | Agent context (Claude Code) | [CLAUDE.md](CLAUDE.md) |
 
 ---

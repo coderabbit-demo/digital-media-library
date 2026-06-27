@@ -152,3 +152,46 @@ export const createRecommendationSchema = z.object({
   providerId: z.string().trim().min(1).max(512),
 });
 export type CreateRecommendationInput = z.infer<typeof createRecommendationSchema>;
+
+/**
+ * Library shelves (feature 005, "My Library"). Stored generically; the UI renders
+ * media-aware labels (e.g. "Want to Read" for books, "Want to Listen" for music).
+ * Exactly one shelf per item. "All" is a view, not a stored value.
+ */
+export const SHELVES = ['want', 'current', 'done', 'dnf'] as const;
+export const shelfSchema = z.enum(SHELVES);
+export type Shelf = z.infer<typeof shelfSchema>;
+
+/** An item in the current user's private library (feature 005). */
+export interface LibraryItemDTO {
+  id: string;
+  mediaType: MediaType;
+  title: string;
+  itemAuthor: string | null;
+  coverUrl: string | null;
+  providerId: string;
+  shelf: Shelf;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** The current user's library page (feature 005). */
+export interface LibraryPageDTO {
+  items: LibraryItemDTO[];
+}
+
+/** Request body for adding a library item (feature 005). Plain text only. */
+export const createLibraryItemSchema = z.object({
+  mediaType: mediaTypeSchema,
+  title: z.string().trim().min(1).max(TITLE_MAX_LENGTH),
+  creator: z.string().trim().max(ITEM_AUTHOR_MAX_LENGTH).optional().nullable(),
+  coverUrl: z.string().trim().url().max(2048).optional().nullable(),
+  providerId: z.string().trim().min(1).max(512),
+  // Optional target shelf; defaults to "want" (Want to Read) when omitted.
+  shelf: shelfSchema.optional(),
+});
+export type CreateLibraryItemInput = z.infer<typeof createLibraryItemSchema>;
+
+/** Request body for moving a library item to a different shelf (feature 005). */
+export const updateLibraryItemSchema = z.object({ shelf: shelfSchema });
+export type UpdateLibraryItemInput = z.infer<typeof updateLibraryItemSchema>;

@@ -12,7 +12,7 @@ const MEDIA_BADGE: Record<MediaType, string> = {
 
 /**
  * Home left column: the user's own current "currently reading/listening" items,
- * simple counts, and quick links (post an update, open Wishlist). Backed by the
+ * simple counts, and quick links (post an update, open My Library). Backed by the
  * local-only `GET /api/home` payload. "Post an update" opens the compose overlay.
  */
 export function HomeLeftColumn({ onPostUpdate }: { onPostUpdate: () => void }) {
@@ -54,7 +54,7 @@ export function HomeLeftColumn({ onPostUpdate }: { onPostUpdate: () => void }) {
           <strong>{data?.counts.currentlyOn ?? 0}</strong> current
         </span>
         <span>
-          <strong>{data?.counts.wishlisted ?? 0}</strong> wishlisted
+          <strong>{data?.counts.wishlisted ?? 0}</strong> want to read
         </span>
       </div>
 
@@ -62,8 +62,8 @@ export function HomeLeftColumn({ onPostUpdate }: { onPostUpdate: () => void }) {
         <button type="button" className="btn btn-primary" onClick={onPostUpdate}>
           Post an update
         </button>
-        <Link to="/wishlist" className="btn">
-          Open Wishlist
+        <Link to="/library" className="btn">
+          Open My Library
         </Link>
       </div>
     </div>

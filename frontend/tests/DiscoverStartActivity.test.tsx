@@ -15,23 +15,31 @@ const page: DiscoverPageDTO = {
 };
 
 function renderDiscover() {
-  vi.spyOn(globalThis, 'fetch').mockImplementation((input: RequestInfo | URL) => {
+  const calls: { url: string; init?: RequestInit }[] = [];
+  vi.spyOn(globalThis, 'fetch').mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);
+    calls.push({ url, init });
     if (url.includes('/discover')) {
       return Promise.resolve(
         new Response(JSON.stringify(page), { status: 200, headers: { 'Content-Type': 'application/json' } }),
       );
     }
+    if (url.includes('/library') && init?.method === 'POST') {
+      return Promise.resolve(
+        new Response(JSON.stringify({ id: 'l1', shelf: 'current' }), { status: 201, headers: { 'Content-Type': 'application/json' } }),
+      );
+    }
     return Promise.resolve(new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } }));
   });
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(
+  render(
     <QueryClientProvider client={qc}>
       <MemoryRouter>
         <Discover category="books" />
       </MemoryRouter>
     </QueryClientProvider>,
   );
+  return { calls };
 }
 
 describe('Discover → start activity', () => {
@@ -46,5 +54,15 @@ describe('Discover → start activity', () => {
     expect(within(dialog).getByLabelText('Title')).toHaveValue('Dune');
     // Author/artist is pre-filled with the item's creator.
     expect(within(dialog).getByLabelText('Author or artist')).toHaveValue('Frank Herbert');
+  });
+
+  it('also shelves the item as Currently Reading in My Library', async () => {
+    const { calls } = renderDiscover();
+    await userEvent.click(await screen.findByRole('button', { name: /reading this/i }));
+
+    await screen.findByRole('dialog', { name: /share what you’re doing now/i });
+    const post = calls.find((c) => c.url.includes('/library') && c.init?.method === 'POST');
+    expect(post).toBeTruthy();
+    expect(JSON.parse(String(post!.init!.body))).toMatchObject({ providerId: 'b1', shelf: 'current' });
   });
 });

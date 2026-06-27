@@ -41,6 +41,7 @@ interface RecommendationRow {
   providerId: string;
   createdAt: Date;
 }
+type LibraryRow = RecommendationRow & { shelf: string; updatedAt: Date };
 
 export interface FakePrisma {
   client: PrismaClient;
@@ -48,6 +49,7 @@ export interface FakePrisma {
   seedActivity(userId: string, partial?: Partial<ActivityRow>): ActivityRow;
   seedSession(userId: string, partial?: Partial<SessionRow>): SessionRow;
   seedRecommendation(userId: string, partial?: Partial<RecommendationRow>): RecommendationRow;
+  seedLibraryItem(userId: string, partial?: Partial<LibraryRow>): LibraryRow;
 }
 
 export function createFakePrisma(): FakePrisma {
@@ -55,6 +57,7 @@ export function createFakePrisma(): FakePrisma {
   const activities = new Map<string, ActivityRow>();
   const sessions = new Map<string, SessionRow>();
   const recommendations = new Map<string, RecommendationRow>();
+  const library = new Map<string, LibraryRow>();
 
   const selectUser = (id: string) => {
     const u = profiles.get(id);
@@ -215,6 +218,76 @@ export function createFakePrisma(): FakePrisma {
         return { count };
       },
     },
+    libraryItem: {
+      upsert: async ({ where, create, update, select }: any) => {
+        const key = where.uq_library_user_item;
+        const existing = [...library.values()].find(
+          (r) =>
+            r.userId === key.userId &&
+            r.mediaType === key.mediaType &&
+            r.providerId === key.providerId,
+        );
+        if (existing) {
+          Object.assign(existing, update, { updatedAt: new Date() });
+          return select ? projectLibrary(existing, select) : existing;
+        }
+        const row: LibraryRow = {
+          id: randomUUID(),
+          userId: create.userId,
+          mediaType: create.mediaType,
+          title: create.title,
+          creator: create.creator ?? null,
+          coverUrl: create.coverUrl ?? null,
+          providerId: create.providerId,
+          shelf: create.shelf ?? 'want',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        library.set(row.id, row);
+        return select ? projectLibrary(row, select) : row;
+      },
+      findUnique: async ({ where, select }: any) => {
+        const row = library.get(where.id);
+        if (!row) return null;
+        return select ? projectLibrary(row, select) : row;
+      },
+      findMany: async ({ where, select }: any = {}) => {
+        let rows = [...library.values()];
+        if (where?.userId) rows = rows.filter((r) => r.userId === where.userId);
+        if (where?.mediaType) rows = rows.filter((r) => r.mediaType === where.mediaType);
+        if (where?.shelf) rows = rows.filter((r) => r.shelf === where.shelf);
+        rows.sort(
+          (a, b) => b.createdAt.getTime() - a.createdAt.getTime() || (a.id < b.id ? 1 : -1),
+        );
+        return rows.map((r) => (select ? projectLibrary(r, select) : r));
+      },
+      count: async ({ where }: any = {}) => {
+        let rows = [...library.values()];
+        if (where?.userId) rows = rows.filter((r) => r.userId === where.userId);
+        if (where?.shelf) rows = rows.filter((r) => r.shelf === where.shelf);
+        return rows.length;
+      },
+      updateMany: async ({ where, data }: any) => {
+        let count = 0;
+        for (const row of library.values()) {
+          if (where.id && row.id !== where.id) continue;
+          if (where.userId && row.userId !== where.userId) continue;
+          Object.assign(row, data, { updatedAt: new Date() });
+          count++;
+        }
+        return { count };
+      },
+      deleteMany: async ({ where }: any) => {
+        let count = 0;
+        for (const [id, row] of library) {
+          if (where.id && row.id !== where.id) continue;
+          if (where.userId && row.userId !== where.userId) continue;
+          library.delete(id);
+          count++;
+        }
+        return { count };
+      },
+    },
     $disconnect: async () => undefined,
   } as unknown as PrismaClient;
 
@@ -272,6 +345,23 @@ export function createFakePrisma(): FakePrisma {
       recommendations.set(row.id, row);
       return row;
     },
+    seedLibraryItem(userId, partial = {}) {
+      const now = new Date();
+      const row: LibraryRow = {
+        id: partial.id ?? randomUUID(),
+        userId,
+        mediaType: partial.mediaType ?? 'book',
+        title: partial.title ?? 'Seed Item',
+        creator: partial.creator ?? null,
+        coverUrl: partial.coverUrl ?? null,
+        providerId: partial.providerId ?? `prov-${randomUUID()}`,
+        shelf: partial.shelf ?? 'want',
+        createdAt: partial.createdAt ?? now,
+        updatedAt: partial.updatedAt ?? now,
+      };
+      library.set(row.id, row);
+      return row;
+    },
   };
 }
 
@@ -317,6 +407,21 @@ function projectRecommendation(
   if (select.providerId) out.providerId = row.providerId;
   if (select.createdAt) out.createdAt = row.createdAt;
   if (select.user) out.user = selectUser(row.userId);
+  return out;
+}
+
+function projectLibrary(row: LibraryRow, select: any): unknown {
+  const out: Record<string, unknown> = {};
+  if (select.id) out.id = row.id;
+  if (select.userId) out.userId = row.userId;
+  if (select.mediaType) out.mediaType = row.mediaType;
+  if (select.title) out.title = row.title;
+  if (select.creator) out.creator = row.creator;
+  if (select.coverUrl) out.coverUrl = row.coverUrl;
+  if (select.providerId) out.providerId = row.providerId;
+  if (select.shelf) out.shelf = row.shelf;
+  if (select.createdAt) out.createdAt = row.createdAt;
+  if (select.updatedAt) out.updatedAt = row.updatedAt;
   return out;
 }
 
