@@ -17,6 +17,8 @@ import { SearchService } from './services/search.js';
 import { RecommendationService } from './services/recommendations.js';
 import { LibraryService } from './services/library.js';
 import { ReplyService } from './services/reply.js';
+import { RatingService } from './services/rating.js';
+import { LikeService } from './services/like.js';
 import type { ContentProvider } from './providers/content-provider.js';
 import type { SearchProvider } from './providers/search-provider.js';
 import { GoogleBooksSearchProvider } from './providers/google-books-search.js';
@@ -42,6 +44,8 @@ import { registerSearchRoutes } from './api/search.js';
 import { registerRecommendationRoutes } from './api/recommendations.js';
 import { registerLibraryRoutes } from './api/library.js';
 import { registerReplyRoutes } from './api/replies.js';
+import { registerRatingRoutes } from './api/ratings.js';
+import { registerLikeRoutes } from './api/likes.js';
 
 /** Overrides let tests inject stubs (prisma/cache/oidc) and a custom config. */
 export interface BuildAppOverrides {
@@ -80,6 +84,8 @@ export async function buildApp(overrides: BuildAppOverrides = {}): Promise<Fasti
   const feed = new FeedService(prisma, cache, config);
   const activities = new ActivityService(prisma, feed);
   const replies = new ReplyService(prisma, feed);
+  const ratings = new RatingService(prisma);
+  const likes = new LikeService(prisma, feed);
   const recommendations = new RecommendationService(prisma);
   const library = new LibraryService(prisma);
   const home = new HomeService(prisma, recommendations, library);
@@ -102,7 +108,7 @@ export async function buildApp(overrides: BuildAppOverrides = {}): Promise<Fasti
   const search = new SearchService(cache, searchProviders, config);
 
   const ctx: AppContext = {
-    config, prisma, cache, oidc, session, profiles, feed, activities, home, discover, search, recommendations, library, replies,
+    config, prisma, cache, oidc, session, profiles, feed, activities, home, discover, search, recommendations, library, replies, ratings, likes,
   };
   app.decorate('ctx', ctx);
 
@@ -159,6 +165,8 @@ export async function buildApp(overrides: BuildAppOverrides = {}): Promise<Fasti
       await registerRecommendationRoutes(api);
       await registerLibraryRoutes(api);
       await registerReplyRoutes(api);
+      await registerRatingRoutes(api);
+      await registerLikeRoutes(api);
     },
     { prefix: '/api' },
   );

@@ -3,6 +3,8 @@ import { SHELVES, type ActivityDTO, type MediaType, type Shelf, type TrendingIte
 import { relativeTime } from '../utils/time';
 import { ReplyThread } from './ReplyThread';
 import { useAddToLibrary, useLibraryShelves, libraryKey, shelfLabel } from '../services/library';
+import { useRatings, useSetRating, useClearRating, ratingKey } from '../services/ratings';
+import { useToggleLike } from '../services/likes';
 
 /** "X is currently reading / listening to …" verb per media type. */
 function currentlyVerb(mediaType: MediaType): string {
@@ -31,7 +33,7 @@ interface ActivityCardProps {
  * and the conversation (comments). All user/provider text renders as plain text.
  */
 export function ActivityCard({ activity, onDelete, deleting = false }: ActivityCardProps) {
-  const { author, mediaType, title, itemAuthor, note, description, coverUrl, providerUrl, providerId, replyCount, createdAt, canDelete } =
+  const { author, mediaType, title, itemAuthor, note, description, coverUrl, providerUrl, providerId, replyCount, likeCount, likedByMe, createdAt, canDelete } =
     activity;
 
   const [showThread, setShowThread] = useState(false);
@@ -40,6 +42,23 @@ export function ActivityCard({ activity, onDelete, deleting = false }: ActivityC
   const addToLibrary = useAddToLibrary();
   const shelves = useLibraryShelves();
   const shelfValue: Shelf | '' = providerId ? (shelves.get(libraryKey({ mediaType, providerId })) ?? '') : '';
+
+  const ratings = useRatings();
+  const setRating = useSetRating();
+  const clearRating = useClearRating();
+  const myRating = providerId ? (ratings.get(ratingKey({ mediaType, providerId })) ?? 0) : 0;
+  const toggleLike = useToggleLike();
+
+  // Optimistic feed inserts have a temporary id until the server reconciles;
+  // like/comment target the activity id, so gate them on a persisted id.
+  const persisted = !activity.id.startsWith('optimistic-');
+
+  const rate = (stars: number) => {
+    if (!providerId) return;
+    // Clicking the current rating again clears it; otherwise set the new value.
+    if (stars === myRating) clearRating.mutate({ mediaType, providerId });
+    else setRating.mutate({ mediaType, providerId, stars, title, creator: itemAuthor, coverUrl });
+  };
 
   const setShelf = (shelf: Shelf) => {
     if (!providerId) return;
@@ -113,6 +132,25 @@ export function ActivityCard({ activity, onDelete, deleting = false }: ActivityC
               </label>
             ) : null}
 
+            {providerId ? (
+              <div className="activity-card__rating" role="group" aria-label={`Rate ${title}`}>
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    className={`star${n <= myRating ? ' star--on' : ''}`}
+                    aria-label={`${n} star${n > 1 ? 's' : ''}`}
+                    aria-pressed={n === myRating}
+                    disabled={setRating.isPending || clearRating.isPending}
+                    onClick={() => rate(n)}
+                  >
+                    ★
+                  </button>
+                ))}
+                {myRating > 0 ? <span className="activity-card__rating-label home-muted">Your rating</span> : null}
+              </div>
+            ) : null}
+
             {note ? <p className="activity-card__note">{note}</p> : null}
 
             {description ? (
@@ -135,8 +173,18 @@ export function ActivityCard({ activity, onDelete, deleting = false }: ActivityC
         <div className="activity-card__actions">
           <button
             type="button"
+            className={`card-link${likedByMe ? ' card-link--active' : ''}`}
+            aria-pressed={likedByMe}
+            disabled={!persisted || toggleLike.isPending}
+            onClick={() => toggleLike.mutate({ activityId: activity.id, liked: likedByMe })}
+          >
+            {likedByMe ? '♥' : '♡'} {likeCount > 0 ? `Like (${likeCount})` : 'Like'}
+          </button>
+          <button
+            type="button"
             className="card-link"
             aria-expanded={showThread}
+            disabled={!persisted}
             onClick={() => setShowThread((v) => !v)}
           >
             {replyCount > 0 ? `Comment (${replyCount})` : 'Comment'}

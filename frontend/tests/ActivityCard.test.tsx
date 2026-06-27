@@ -18,6 +18,8 @@ function makeActivity(overrides: Partial<ActivityDTO> = {}): ActivityDTO {
     providerId: null,
     description: null,
     providerUrl: null,
+    likeCount: 0,
+    likedByMe: false,
     createdAt: new Date().toISOString(),
     canDelete: false,
     ...overrides,
@@ -25,16 +27,20 @@ function makeActivity(overrides: Partial<ActivityDTO> = {}): ActivityDTO {
 }
 
 function renderCard(activity: ActivityDTO, onDelete?: (id: string) => void) {
-  // The card uses react-query (library shelf control); provide a client + stub fetch.
-  vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-    new Response(JSON.stringify({ items: [] }), { status: 200, headers: { 'Content-Type': 'application/json' } }),
-  );
+  // The card uses react-query (library/ratings/likes); provide a client + stub fetch.
+  const calls: { url: string; init?: RequestInit }[] = [];
+  vi.spyOn(globalThis, 'fetch').mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+    calls.push({ url: String(input), init });
+    const body = String(input).includes('/ratings') ? { ratings: [] } : { items: [] };
+    return Promise.resolve(new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+  });
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(
+  render(
     <QueryClientProvider client={qc}>
       <ActivityCard activity={activity} onDelete={onDelete} />
     </QueryClientProvider>,
   );
+  return { calls };
 }
 
 describe('ActivityCard', () => {
@@ -63,8 +69,21 @@ describe('ActivityCard', () => {
 
   it('renders HTML-like text as plain text, never as markup (FR-018)', () => {
     const malicious = '<img src=x onerror=alert(1)>';
-    const { container } = renderCard(makeActivity({ title: malicious }));
+    renderCard(makeActivity({ title: malicious }));
     expect(screen.getByText(malicious)).toBeInTheDocument();
-    expect(container.querySelector('img[onerror]')).toBeNull();
+    expect(document.querySelector('img[onerror]')).toBeNull();
+  });
+
+  it('likes an update and rates an item with a provider id', async () => {
+    const { calls } = renderCard(makeActivity({ providerId: 'b1', likeCount: 0, likedByMe: false }));
+
+    await userEvent.click(screen.getByRole('button', { name: /Like/ }));
+    const like = calls.find((c) => c.url.includes('/activities/a1/like') && c.init?.method === 'POST');
+    expect(like).toBeTruthy();
+
+    await userEvent.click(screen.getByRole('button', { name: '4 stars' }));
+    const rate = calls.find((c) => c.url.includes('/ratings') && c.init?.method === 'PUT');
+    expect(rate).toBeTruthy();
+    expect(JSON.parse(String(rate!.init!.body))).toMatchObject({ providerId: 'b1', stars: 4 });
   });
 });

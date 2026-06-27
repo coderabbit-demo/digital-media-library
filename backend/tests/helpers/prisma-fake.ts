@@ -61,6 +61,24 @@ type LibraryRow = RecommendationRow & {
   providerUrl: string | null;
   updatedAt: Date;
 };
+interface RatingRow {
+  id: string;
+  userId: string;
+  mediaType: string;
+  providerId: string;
+  stars: number;
+  title: string;
+  creator: string | null;
+  coverUrl: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+interface LikeRow {
+  id: string;
+  userId: string;
+  activityId: string;
+  createdAt: Date;
+}
 
 export interface FakePrisma {
   client: PrismaClient;
@@ -79,8 +97,12 @@ export function createFakePrisma(): FakePrisma {
   const recommendations = new Map<string, RecommendationRow>();
   const library = new Map<string, LibraryRow>();
   const replies = new Map<string, ReplyRow>();
+  const ratings = new Map<string, RatingRow>();
+  const likes = new Map<string, LikeRow>();
   const countReplies = (activityId: string) =>
     [...replies.values()].filter((r) => r.activityId === activityId && r.deletedAt === null).length;
+  const countLikes = (activityId: string) =>
+    [...likes.values()].filter((l) => l.activityId === activityId).length;
 
   const selectUser = (id: string) => {
     const u = profiles.get(id);
@@ -131,12 +153,12 @@ export function createFakePrisma(): FakePrisma {
           createdAt: new Date(),
         };
         activities.set(row.id, row);
-        return select ? projectActivity(row, select, selectUser, countReplies) : row;
+        return select ? projectActivity(row, select, selectUser, countReplies, countLikes) : row;
       },
       findUnique: async ({ where, select }: any) => {
         const row = activities.get(where.id);
         if (!row) return null;
-        return select ? projectActivity(row, select, selectUser, countReplies) : row;
+        return select ? projectActivity(row, select, selectUser, countReplies, countLikes) : row;
       },
       findMany: async ({ take, where, select }: any) => {
         let rows = [...activities.values()];
@@ -150,7 +172,7 @@ export function createFakePrisma(): FakePrisma {
           (a, b) => b.createdAt.getTime() - a.createdAt.getTime() || (a.id < b.id ? 1 : -1),
         );
         if (typeof take === 'number') rows = rows.slice(0, take);
-        return rows.map((r) => (select ? projectActivity(r, select, selectUser, countReplies) : r));
+        return rows.map((r) => (select ? projectActivity(r, select, selectUser, countReplies, countLikes) : r));
       },
       count: async ({ where }: any = {}) => {
         let rows = [...activities.values()];
@@ -163,8 +185,9 @@ export function createFakePrisma(): FakePrisma {
           if (where.id && row.id !== where.id) continue;
           if (where.userId && row.userId !== where.userId) continue;
           activities.delete(id);
-          // Mirror the DB cascade: deleting an activity removes its conversation.
+          // Mirror the DB cascade: deleting an activity removes its conversation + likes.
           for (const [rid, r] of replies) if (r.activityId === id) replies.delete(rid);
+          for (const [lid, l] of likes) if (l.activityId === id) likes.delete(lid);
           count++;
         }
         return { count };
@@ -315,6 +338,83 @@ export function createFakePrisma(): FakePrisma {
           if (where.id && row.id !== where.id) continue;
           if (where.userId && row.userId !== where.userId) continue;
           library.delete(id);
+          count++;
+        }
+        return { count };
+      },
+    },
+    rating: {
+      upsert: async ({ where, create, update, select }: any) => {
+        const key = where.uq_rating_user_item;
+        const existing = [...ratings.values()].find(
+          (r) => r.userId === key.userId && r.mediaType === key.mediaType && r.providerId === key.providerId,
+        );
+        if (existing) {
+          Object.assign(existing, update, { updatedAt: new Date() });
+          return select ? pick(existing as any, select) : existing;
+        }
+        const now = new Date();
+        const row: RatingRow = {
+          id: randomUUID(),
+          userId: create.userId,
+          mediaType: create.mediaType,
+          providerId: create.providerId,
+          stars: create.stars,
+          title: create.title,
+          creator: create.creator ?? null,
+          coverUrl: create.coverUrl ?? null,
+          createdAt: now,
+          updatedAt: now,
+        };
+        ratings.set(row.id, row);
+        return select ? pick(row as any, select) : row;
+      },
+      findMany: async ({ where, select }: any = {}) => {
+        let rows = [...ratings.values()];
+        if (where?.userId) rows = rows.filter((r) => r.userId === where.userId);
+        return rows.map((r) => (select ? pick(r as any, select) : r));
+      },
+      deleteMany: async ({ where }: any) => {
+        let count = 0;
+        for (const [id, row] of ratings) {
+          if (where.userId && row.userId !== where.userId) continue;
+          if (where.mediaType && row.mediaType !== where.mediaType) continue;
+          if (where.providerId && row.providerId !== where.providerId) continue;
+          ratings.delete(id);
+          count++;
+        }
+        return { count };
+      },
+    },
+    activityLike: {
+      upsert: async ({ where, create }: any) => {
+        const key = where.uq_like_user_activity;
+        const existing = [...likes.values()].find(
+          (l) => l.userId === key.userId && l.activityId === key.activityId,
+        );
+        if (existing) return existing;
+        const row: LikeRow = {
+          id: randomUUID(),
+          userId: create.userId,
+          activityId: create.activityId,
+          createdAt: new Date(),
+        };
+        likes.set(row.id, row);
+        return row;
+      },
+      findMany: async ({ where, select }: any = {}) => {
+        let rows = [...likes.values()];
+        if (where?.userId) rows = rows.filter((l) => l.userId === where.userId);
+        if (where?.activityId?.in) rows = rows.filter((l) => where.activityId.in.includes(l.activityId));
+        else if (where?.activityId) rows = rows.filter((l) => l.activityId === where.activityId);
+        return rows.map((l) => (select ? pick(l as any, select) : l));
+      },
+      deleteMany: async ({ where }: any) => {
+        let count = 0;
+        for (const [id, row] of likes) {
+          if (where.userId && row.userId !== where.userId) continue;
+          if (where.activityId && row.activityId !== where.activityId) continue;
+          likes.delete(id);
           count++;
         }
         return { count };
@@ -484,6 +584,7 @@ function projectActivity(
   select: any,
   selectUser: (id: string) => unknown,
   countReplies: (activityId: string) => number,
+  countLikes: (activityId: string) => number,
 ): unknown {
   const out: Record<string, unknown> = {};
   if (select.id) out.id = row.id;
@@ -498,7 +599,7 @@ function projectActivity(
   if (select.createdAt) out.createdAt = row.createdAt;
   if (select.userId) out.userId = row.userId;
   if (select.user) out.user = selectUser(row.userId);
-  if (select._count) out._count = { replies: countReplies(row.id) };
+  if (select._count) out._count = { replies: countReplies(row.id), likes: countLikes(row.id) };
   return out;
 }
 

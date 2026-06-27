@@ -11,6 +11,8 @@ import type { SearchService } from './services/search.js';
 import type { RecommendationService } from './services/recommendations.js';
 import type { LibraryService } from './services/library.js';
 import type { ReplyService } from './services/reply.js';
+import type { RatingService } from './services/rating.js';
+import type { LikeService } from './services/like.js';
 import type { SessionManager } from './plugins/session.js';
 import type { ProfileDTO } from '@dml/shared';
 
@@ -34,6 +36,8 @@ export interface AppContext {
   recommendations: RecommendationService;
   library: LibraryService;
   replies: ReplyService;
+  ratings: RatingService;
+  likes: LikeService;
 }
 
 declare module 'fastify' {
