@@ -22,7 +22,17 @@ interface ActivityRow {
   mediaType: string;
   title: string;
   author: string | null;
+  note: string | null;
   createdAt: Date;
+}
+interface ReplyRow {
+  id: string;
+  activityId: string;
+  userId: string;
+  parentId: string | null;
+  body: string;
+  createdAt: Date;
+  deletedAt: Date | null;
 }
 interface SessionRow {
   id: string;
@@ -50,6 +60,7 @@ export interface FakePrisma {
   seedSession(userId: string, partial?: Partial<SessionRow>): SessionRow;
   seedRecommendation(userId: string, partial?: Partial<RecommendationRow>): RecommendationRow;
   seedLibraryItem(userId: string, partial?: Partial<LibraryRow>): LibraryRow;
+  seedReply(activityId: string, userId: string, partial?: Partial<ReplyRow>): ReplyRow;
 }
 
 export function createFakePrisma(): FakePrisma {
@@ -58,6 +69,9 @@ export function createFakePrisma(): FakePrisma {
   const sessions = new Map<string, SessionRow>();
   const recommendations = new Map<string, RecommendationRow>();
   const library = new Map<string, LibraryRow>();
+  const replies = new Map<string, ReplyRow>();
+  const countReplies = (activityId: string) =>
+    [...replies.values()].filter((r) => r.activityId === activityId && r.deletedAt === null).length;
 
   const selectUser = (id: string) => {
     const u = profiles.get(id);
@@ -100,15 +114,16 @@ export function createFakePrisma(): FakePrisma {
           mediaType: data.mediaType,
           title: data.title,
           author: data.author ?? null,
+          note: data.note ?? null,
           createdAt: new Date(),
         };
         activities.set(row.id, row);
-        return select ? projectActivity(row, select, selectUser) : row;
+        return select ? projectActivity(row, select, selectUser, countReplies) : row;
       },
       findUnique: async ({ where, select }: any) => {
         const row = activities.get(where.id);
         if (!row) return null;
-        return select ? projectActivity(row, select, selectUser) : row;
+        return select ? projectActivity(row, select, selectUser, countReplies) : row;
       },
       findMany: async ({ take, where, select }: any) => {
         let rows = [...activities.values()];
@@ -122,7 +137,7 @@ export function createFakePrisma(): FakePrisma {
           (a, b) => b.createdAt.getTime() - a.createdAt.getTime() || (a.id < b.id ? 1 : -1),
         );
         if (typeof take === 'number') rows = rows.slice(0, take);
-        return rows.map((r) => (select ? projectActivity(r, select, selectUser) : r));
+        return rows.map((r) => (select ? projectActivity(r, select, selectUser, countReplies) : r));
       },
       count: async ({ where }: any = {}) => {
         let rows = [...activities.values()];
@@ -135,6 +150,8 @@ export function createFakePrisma(): FakePrisma {
           if (where.id && row.id !== where.id) continue;
           if (where.userId && row.userId !== where.userId) continue;
           activities.delete(id);
+          // Mirror the DB cascade: deleting an activity removes its conversation.
+          for (const [rid, r] of replies) if (r.activityId === id) replies.delete(rid);
           count++;
         }
         return { count };
@@ -288,6 +305,57 @@ export function createFakePrisma(): FakePrisma {
         return { count };
       },
     },
+    reply: {
+      create: async ({ data, select }: any) => {
+        const row: ReplyRow = {
+          id: randomUUID(),
+          activityId: data.activityId,
+          userId: data.userId,
+          parentId: data.parentId ?? null,
+          body: data.body,
+          createdAt: new Date(),
+          deletedAt: null,
+        };
+        replies.set(row.id, row);
+        return select ? projectReply(row, select, selectUser) : row;
+      },
+      findUnique: async ({ where, select }: any) => {
+        const row = replies.get(where.id);
+        if (!row) return null;
+        return select ? projectReply(row, select, selectUser) : row;
+      },
+      findMany: async ({ where, select }: any = {}) => {
+        let rows = [...replies.values()];
+        if (where?.activityId) rows = rows.filter((r) => r.activityId === where.activityId);
+        if (where?.parentId !== undefined) rows = rows.filter((r) => r.parentId === where.parentId);
+        rows.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime() || (a.id < b.id ? -1 : 1));
+        return rows.map((r) => (select ? projectReply(r, select, selectUser) : r));
+      },
+      count: async ({ where }: any = {}) => {
+        let rows = [...replies.values()];
+        if (where?.parentId !== undefined) rows = rows.filter((r) => r.parentId === where.parentId);
+        if (where?.activityId) rows = rows.filter((r) => r.activityId === where.activityId);
+        return rows.length;
+      },
+      update: async ({ where, data }: any) => {
+        const row = replies.get(where.id);
+        if (row) Object.assign(row, data);
+        return row;
+      },
+      deleteMany: async ({ where }: any) => {
+        let count = 0;
+        for (const [id, row] of replies) {
+          if (where.id && row.id !== where.id) continue;
+          if (where.userId && row.userId !== where.userId) continue;
+          replies.delete(id);
+          count++;
+        }
+        return { count };
+      },
+    },
+    // Interactive transactions run against the same in-memory client (no real
+    // isolation needed for these tests); array form resolves all promises.
+    $transaction: async (arg: any) => (Array.isArray(arg) ? Promise.all(arg) : arg(client)),
     $disconnect: async () => undefined,
   } as unknown as PrismaClient;
 
@@ -314,9 +382,23 @@ export function createFakePrisma(): FakePrisma {
         mediaType: partial.mediaType ?? 'book',
         title: partial.title ?? 'Seed Title',
         author: partial.author ?? null,
+        note: partial.note ?? null,
         createdAt: partial.createdAt ?? new Date(),
       };
       activities.set(row.id, row);
+      return row;
+    },
+    seedReply(activityId, userId, partial = {}) {
+      const row: ReplyRow = {
+        id: partial.id ?? randomUUID(),
+        activityId,
+        userId,
+        parentId: partial.parentId ?? null,
+        body: partial.body ?? 'Seed reply',
+        createdAt: partial.createdAt ?? new Date(),
+        deletedAt: partial.deletedAt ?? null,
+      };
+      replies.set(row.id, row);
       return row;
     },
     seedSession(userId, partial = {}) {
@@ -380,14 +462,34 @@ function projectActivity(
   row: ActivityRow,
   select: any,
   selectUser: (id: string) => unknown,
+  countReplies: (activityId: string) => number,
 ): unknown {
   const out: Record<string, unknown> = {};
   if (select.id) out.id = row.id;
   if (select.mediaType) out.mediaType = row.mediaType;
   if (select.title) out.title = row.title;
   if (select.author) out.author = row.author;
+  if (select.note) out.note = row.note;
   if (select.createdAt) out.createdAt = row.createdAt;
   if (select.userId) out.userId = row.userId;
+  if (select.user) out.user = selectUser(row.userId);
+  if (select._count) out._count = { replies: countReplies(row.id) };
+  return out;
+}
+
+function projectReply(
+  row: ReplyRow,
+  select: any,
+  selectUser: (id: string) => unknown,
+): unknown {
+  const out: Record<string, unknown> = {};
+  if (select.id) out.id = row.id;
+  if (select.activityId) out.activityId = row.activityId;
+  if (select.userId) out.userId = row.userId;
+  if (select.parentId) out.parentId = row.parentId;
+  if (select.body) out.body = row.body;
+  if (select.createdAt) out.createdAt = row.createdAt;
+  if (select.deletedAt) out.deletedAt = row.deletedAt;
   if (select.user) out.user = selectUser(row.userId);
   return out;
 }

@@ -53,6 +53,7 @@ model UserProfile {
   sessions        Session[]
   recommendations Recommendation[]
   libraryItems    LibraryItem[]
+  replies         Reply[]
 
   @@map("user_profile")
 }
@@ -65,15 +66,41 @@ model Activity {
   // Optional author/artist of the item. Column is `author` per data-model.md;
   // the API surfaces it as `itemAuthor` to avoid clashing with the post author.
   author    String?
+  // Optional free-text author note/comment (feature 006), plain text.
+  note      String?
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  user UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user    UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  replies Reply[]
 
   // Keyset feed pagination ordering key (FR-008/FR-011).
   @@index([createdAt(sort: Desc), id(sort: Desc)], name: "idx_activity_feed")
   // Author lookups and cascade efficiency.
   @@index([userId], name: "idx_activity_user")
   @@map("activity")
+}
+
+model Reply {
+  id         String    @id @default(uuid()) @db.Uuid
+  activityId String    @map("activity_id") @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  // Null = top-level reply; otherwise the reply this one answers (nested thread).
+  parentId   String?   @map("parent_id") @db.Uuid
+  body       String
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  // Soft-delete tombstone: set when a reply that has children is deleted, so the
+  // thread stays coherent. Childless replies are hard-deleted instead.
+  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  // Deleting an activity removes its whole conversation (FR-012).
+  activity Activity     @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  user     UserProfile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent   Reply?       @relation("ReplyChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  children Reply[]      @relation("ReplyChildren")
+
+  @@index([activityId, createdAt], name: "idx_reply_activity")
+  @@index([parentId], name: "idx_reply_parent")
+  @@map("reply")
 }
 
 model Recommendation {

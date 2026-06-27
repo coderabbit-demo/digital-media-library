@@ -1,0 +1,155 @@
+openapi: 3.1.0
+info:
+  title: Digital Media Library — Conversations (006)
+  version: 0.1.0
+  description: >
+    Conversations on activity updates: an optional author note on an update, plus
+    replies (including nested, Twitter-style threads) visible to all authenticated
+    users. All routes require the feature-001 session cookie. Text is plain text
+    only. Reply creation is rate-limited per user (10/min), consistent with posts.
+    Deleting a reply with children leaves a "[deleted]" tombstone; a childless reply
+    is removed outright. Deleting the update removes its whole conversation.
+servers:
+  - url: /api
+security:
+  - sessionCookie: []
+paths:
+  /activities:
+    post:
+      summary: Post an activity update (now accepts an optional plain-text note).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateActivity' }
+      responses:
+        '201':
+          description: The created update (includes note and replyCount).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Activity' }
+        '400': { description: Invalid body }
+        '401': { description: Not authenticated }
+        '429':
+          description: Rate limited (per-user posting limit)
+          headers:
+            Retry-After: { schema: { type: integer }, description: Seconds until the window resets }
+  /activities/{id}/replies:
+    get:
+      summary: Get an update's conversation (flat list; client builds the tree). Visible to all authenticated users.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: The conversation thread (count excludes deleted).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReplyThread' }
+        '401': { description: Not authenticated }
+        # An unknown activity yields an empty ReplyThread (200), not a 404.
+    post:
+      summary: Reply to an update (or to a parent reply). Rate-limited 10/min per user.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateReply' }
+      responses:
+        '201':
+          description: The created reply.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Reply' }
+        '400': { description: Invalid body (empty/over-length), or parentId not on this activity }
+        '401': { description: Not authenticated }
+        '404': { description: Unknown activity }
+        '429':
+          description: Rate limited (per-user reply limit, 10/min)
+          headers:
+            Retry-After: { schema: { type: integer }, description: Seconds until the window resets }
+  /replies/{id}:
+    delete:
+      summary: Delete your own reply (owner-only). Tombstone if it has children, else hard delete.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '204': { description: Deleted (hard or tombstoned) }
+        '401': { description: Not authenticated }
+        '403': { description: Not the reply's author }
+        '404': { description: Unknown reply }
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: dml_session
+  schemas:
+    Activity:
+      type: object
+      description: Feature-001 update, extended with note and replyCount (feature 006).
+      required: [id, author, mediaType, title, itemAuthor, note, replyCount, createdAt, canDelete]
+      properties:
+        id: { type: string }
+        author: { $ref: '#/components/schemas/ActivityAuthor' }
+        mediaType: { type: string, enum: [book, music, audiobook, podcast] }
+        title: { type: string }
+        itemAuthor: { type: [string, "null"] }
+        note: { type: [string, "null"], maxLength: 1000 }
+        replyCount: { type: integer, description: Count of non-deleted replies }
+        createdAt: { type: string, format: date-time }
+        canDelete: { type: boolean }
+    CreateActivity:
+      type: object
+      description: Feature-001 create-activity body, extended with an optional note (feature 006).
+      required: [mediaType, title]
+      properties:
+        mediaType: { type: string, enum: [book, music, audiobook, podcast] }
+        title: { type: string, minLength: 1, maxLength: 300 }
+        itemAuthor: { type: [string, "null"], maxLength: 200 }
+        note: { type: [string, "null"], maxLength: 1000 }
+    Reply:
+      type: object
+      required: [id, activityId, parentId, author, body, createdAt, deleted, canDelete]
+      properties:
+        id: { type: string }
+        activityId: { type: string }
+        parentId: { type: [string, "null"] }
+        author: { $ref: '#/components/schemas/ActivityAuthor' }
+        body: { type: string, description: Empty string when deleted (render a tombstone) }
+        createdAt: { type: string, format: date-time }
+        deleted: { type: boolean }
+        canDelete: { type: boolean }
+    ReplyThread:
+      type: object
+      required: [activityId, replies, count]
+      properties:
+        activityId: { type: string }
+        replies:
+          type: array
+          items: { $ref: '#/components/schemas/Reply' }
+        count: { type: integer, description: Non-deleted replies }
+    CreateReply:
+      type: object
+      required: [body]
+      properties:
+        body: { type: string, minLength: 1, maxLength: 1000 }
+        parentId: { type: [string, "null"], description: A reply on the same activity; null/omitted = top-level }
+    ActivityAuthor:
+      type: object
+      description: Reused from feature 002 (avatar/initials).
+      required: [id, displayName]
+      properties:
+        id: { type: string }
+        displayName: { type: string }
+        avatarUrl: { type: [string, "null"], format: uri }

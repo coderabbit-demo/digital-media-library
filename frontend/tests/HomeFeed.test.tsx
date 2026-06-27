@@ -14,6 +14,8 @@ const home: HomeData = {
       mediaType: 'book',
       title: 'Dune',
       itemAuthor: 'Frank Herbert',
+      note: null,
+      replyCount: 0,
       createdAt: new Date().toISOString(),
       canDelete: true,
     },

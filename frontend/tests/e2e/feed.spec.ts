@@ -26,6 +26,8 @@ function activity(partial: Partial<ActivityDTO> & Pick<ActivityDTO, 'id' | 'titl
     author: { id: ME.id, displayName: ME.displayName, avatarUrl: null },
     mediaType: 'book',
     itemAuthor: null,
+    note: null,
+    replyCount: 0,
     createdAt: new Date().toISOString(),
     canDelete: true,
     ...partial,

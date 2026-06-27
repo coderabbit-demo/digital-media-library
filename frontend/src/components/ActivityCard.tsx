@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import type { ActivityDTO, MediaType } from '@dml/shared';
 import { relativeTime } from '../utils/time';
+import { ReplyThread } from './ReplyThread';
 
 const MEDIA_LABELS: Record<MediaType, string> = {
   book: 'Reading',
@@ -27,7 +29,8 @@ interface ActivityCardProps {
  * (FR-018). The delete control only renders when the API says canDelete.
  */
 export function ActivityCard({ activity, onDelete, deleting = false }: ActivityCardProps) {
-  const { author, mediaType, title, itemAuthor, createdAt, canDelete } = activity;
+  const { author, mediaType, title, itemAuthor, note, replyCount, createdAt, canDelete } = activity;
+  const [showThread, setShowThread] = useState(false);
 
   return (
     <article className="card activity-card">
@@ -50,6 +53,7 @@ export function ActivityCard({ activity, onDelete, deleting = false }: ActivityC
 
         <p className="activity-card__title">{title}</p>
         {itemAuthor ? <p className="activity-card__item-author">by {itemAuthor}</p> : null}
+        {note ? <p className="activity-card__note">{note}</p> : null}
 
         <div className="activity-card__meta">
           <time dateTime={createdAt} title={new Date(createdAt).toLocaleString()}>
@@ -70,6 +74,17 @@ export function ActivityCard({ activity, onDelete, deleting = false }: ActivityC
             </button>
           ) : null}
         </div>
+
+        <button
+          type="button"
+          className="btn btn-ghost activity-card__replies-toggle"
+          aria-expanded={showThread}
+          onClick={() => setShowThread((v) => !v)}
+        >
+          {replyCount > 0 ? `${replyCount} ${replyCount === 1 ? 'reply' : 'replies'}` : 'Reply'}
+        </button>
+
+        {showThread ? <ReplyThread activityId={activity.id} /> : null}
       </div>
     </article>
   );

@@ -6,6 +6,11 @@ export const FEED_DEFAULT_LIMIT = 20;
 export const FEED_MAX_LIMIT = 50;
 export const TITLE_MAX_LENGTH = 300;
 export const ITEM_AUTHOR_MAX_LENGTH = 200;
+/** Max length of an author note on an update and of a reply body (feature 006). */
+export const NOTE_MAX_LENGTH = 1000;
+export const REPLY_MAX_LENGTH = 1000;
+/** Per-user reply rate limit — matches the posting limit (feature 006). */
+export const RATE_LIMIT_REPLIES_PER_MINUTE = 10;
 
 /** Media types a user can be reading/listening to. */
 export const MEDIA_TYPES = ['book', 'music', 'audiobook', 'podcast'] as const;
@@ -17,6 +22,8 @@ export const createActivitySchema = z.object({
   mediaType: mediaTypeSchema,
   title: z.string().trim().min(1).max(TITLE_MAX_LENGTH),
   itemAuthor: z.string().trim().max(ITEM_AUTHOR_MAX_LENGTH).optional().nullable(),
+  // Optional free-text author note (feature 006), plain text.
+  note: z.string().trim().max(NOTE_MAX_LENGTH).optional().nullable(),
 });
 export type CreateActivityInput = z.infer<typeof createActivitySchema>;
 
@@ -46,10 +53,46 @@ export interface ActivityDTO {
   mediaType: MediaType;
   title: string;
   itemAuthor: string | null;
+  /** Optional author note/comment shown with the update (feature 006). */
+  note: string | null;
+  /** Number of (non-deleted) replies in this update's conversation (feature 006). */
+  replyCount: number;
   createdAt: string;
   /** True when the requesting user authored this activity. */
   canDelete: boolean;
 }
+
+/** A reply in an update's conversation (feature 006). Plain text only. */
+export interface ReplyDTO {
+  id: string;
+  activityId: string;
+  /** The reply this answers, or null for a top-level reply. */
+  parentId: string | null;
+  author: ActivityAuthorDTO;
+  /** Empty string when `deleted` is true (rendered as a tombstone). */
+  body: string;
+  createdAt: string;
+  /** True when soft-deleted (kept as a tombstone because it has child replies). */
+  deleted: boolean;
+  /** True when the requesting user authored this reply (and it isn't deleted). */
+  canDelete: boolean;
+}
+
+/** An update's full conversation as a flat list (client builds the tree from parentId). */
+export interface ReplyThreadDTO {
+  activityId: string;
+  replies: ReplyDTO[];
+  /** Count of non-deleted replies. */
+  count: number;
+}
+
+/** Request body for creating a reply (feature 006). Plain text only. */
+export const createReplySchema = z.object({
+  body: z.string().trim().min(1).max(REPLY_MAX_LENGTH),
+  // A malformed parentId is a client error (400), not a server error.
+  parentId: z.string().uuid().optional().nullable(),
+});
+export type CreateReplyInput = z.infer<typeof createReplySchema>;
 
 export interface FeedPageDTO {
   items: ActivityDTO[];
