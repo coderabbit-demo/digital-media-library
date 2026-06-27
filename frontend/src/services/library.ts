@@ -79,6 +79,8 @@ export function useAddToLibrary() {
           creator: item.creator,
           coverUrl: item.coverUrl,
           providerId: item.providerId,
+          description: item.description,
+          providerUrl: item.providerUrl,
           ...(shelf ? { shelf } : {}),
         },
       }),

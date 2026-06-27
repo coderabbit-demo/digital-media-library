@@ -15,7 +15,7 @@ const home: HomeData = {
       itemAuthor: 'Frank Herbert',
       coverUrl: null,
       providerId: 'b1',
-      shelf: 'current',
+      shelf: 'current', description: null, providerUrl: null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     },

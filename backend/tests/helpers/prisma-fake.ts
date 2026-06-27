@@ -55,7 +55,12 @@ interface RecommendationRow {
   providerId: string;
   createdAt: Date;
 }
-type LibraryRow = RecommendationRow & { shelf: string; updatedAt: Date };
+type LibraryRow = RecommendationRow & {
+  shelf: string;
+  description: string | null;
+  providerUrl: string | null;
+  updatedAt: Date;
+};
 
 export interface FakePrisma {
   client: PrismaClient;
@@ -264,6 +269,8 @@ export function createFakePrisma(): FakePrisma {
           creator: create.creator ?? null,
           coverUrl: create.coverUrl ?? null,
           providerId: create.providerId,
+          description: create.description ?? null,
+          providerUrl: create.providerUrl ?? null,
           shelf: create.shelf ?? 'want',
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -449,6 +456,8 @@ export function createFakePrisma(): FakePrisma {
         creator: partial.creator ?? null,
         coverUrl: partial.coverUrl ?? null,
         providerId: partial.providerId ?? `prov-${randomUUID()}`,
+        description: partial.description ?? null,
+        providerUrl: partial.providerUrl ?? null,
         shelf: partial.shelf ?? 'want',
         createdAt: partial.createdAt ?? now,
         updatedAt: partial.updatedAt ?? now,
@@ -537,6 +546,8 @@ function projectLibrary(row: LibraryRow, select: any): unknown {
   if (select.creator) out.creator = row.creator;
   if (select.coverUrl) out.coverUrl = row.coverUrl;
   if (select.providerId) out.providerId = row.providerId;
+  if (select.description) out.description = row.description;
+  if (select.providerUrl) out.providerUrl = row.providerUrl;
   if (select.shelf) out.shelf = row.shelf;
   if (select.createdAt) out.createdAt = row.createdAt;
   if (select.updatedAt) out.updatedAt = row.updatedAt;

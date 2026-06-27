@@ -45,6 +45,8 @@ export function Library() {
       itemAuthor: item.itemAuthor ?? undefined,
       coverUrl: item.coverUrl,
       providerId: item.providerId,
+      description: item.description,
+      providerUrl: item.providerUrl,
     });
 
   const onMove = (item: LibraryItemDTO, next: Shelf) => {

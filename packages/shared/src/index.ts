@@ -12,6 +12,19 @@ export const REPLY_MAX_LENGTH = 1000;
 /** Per-user reply rate limit — matches the posting limit (feature 006). */
 export const RATE_LIMIT_REPLIES_PER_MINUTE = 10;
 
+/**
+ * A snapshot URL (cover art or provider link). Validates URL format and restricts
+ * the scheme to http(s) so client-supplied snapshots can't smuggle javascript:/
+ * data: URIs into an <img src> or <a href>.
+ */
+const httpUrl = () =>
+  z
+    .string()
+    .trim()
+    .url()
+    .max(2048)
+    .refine((u) => /^https?:\/\//i.test(u), { message: 'URL must use http(s)' });
+
 /** Media types a user can be reading/listening to. */
 export const MEDIA_TYPES = ['book', 'music', 'audiobook', 'podcast'] as const;
 export const mediaTypeSchema = z.enum(MEDIA_TYPES);
@@ -26,10 +39,11 @@ export const createActivitySchema = z.object({
   note: z.string().trim().max(NOTE_MAX_LENGTH).optional().nullable(),
   // Optional snapshot of the source item (when started from Discover/Search/Library)
   // so feed cards can show cover art, a synopsis, and a provider link (UI refresh).
-  coverUrl: z.string().trim().url().max(2048).optional().nullable(),
+  // URLs are http(s)-only and text is plain text — these are user-supplied snapshots.
+  coverUrl: httpUrl().optional().nullable(),
   providerId: z.string().trim().max(512).optional().nullable(),
   description: z.string().trim().max(5000).optional().nullable(),
-  providerUrl: z.string().trim().url().max(2048).optional().nullable(),
+  providerUrl: httpUrl().optional().nullable(),
 });
 export type CreateActivityInput = z.infer<typeof createActivitySchema>;
 
@@ -210,7 +224,7 @@ export const createRecommendationSchema = z.object({
   mediaType: mediaTypeSchema,
   title: z.string().trim().min(1).max(TITLE_MAX_LENGTH),
   creator: z.string().trim().max(ITEM_AUTHOR_MAX_LENGTH).optional().nullable(),
-  coverUrl: z.string().trim().url().max(2048).optional().nullable(),
+  coverUrl: httpUrl().optional().nullable(),
   providerId: z.string().trim().min(1).max(512),
 });
 export type CreateRecommendationInput = z.infer<typeof createRecommendationSchema>;
@@ -233,6 +247,9 @@ export interface LibraryItemDTO {
   coverUrl: string | null;
   providerId: string;
   shelf: Shelf;
+  /** Snapshot synopsis + provider link (UI refresh), so library-started activities stay rich. */
+  description: string | null;
+  providerUrl: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -247,8 +264,11 @@ export const createLibraryItemSchema = z.object({
   mediaType: mediaTypeSchema,
   title: z.string().trim().min(1).max(TITLE_MAX_LENGTH),
   creator: z.string().trim().max(ITEM_AUTHOR_MAX_LENGTH).optional().nullable(),
-  coverUrl: z.string().trim().url().max(2048).optional().nullable(),
+  coverUrl: httpUrl().optional().nullable(),
   providerId: z.string().trim().min(1).max(512),
+  // Snapshot synopsis + provider link, so library-started activities stay rich.
+  description: z.string().trim().max(5000).optional().nullable(),
+  providerUrl: httpUrl().optional().nullable(),
   // Optional target shelf; defaults to "want" (Want to Read) when omitted.
   shelf: shelfSchema.optional(),
 });

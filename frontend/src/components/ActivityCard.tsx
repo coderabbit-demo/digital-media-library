@@ -56,6 +56,9 @@ export function ActivityCard({ activity, onDelete, deleting = false }: ActivityC
     addToLibrary.mutate({ item, shelf });
   };
 
+  // Only link out to http(s) provider URLs (defense-in-depth against bad schemes).
+  const previewUrl = providerUrl && /^https?:\/\//i.test(providerUrl) ? providerUrl : null;
+
   const longDesc = !!description && description.length > DESC_PREVIEW;
   const shownDesc =
     description && longDesc && !descExpanded ? `${description.slice(0, DESC_PREVIEW).trimEnd()}…` : description;
@@ -138,8 +141,8 @@ export function ActivityCard({ activity, onDelete, deleting = false }: ActivityC
           >
             {replyCount > 0 ? `Comment (${replyCount})` : 'Comment'}
           </button>
-          {providerUrl ? (
-            <a className="card-link" href={providerUrl} target="_blank" rel="noreferrer noopener">
+          {previewUrl ? (
+            <a className="card-link" href={previewUrl} target="_blank" rel="noreferrer noopener">
               Preview
             </a>
           ) : null}
