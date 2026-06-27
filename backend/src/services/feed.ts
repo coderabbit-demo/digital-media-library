@@ -78,7 +78,8 @@ export class FeedService {
       }
     }
 
-    const items = rows.map((row) => this.toActivityDTO(row, currentUserId));
+    const likedIds = await this.likedActivityIds(currentUserId, rows.map((r) => r.id));
+    const items = rows.map((row) => this.toActivityDTO(row, currentUserId, likedIds));
     const nextCursor =
       rows.length === limit && rows.length > 0
         ? encodeCursor({ createdAt: rows[rows.length - 1]!.createdAt, id: rows[rows.length - 1]!.id })
@@ -90,6 +91,16 @@ export class FeedService {
   /** Invalidate every cached feed page (called on create/delete). */
   async invalidate(): Promise<void> {
     await this.cache.delByPrefix(FEED_CACHE_PREFIX);
+  }
+
+  /** The subset of `ids` the user has liked (per-viewer; not cached in rows). */
+  private async likedActivityIds(userId: string, ids: string[]): Promise<Set<string>> {
+    if (ids.length === 0) return new Set();
+    const liked = await this.prisma.activityLike.findMany({
+      where: { userId, activityId: { in: ids } },
+      select: { activityId: true },
+    });
+    return new Set(liked.map((l) => l.activityId));
   }
 
   /** Run the keyset query and return viewer-agnostic rows. */
@@ -120,8 +131,8 @@ export class FeedService {
         providerUrl: true,
         createdAt: true,
         user: { select: { id: true, displayName: true, avatarUrl: true } },
-        // Conversation size (excluding deleted tombstones) — feature 006.
-        _count: { select: { replies: { where: { deletedAt: null } } } },
+        // Conversation size (excluding deleted tombstones, feature 006) + like count.
+        _count: { select: { replies: { where: { deletedAt: null } }, likes: true } },
       },
     });
 
@@ -132,6 +143,7 @@ export class FeedService {
       itemAuthor: a.author,
       note: a.note,
       replyCount: a._count.replies,
+      likeCount: a._count.likes,
       coverUrl: a.coverUrl,
       providerId: a.providerId,
       description: a.description,
@@ -145,8 +157,8 @@ export class FeedService {
     }));
   }
 
-  /** Add the per-viewer canDelete flag to a cached/queried row. */
-  private toActivityDTO(row: FeedRow, currentUserId: string): ActivityDTO {
+  /** Add per-viewer flags (canDelete, likedByMe) to a cached/queried row. */
+  private toActivityDTO(row: FeedRow, currentUserId: string, likedIds: Set<string>): ActivityDTO {
     return {
       id: row.id,
       author: row.author,
@@ -160,6 +172,8 @@ export class FeedService {
       providerId: row.providerId ?? null,
       description: row.description ?? null,
       providerUrl: row.providerUrl ?? null,
+      likeCount: row.likeCount ?? 0,
+      likedByMe: likedIds.has(row.id),
       createdAt: row.createdAt,
       canDelete: row.author.id === currentUserId,
     };
@@ -174,6 +188,7 @@ interface FeedRow {
   itemAuthor: string | null;
   note: string | null;
   replyCount: number;
+  likeCount: number;
   coverUrl: string | null;
   providerId: string | null;
   description: string | null;

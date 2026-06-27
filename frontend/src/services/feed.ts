@@ -68,6 +68,8 @@ export function useCreateActivity() {
         providerId: input.providerId ?? null,
         description: input.description ?? null,
         providerUrl: input.providerUrl ?? null,
+        likeCount: 0,
+        likedByMe: false,
         createdAt: new Date().toISOString(),
         canDelete: true,
       };

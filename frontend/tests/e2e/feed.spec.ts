@@ -32,6 +32,8 @@ function activity(partial: Partial<ActivityDTO> & Pick<ActivityDTO, 'id' | 'titl
     providerId: null,
     description: null,
     providerUrl: null,
+    likeCount: 0,
+    likedByMe: false,
     createdAt: new Date().toISOString(),
     canDelete: true,
     ...partial,

@@ -1195,6 +1195,36 @@ body {
 .card-link--danger {
   color: var(--md-sys-color-error);
 }
+.card-link--active {
+  color: var(--md-sys-color-error);
+  font-weight: 600;
+}
+
+/* Star rating control */
+.activity-card__rating {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.activity-card__rating .star {
+  border: none;
+  background: transparent;
+  padding: 0 1px;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--md-sys-color-outline);
+}
+.activity-card__rating .star--on {
+  color: #f5a623;
+}
+.activity-card__rating .star:disabled {
+  cursor: default;
+}
+.activity-card__rating-label {
+  margin-left: 6px;
+  font-size: 0.75rem;
+}
 
 /* Conversations (feature 006) */
 .activity-card__note {

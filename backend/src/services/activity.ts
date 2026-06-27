@@ -62,6 +62,9 @@ export class ActivityService {
       providerId: activity.providerId,
       description: activity.description,
       providerUrl: activity.providerUrl,
+      // A freshly created activity has no likes yet.
+      likeCount: 0,
+      likedByMe: false,
       createdAt: activity.createdAt.toISOString(),
       // The author is, by definition, the current user.
       canDelete: true,

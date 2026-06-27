@@ -11,6 +11,9 @@ export const NOTE_MAX_LENGTH = 1000;
 export const REPLY_MAX_LENGTH = 1000;
 /** Per-user reply rate limit — matches the posting limit (feature 006). */
 export const RATE_LIMIT_REPLIES_PER_MINUTE = 10;
+/** Star rating bounds (UI refresh). */
+export const RATING_MIN = 1;
+export const RATING_MAX = 5;
 
 /**
  * A snapshot URL (cover art or provider link). Validates URL format and restricts
@@ -82,6 +85,9 @@ export interface ActivityDTO {
   providerId: string | null;
   description: string | null;
   providerUrl: string | null;
+  /** Number of likes on this update, and whether the requesting user liked it (UI refresh). */
+  likeCount: number;
+  likedByMe: boolean;
   createdAt: string;
   /** True when the requesting user authored this activity. */
   canDelete: boolean;
@@ -277,3 +283,22 @@ export type CreateLibraryItemInput = z.infer<typeof createLibraryItemSchema>;
 /** Request body for moving a library item to a different shelf (feature 005). */
 export const updateLibraryItemSchema = z.object({ shelf: shelfSchema });
 export type UpdateLibraryItemInput = z.infer<typeof updateLibraryItemSchema>;
+
+/** A user's star rating of an item (UI refresh). */
+export interface RatingDTO {
+  mediaType: MediaType;
+  providerId: string;
+  stars: number;
+}
+
+/** Request body for setting a star rating (UI refresh). Upsert per user+item. */
+export const upsertRatingSchema = z.object({
+  mediaType: mediaTypeSchema,
+  providerId: z.string().trim().min(1).max(512),
+  stars: z.number().int().min(RATING_MIN).max(RATING_MAX),
+  // Snapshot for a future "your ratings" view.
+  title: z.string().trim().min(1).max(TITLE_MAX_LENGTH),
+  creator: z.string().trim().max(ITEM_AUTHOR_MAX_LENGTH).optional().nullable(),
+  coverUrl: httpUrl().optional().nullable(),
+});
+export type UpsertRatingInput = z.infer<typeof upsertRatingSchema>;
