@@ -25,6 +25,14 @@ export interface DiscoverResult {
  *  4. otherwise → empty (the client shows an unavailable state)
  */
 export class TrendingService {
+  /**
+   * Per-category in-flight refresh promises (single-flight). Coalesces concurrent
+   * cold-cache requests on the same instance so only one provider fetch runs,
+   * protecting the refresh cadence/quota during spikes. (Cross-instance
+   * coordination via a distributed lock is unnecessary at the current scale.)
+   */
+  private readonly inFlight = new Map<MediaType, Promise<TrendingItem[]>>();
+
   constructor(
     private readonly cache: CacheService,
     private readonly providers: Record<MediaType, ContentProvider>,
@@ -44,10 +52,19 @@ export class TrendingService {
     const cooling = await this.cache.get<string>(cooldownKey);
     if (!cooling) {
       try {
-        // Fetch a small batch so different limits share one cached result.
-        const items = await this.providers[mediaType].getTrending(Math.max(limit, 20));
-        await this.cache.set(freshKey, items, this.config.DISCOVER_TTL_SECONDS);
-        await this.cache.set(lastGoodKey, items, LAST_GOOD_TTL_SECONDS);
+        // Single-flight: concurrent callers share one fetch + cache write.
+        let refresh = this.inFlight.get(mediaType);
+        if (!refresh) {
+          refresh = (async () => {
+            // Fetch a small batch so different limits share one cached result.
+            const items = await this.providers[mediaType].getTrending(Math.max(limit, 20));
+            await this.cache.set(freshKey, items, this.config.DISCOVER_TTL_SECONDS);
+            await this.cache.set(lastGoodKey, items, LAST_GOOD_TTL_SECONDS);
+            return items;
+          })().finally(() => this.inFlight.delete(mediaType));
+          this.inFlight.set(mediaType, refresh);
+        }
+        const items = await refresh;
         return { items: items.slice(0, limit), stale: false, cacheHit: false };
       } catch {
         // Back off briefly so we don't hammer a failing provider (and burn quota).

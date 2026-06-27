@@ -70,6 +70,7 @@ the compose flow is pre-filled and the submitted activity appears in the feed.
 
 ### Functional Requirements
 
+- **FR-000**: Every Discover view and its data endpoint MUST require authentication (consistent with the app-wide auth gate from feature 002); unauthenticated requests are rejected/redirected and receive no trending data.
 - **FR-001**: Each Discover view MUST present trending/popular items for its media type, showing at least a title and creator (author/artist), plus cover art when available.
 - **FR-002**: Trending content MUST be sourced from external content providers exclusively through an internal provider-abstraction layer; no part of the product calls a provider directly.
 - **FR-003**: Provider responses MUST be cached with a defined freshness window (TTL); within that window, Discover views MUST be served from cache without contacting the provider.

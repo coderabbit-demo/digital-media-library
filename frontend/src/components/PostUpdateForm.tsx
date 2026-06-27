@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import {
   ITEM_AUTHOR_MAX_LENGTH,
   MEDIA_TYPES,
@@ -38,6 +38,14 @@ export function PostUpdateForm({
   const [itemAuthor, setItemAuthor] = useState(initial?.itemAuthor ?? '');
   const [validationError, setValidationError] = useState<string | null>(null);
   const [rateLimited, setRateLimited] = useState(false);
+
+  // Re-sync when prefilled from a different item (e.g., a new Discover selection),
+  // so distinct items that happen to share a title never reuse the prior values.
+  useEffect(() => {
+    setMediaType(initial?.mediaType ?? MEDIA_TYPES[0]);
+    setTitle(initial?.title ?? '');
+    setItemAuthor(initial?.itemAuthor ?? '');
+  }, [initial?.mediaType, initial?.title, initial?.itemAuthor]);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

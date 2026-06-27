@@ -103,7 +103,9 @@ const CATEGORY_TO_MEDIA: Record<DiscoverCategory, MediaType> = {
 
 /** Map a Discover route segment to a MediaType, or null if unknown. */
 export function mediaTypeForCategory(segment: string): MediaType | null {
-  return (CATEGORY_TO_MEDIA as Record<string, MediaType | undefined>)[segment] ?? null;
+  // Guard against inherited keys (e.g. "constructor", "toString") matching.
+  if (!Object.prototype.hasOwnProperty.call(CATEGORY_TO_MEDIA, segment)) return null;
+  return CATEGORY_TO_MEDIA[segment as DiscoverCategory];
 }
 
 /** A normalized trending item surfaced in a Discover view. */

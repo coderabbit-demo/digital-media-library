@@ -58,7 +58,7 @@ export function ComposeDialog({ open, onClose, initial }: ComposeDialogProps) {
             </span>
           </button>
         </div>
-        <PostUpdateForm key={initial?.title ?? 'blank'} onPosted={onClose} initial={initial} />
+        <PostUpdateForm onPosted={onClose} initial={initial} />
       </div>
     </div>
   );

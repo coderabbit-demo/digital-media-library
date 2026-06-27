@@ -21,7 +21,16 @@ export async function fetchJson<T>(url: string, opts: FetchOptions = {}): Promis
     signal: AbortSignal.timeout(opts.timeoutMs ?? DEFAULT_TIMEOUT_MS),
   });
   if (!res.ok) {
-    throw new Error(`Provider request failed: HTTP ${res.status} for ${url}`);
+    // Never include the query string — provider URLs carry API keys (e.g. NYT,
+    // Google Books pass the key as a query param). Log only host + path + status.
+    let safe = url;
+    try {
+      const u = new URL(url);
+      safe = `${u.origin}${u.pathname}`;
+    } catch {
+      safe = '[unparseable url]';
+    }
+    throw new Error(`Provider request failed: HTTP ${res.status} for ${safe}`);
   }
   return (await res.json()) as T;
 }

@@ -25,9 +25,11 @@ export class AppleAudiobookProvider implements ContentProvider {
     const data = await fetchJson<AppleRssFeed>(url);
 
     const items: TrendingItem[] = [];
+    const seen = new Set<string>();
     for (const r of data.feed?.results ?? []) {
       const title = r.name?.trim();
-      if (!title || !r.id) continue;
+      if (!title || !r.id || seen.has(r.id)) continue;
+      seen.add(r.id);
       items.push({
         mediaType: 'audiobook',
         title,

@@ -25,13 +25,12 @@ components:
         mediaType: { type: string, enum: [book, music, audiobook] }
         title: { type: string }
         creator:
-          type: string
-          nullable: true
+          # OpenAPI 3.1 / JSON Schema nullable form (not the 3.0 `nullable: true`).
+          type: [string, "null"]
           description: Author (books/audiobooks) or artist (music).
         coverUrl:
-          type: string
+          type: [string, "null"]
           format: uri
-          nullable: true
           description: Cover/art image URL when the provider supplies one.
         providerId:
           type: string
