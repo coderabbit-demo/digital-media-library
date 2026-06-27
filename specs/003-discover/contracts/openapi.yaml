@@ -20,7 +20,7 @@ components:
   schemas:
     TrendingItem:
       type: object
-      required: [mediaType, title, creator, coverUrl, providerId]
+      required: [mediaType, title, creator, coverUrl, providerId, genre]
       properties:
         mediaType: { type: string, enum: [book, music, audiobook, podcast] }
         title: { type: string }
@@ -35,6 +35,11 @@ components:
         providerId:
           type: string
           description: The provider's stable identifier for the item.
+        genre:
+          type: [string, "null"]
+          description: >
+            Genre/list this item came from (NYT list, Google subject, or Apple
+            genre); null when the source has no genre.
 
     DiscoverPage:
       type: object

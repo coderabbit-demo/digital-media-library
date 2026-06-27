@@ -70,4 +70,18 @@ describe('integration: discover caching & resilience', () => {
     const body = res.json();
     expect(body.items).toEqual([]);
   });
+
+  it('honors an explicit limit even for genre-sectioned categories', async () => {
+    // Without a limit, books default to the generous section batch (all 25 items).
+    const all = await get();
+    expect(all.json().items.length).toBe(25);
+    // With an explicit limit, the caller's value is respected exactly.
+    const limited = await t.app.inject({
+      method: 'GET',
+      url: '/api/discover/books?limit=3',
+      headers: { cookie },
+    });
+    expect(limited.statusCode).toBe(200);
+    expect(limited.json().items.length).toBe(3);
+  });
 });

@@ -22,15 +22,19 @@ export async function registerDiscoverRoutes(app: FastifyInstance): Promise<void
     const mediaType = mediaTypeForCategory(category);
     if (!mediaType) throw badRequest(`Unknown category: ${category}`);
 
-    const rawLimit = Number((request.query as { limit?: string }).limit ?? DEFAULT_LIMIT);
+    const rawParam = (request.query as { limit?: string }).limit;
+    const rawLimit = Number(rawParam ?? DEFAULT_LIMIT);
     if (!Number.isFinite(rawLimit) || rawLimit < 1 || rawLimit > MAX_LIMIT) {
       throw badRequest(`limit must be between 1 and ${MAX_LIMIT}`);
     }
-    // Genre-sectioned categories fetch a generous batch to span many genres;
-    // other categories use the requested limit.
-    const limit = SECTION_BATCH[mediaType] ?? Math.floor(rawLimit);
+    const requestedLimit = Math.floor(rawLimit);
+    // When the caller specifies a limit we honor it exactly. Otherwise, genre-
+    // sectioned categories default to a generous batch so the UI can fill many
+    // sections (books: NYT lists + Google subjects; music/podcasts: Apple genres).
+    const effectiveLimit =
+      rawParam !== undefined ? requestedLimit : (SECTION_BATCH[mediaType] ?? requestedLimit);
 
-    const { items, stale, cacheHit } = await app.ctx.discover.getDiscover(mediaType, limit);
+    const { items, stale, cacheHit } = await app.ctx.discover.getDiscover(mediaType, effectiveLimit);
 
     request.log.info(
       { route: 'GET /api/discover', category: mediaType, items: items.length, stale, cacheHit },
