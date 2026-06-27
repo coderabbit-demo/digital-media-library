@@ -89,12 +89,25 @@ export class GoogleOidcService implements OidcService {
     if (!claims?.sub) {
       throw new Error('OIDC callback returned no subject claim');
     }
+    const sub = String(claims.sub);
 
-    return {
-      sub: String(claims.sub),
-      email: typeof claims.email === 'string' ? claims.email : null,
-      name: typeof claims.name === 'string' ? claims.name : null,
-      picture: typeof claims.picture === 'string' ? claims.picture : null,
-    };
+    let email = typeof claims.email === 'string' ? claims.email : null;
+    let name = typeof claims.name === 'string' ? claims.name : null;
+    let picture = typeof claims.picture === 'string' ? claims.picture : null;
+
+    // Google doesn't always put profile fields (notably `picture`) in the ID
+    // token; fall back to the UserInfo endpoint so the avatar is captured.
+    if (!picture || !name || !email) {
+      try {
+        const info = await client.fetchUserInfo(config, tokens.access_token, sub);
+        picture = picture ?? (typeof info.picture === 'string' ? info.picture : null);
+        name = name ?? (typeof info.name === 'string' ? info.name : null);
+        email = email ?? (typeof info.email === 'string' ? info.email : null);
+      } catch {
+        // Non-fatal: keep whatever the ID token provided.
+      }
+    }
+
+    return { sub, email, name, picture };
   }
 }

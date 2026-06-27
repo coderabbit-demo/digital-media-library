@@ -52,41 +52,41 @@ describe('integration: home', () => {
     expect(res.statusCode).toBe(401);
   });
 
-  it('returns the user\'s own items and counts, with empty recommendations and wishlisted=0', async () => {
+  it('returns the My Library current shelf and counts (recommendations empty, wishlisted=0)', async () => {
     const a = await makeUser('Ada');
     for (const title of ['One', 'Two', 'Three']) {
-      await dbh.prisma.activity.create({
-        data: { userId: a.user.id, mediaType: 'book', title },
+      await dbh.prisma.libraryItem.create({
+        data: { userId: a.user.id, mediaType: 'book', title, providerId: `p-${title}`, shelf: 'current' },
       });
     }
 
     const res = await app.inject({ method: 'GET', url: '/api/home', headers: { cookie: a.cookie } });
     expect(res.statusCode).toBe(200);
     const body = res.json();
-    expect(body.ownItems.length).toBe(3);
-    expect(body.ownItems.every((i: { canDelete: boolean }) => i.canDelete === true)).toBe(true);
+    expect(body.current.length).toBe(3);
+    expect(body.current.every((i: { shelf: string }) => i.shelf === 'current')).toBe(true);
     expect(body.counts).toEqual({ currentlyOn: 3, wishlisted: 0 });
     expect(body.recommendations).toEqual([]);
   });
 
-  it('scopes own items to the requesting user only', async () => {
+  it('scopes the current list to the requesting user only', async () => {
     const a = await makeUser('Ada');
     const b = await makeUser('Bob');
-    await dbh.prisma.activity.create({ data: { userId: a.user.id, mediaType: 'book', title: 'A-book' } });
-    await dbh.prisma.activity.create({ data: { userId: b.user.id, mediaType: 'music', title: 'B-song' } });
+    await dbh.prisma.libraryItem.create({ data: { userId: a.user.id, mediaType: 'book', title: 'A-book', providerId: 'pa', shelf: 'current' } });
+    await dbh.prisma.libraryItem.create({ data: { userId: b.user.id, mediaType: 'music', title: 'B-song', providerId: 'pb', shelf: 'current' } });
 
     const res = await app.inject({ method: 'GET', url: '/api/home', headers: { cookie: b.cookie } });
     const body = res.json();
-    expect(body.ownItems.length).toBe(1);
-    expect(body.ownItems[0].title).toBe('B-song');
+    expect(body.current.length).toBe(1);
+    expect(body.current[0].title).toBe('B-song');
     expect(body.counts.currentlyOn).toBe(1);
   });
 
-  it('returns empty own items for a user with no activity', async () => {
+  it('returns an empty current list for a user with nothing on that shelf', async () => {
     const a = await makeUser('Newbie');
     const res = await app.inject({ method: 'GET', url: '/api/home', headers: { cookie: a.cookie } });
     const body = res.json();
-    expect(body.ownItems).toEqual([]);
+    expect(body.current).toEqual([]);
     expect(body.counts.currentlyOn).toBe(0);
   });
 });

@@ -7,17 +7,17 @@ import type { HomeData } from '@dml/shared';
 import { HomeFeed } from '../src/pages/HomeFeed';
 
 const home: HomeData = {
-  ownItems: [
+  current: [
     {
-      id: 'a1',
-      author: { id: 'u1', displayName: 'You', avatarUrl: null },
+      id: 'l1',
       mediaType: 'book',
       title: 'Dune',
       itemAuthor: 'Frank Herbert',
-      note: null,
-      replyCount: 0,
+      coverUrl: null,
+      providerId: 'b1',
+      shelf: 'current',
       createdAt: new Date().toISOString(),
-      canDelete: true,
+      updatedAt: new Date().toISOString(),
     },
   ],
   counts: { currentlyOn: 1, wishlisted: 0 },

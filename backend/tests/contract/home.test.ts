@@ -26,8 +26,9 @@ describe('contract: home', () => {
 
   it('returns 200 HomeData with ownItems, counts, and empty recommendations', async () => {
     const user = db.seedProfile({ displayName: 'Ada', avatarUrl: null });
-    db.seedActivity(user.id, { mediaType: 'book', title: 'Dune', author: 'Herbert' });
-    db.seedActivity(user.id, { mediaType: 'music', title: 'Blue', author: 'Joni' });
+    db.seedLibraryItem(user.id, { mediaType: 'book', title: 'Dune', creator: 'Herbert', shelf: 'current' });
+    db.seedLibraryItem(user.id, { mediaType: 'music', title: 'Blue', creator: 'Joni', shelf: 'current' });
+    db.seedLibraryItem(user.id, { mediaType: 'book', title: 'Later', shelf: 'want' });
     const session = db.seedSession(user.id);
 
     const res = await t.app.inject({
@@ -38,17 +39,17 @@ describe('contract: home', () => {
 
     expect(res.statusCode).toBe(200);
     const body = res.json();
-    expect(body).toHaveProperty('ownItems');
+    expect(body).toHaveProperty('current');
     expect(body).toHaveProperty('counts');
     expect(body).toHaveProperty('recommendations');
-    expect(Array.isArray(body.ownItems)).toBe(true);
-    expect(body.ownItems.length).toBe(2);
-    expect(body.counts).toMatchObject({ currentlyOn: 2, wishlisted: 0 });
+    expect(Array.isArray(body.current)).toBe(true);
+    expect(body.current.length).toBe(2);
+    // currentlyOn = current shelf size; wishlisted = want shelf size.
+    expect(body.counts).toMatchObject({ currentlyOn: 2, wishlisted: 1 });
     expect(body.recommendations).toEqual([]);
 
-    const item = body.ownItems[0];
-    expect(item).toMatchObject({ canDelete: true });
-    expect(item.author).toMatchObject({ id: user.id, displayName: 'Ada' });
+    const item = body.current[0];
+    expect(item).toMatchObject({ shelf: 'current' });
     expect(typeof item.id).toBe('string');
     expect(typeof item.createdAt).toBe('string');
   });
