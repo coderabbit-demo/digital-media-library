@@ -1,0 +1,103 @@
+openapi: 3.1.0
+info:
+  title: Digital Media Library API — Home (feature 002)
+  version: 0.1.0
+  description: >
+    Aggregated, local-only home-page data for feature 002-app-shell-home. One
+    auth-guarded endpoint reading only the application's own database (no external
+    content-provider calls). Reuses the Activity/FeedPage shapes from feature 001.
+servers:
+  - url: /api
+
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: dml_session
+      description: Signed, httpOnly session cookie issued by feature 001.
+
+  schemas:
+    # Reused from feature 001 (shape repeated here for contract completeness).
+    Activity:
+      type: object
+      required: [id, author, mediaType, title, createdAt, canDelete]
+      properties:
+        id: { type: string, format: uuid }
+        author:
+          type: object
+          required: [id, displayName]
+          properties:
+            id: { type: string, format: uuid }
+            displayName: { type: string }
+            avatarUrl: { type: string, format: uri, nullable: true }
+        mediaType: { type: string, enum: [book, music, audiobook] }
+        title: { type: string }
+        itemAuthor: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        canDelete: { type: boolean }
+
+    FeedPage:
+      type: object
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/Activity' }
+        nextCursor: { type: string, nullable: true }
+
+    HomeCounts:
+      type: object
+      required: [currentlyOn, wishlisted]
+      properties:
+        currentlyOn:
+          type: integer
+          description: Count of the current user's own current activities.
+        wishlisted:
+          type: integer
+          description: Placeholder 0 until feature 005 (wishlist).
+
+    HomeData:
+      type: object
+      required: [ownItems, counts, recommendations]
+      properties:
+        ownItems:
+          type: array
+          description: The current user's recent own activities (left column).
+          items: { $ref: '#/components/schemas/Activity' }
+        counts:
+          $ref: '#/components/schemas/HomeCounts'
+        recommendations:
+          type: array
+          description: Always empty in feature 002; populated by feature 004.
+          items: { type: object }
+      # Note: the community feed (center column) is fetched separately via the
+      # existing paginated GET /feed (also local); it is not embedded here.
+
+    Error:
+      type: object
+      required: [error, message]
+      properties:
+        error: { type: string }
+        message: { type: string }
+
+paths:
+  /home:
+    get:
+      summary: Aggregated home-page data (local-only)
+      description: >
+        Returns the signed-in user's own current items, the community feed's first
+        page, and counts — all from the application's own database. Makes no external
+        content-provider calls.
+      security: [{ sessionCookie: [] }]
+      responses:
+        '200':
+          description: Home data for the authenticated user.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HomeData' }
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }

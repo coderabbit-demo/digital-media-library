@@ -60,3 +60,33 @@ export interface ErrorDTO {
   error: string;
   message: string;
 }
+
+/** Counts shown in the home left column. `wishlisted` is 0 until feature 005. */
+export interface HomeCounts {
+  currentlyOn: number;
+  wishlisted: number;
+}
+
+/**
+ * A user-initiated recommendation surfaced on the home page. Always an empty list
+ * in feature 002; the recommendation system is delivered in feature 004 (this shape
+ * may be refined there).
+ */
+export interface RecommendationDTO {
+  id: string;
+  recommender: ActivityAuthorDTO;
+  mediaType: MediaType;
+  title: string;
+  itemAuthor: string | null;
+  createdAt: string;
+}
+
+/**
+ * Aggregated, local-only home payload (feature 002). The community feed is fetched
+ * separately via the existing paginated `/feed` endpoint; both are local DB reads.
+ */
+export interface HomeData {
+  ownItems: ActivityDTO[];
+  counts: HomeCounts;
+  recommendations: RecommendationDTO[];
+}
