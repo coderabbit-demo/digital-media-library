@@ -1,17 +1,17 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-`specs/005-wishlist/plan.md`
+`specs/006-conversations/plan.md`
 
-Active feature: 005 **My Library** (Goodreads-style shelves; supersedes the flat
-wishlist). Private per-user collection; each item on exactly one shelf (want/current/
-done/dnf, stored generically, media-aware UI labels). "Add to Library" on every media
-item (→ Want to Read), a My Library page with shelf tabs + media-type filter, move
-between shelves, owner-only remove, and a **bridge** that offers to share an activity
-to the feed when moving to Currently Reading (feed/001 unchanged). Local-data only
-(snapshots; no external providers/secrets). `LibraryItem` model + `Shelf` enum,
-`GET/POST /api/library` + `PATCH/DELETE /api/library/:id`; home `wishlisted` count =
-Want to Read. Builds on shipped 001–004.
+Active feature: 006 **Conversations** (update notes + threaded replies). Adds an
+optional author **note** on an update, and **replies** to updates (nested/Twitter-
+style; plain text; rate-limited 10/min like posts; length-limited). Replies are
+visible to all authenticated users; users delete their own (hard-delete when
+childless, tombstone when it has children); deleting an update cascades its
+conversation; each update shows a reply count. Adds `Reply` model + `Activity.note`,
+`GET/POST /api/activities/:id/replies` + `DELETE /api/replies/:id`, feed/home carry
+`note`+`replyCount`. Out of scope: likes, edit, @mentions, notifications. Builds on
+shipped 001–005.
 
 Stack: TypeScript pnpm monorepo — React/Vite SPA (`frontend/`, Material Design 3),
 Fastify/Node 22 API (`backend/`), shared types (`packages/shared`); CloudSQL

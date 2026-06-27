@@ -113,8 +113,11 @@ export class FeedService {
         mediaType: true,
         title: true,
         author: true,
+        note: true,
         createdAt: true,
         user: { select: { id: true, displayName: true, avatarUrl: true } },
+        // Conversation size (excluding deleted tombstones) — feature 006.
+        _count: { select: { replies: { where: { deletedAt: null } } } },
       },
     });
 
@@ -123,6 +126,8 @@ export class FeedService {
       mediaType: a.mediaType,
       title: a.title,
       itemAuthor: a.author,
+      note: a.note,
+      replyCount: a._count.replies,
       createdAt: a.createdAt.toISOString(),
       author: {
         id: a.user.id,
@@ -140,6 +145,8 @@ export class FeedService {
       mediaType: row.mediaType,
       title: row.title,
       itemAuthor: row.itemAuthor,
+      note: row.note,
+      replyCount: row.replyCount,
       createdAt: row.createdAt,
       canDelete: row.author.id === currentUserId,
     };
@@ -152,6 +159,8 @@ interface FeedRow {
   mediaType: MediaType;
   title: string;
   itemAuthor: string | null;
+  note: string | null;
+  replyCount: number;
   createdAt: string;
   author: { id: string; displayName: string; avatarUrl: string | null };
 }

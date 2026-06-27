@@ -22,12 +22,14 @@ export class ActivityService {
         mediaType: input.mediaType,
         title: input.title,
         author: input.itemAuthor ?? null,
+        note: input.note ?? null,
       },
       select: {
         id: true,
         mediaType: true,
         title: true,
         author: true,
+        note: true,
         createdAt: true,
         user: { select: { id: true, displayName: true, avatarUrl: true } },
       },
@@ -45,6 +47,9 @@ export class ActivityService {
       mediaType: activity.mediaType,
       title: activity.title,
       itemAuthor: activity.author,
+      note: activity.note,
+      // A freshly created activity has no replies yet.
+      replyCount: 0,
       createdAt: activity.createdAt.toISOString(),
       // The author is, by definition, the current user.
       canDelete: true,

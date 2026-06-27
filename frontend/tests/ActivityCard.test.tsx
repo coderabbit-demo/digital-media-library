@@ -11,6 +11,8 @@ function makeActivity(overrides: Partial<ActivityDTO> = {}): ActivityDTO {
     mediaType: 'book',
     title: 'The Left Hand of Darkness',
     itemAuthor: 'Ursula K. Le Guin',
+    note: null,
+    replyCount: 0,
     createdAt: new Date().toISOString(),
     canDelete: false,
     ...overrides,

@@ -16,6 +16,7 @@ import { TrendingService } from './services/discover.js';
 import { SearchService } from './services/search.js';
 import { RecommendationService } from './services/recommendations.js';
 import { LibraryService } from './services/library.js';
+import { ReplyService } from './services/reply.js';
 import type { ContentProvider } from './providers/content-provider.js';
 import type { SearchProvider } from './providers/search-provider.js';
 import { GoogleBooksSearchProvider } from './providers/google-books-search.js';
@@ -40,6 +41,7 @@ import { registerDiscoverRoutes } from './api/discover.js';
 import { registerSearchRoutes } from './api/search.js';
 import { registerRecommendationRoutes } from './api/recommendations.js';
 import { registerLibraryRoutes } from './api/library.js';
+import { registerReplyRoutes } from './api/replies.js';
 
 /** Overrides let tests inject stubs (prisma/cache/oidc) and a custom config. */
 export interface BuildAppOverrides {
@@ -77,6 +79,7 @@ export async function buildApp(overrides: BuildAppOverrides = {}): Promise<Fasti
   const profiles = new ProfileService(prisma);
   const feed = new FeedService(prisma, cache, config);
   const activities = new ActivityService(prisma, feed);
+  const replies = new ReplyService(prisma, feed);
   const recommendations = new RecommendationService(prisma);
   const library = new LibraryService(prisma);
   const home = new HomeService(prisma, recommendations, library);
@@ -99,7 +102,7 @@ export async function buildApp(overrides: BuildAppOverrides = {}): Promise<Fasti
   const search = new SearchService(cache, searchProviders, config);
 
   const ctx: AppContext = {
-    config, prisma, cache, oidc, session, profiles, feed, activities, home, discover, search, recommendations, library,
+    config, prisma, cache, oidc, session, profiles, feed, activities, home, discover, search, recommendations, library, replies,
   };
   app.decorate('ctx', ctx);
 
@@ -155,6 +158,7 @@ export async function buildApp(overrides: BuildAppOverrides = {}): Promise<Fasti
       await registerSearchRoutes(api);
       await registerRecommendationRoutes(api);
       await registerLibraryRoutes(api);
+      await registerReplyRoutes(api);
     },
     { prefix: '/api' },
   );

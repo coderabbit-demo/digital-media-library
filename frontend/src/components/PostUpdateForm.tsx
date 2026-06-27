@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import {
   ITEM_AUTHOR_MAX_LENGTH,
   MEDIA_TYPES,
+  NOTE_MAX_LENGTH,
   TITLE_MAX_LENGTH,
   createActivitySchema,
   type MediaType,
@@ -37,6 +38,7 @@ export function PostUpdateForm({
   const [mediaType, setMediaType] = useState<MediaType>(initial?.mediaType ?? MEDIA_TYPES[0]);
   const [title, setTitle] = useState(initial?.title ?? '');
   const [itemAuthor, setItemAuthor] = useState(initial?.itemAuthor ?? '');
+  const [note, setNote] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
   const [rateLimited, setRateLimited] = useState(false);
 
@@ -57,6 +59,7 @@ export function PostUpdateForm({
       mediaType,
       title,
       itemAuthor: itemAuthor.trim() === '' ? null : itemAuthor,
+      note: note.trim() === '' ? null : note,
     });
 
     if (!parsed.success) {
@@ -69,6 +72,7 @@ export function PostUpdateForm({
       onSuccess: () => {
         setTitle('');
         setItemAuthor('');
+        setNote('');
         setMediaType(MEDIA_TYPES[0]);
         onPosted?.();
       },
@@ -135,6 +139,21 @@ export function PostUpdateForm({
         />
         <span className="md3-field__label" aria-hidden="true">
           Author / artist (optional)
+        </span>
+      </div>
+
+      <div className="post-form__field md3-field">
+        <textarea
+          id="pf-note"
+          value={note}
+          maxLength={NOTE_MAX_LENGTH}
+          rows={2}
+          placeholder=" "
+          onChange={(e) => setNote(e.target.value)}
+          aria-label="Note"
+        />
+        <span className="md3-field__label" aria-hidden="true">
+          Add a note (optional)
         </span>
       </div>
 

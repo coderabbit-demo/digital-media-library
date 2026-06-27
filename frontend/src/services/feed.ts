@@ -62,6 +62,8 @@ export function useCreateActivity() {
         mediaType: input.mediaType,
         title: input.title,
         itemAuthor: input.itemAuthor ?? null,
+        note: input.note ?? null,
+        replyCount: 0,
         createdAt: new Date().toISOString(),
         canDelete: true,
       };
