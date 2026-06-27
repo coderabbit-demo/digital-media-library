@@ -100,11 +100,19 @@ export function createFakePrisma(): FakePrisma {
         if (where?.OR) {
           rows = rows.filter((r) => matchKeyset(r, where.OR));
         }
+        if (where?.userId) {
+          rows = rows.filter((r) => r.userId === where.userId);
+        }
         rows.sort(
           (a, b) => b.createdAt.getTime() - a.createdAt.getTime() || (a.id < b.id ? 1 : -1),
         );
         if (typeof take === 'number') rows = rows.slice(0, take);
         return rows.map((r) => (select ? projectActivity(r, select, selectUser) : r));
+      },
+      count: async ({ where }: any = {}) => {
+        let rows = [...activities.values()];
+        if (where?.userId) rows = rows.filter((r) => r.userId === where.userId);
+        return rows.length;
       },
       deleteMany: async ({ where }: any) => {
         let count = 0;

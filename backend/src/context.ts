@@ -5,6 +5,7 @@ import type { OidcService } from './services/oidc.js';
 import type { ProfileService } from './services/profile.js';
 import type { FeedService } from './services/feed.js';
 import type { ActivityService } from './services/activity.js';
+import type { HomeService } from './services/home.js';
 import type { SessionManager } from './plugins/session.js';
 import type { ProfileDTO } from '@dml/shared';
 
@@ -22,6 +23,7 @@ export interface AppContext {
   profiles: ProfileService;
   feed: FeedService;
   activities: ActivityService;
+  home: HomeService;
 }
 
 declare module 'fastify' {

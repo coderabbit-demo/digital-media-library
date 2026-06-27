@@ -9,6 +9,7 @@ export default tseslint.config(
       '**/dist/**',
       '**/build/**',
       '**/coverage/**',
+      '**/.vite/**',
       '**/*.min.js',
       'backend/prisma/migrations/**',
       'backend/tests/load/**',

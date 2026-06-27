@@ -45,9 +45,10 @@ The project's non-negotiable principles live in the
 
 | # | Feature | Status | Spec |
 |---|---------|--------|------|
-| 001 | Authentication & Activity Feed | 🛠️ Implemented (in review) | [spec](specs/001-auth-activity-feed/spec.md) · [plan](specs/001-auth-activity-feed/plan.md) |
+| 001 | Authentication & Activity Feed | ✅ Merged | [spec](specs/001-auth-activity-feed/spec.md) · [plan](specs/001-auth-activity-feed/plan.md) |
+| 002 | App shell, auth gate & three-column home | 🛠️ Implemented (in review) | [spec](specs/002-app-shell-home/spec.md) · [plan](specs/002-app-shell-home/plan.md) |
 
-*Out of scope for 001, planned next: trending-content discovery, comments on feed updates.*
+*Content-discovery roadmap (specs drafted): 003 Discover (trending) → 004 Search & recommendations → 005 Wishlist. Comments on feed updates: a later feature.*
 
 ## Repository layout
 

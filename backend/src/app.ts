@@ -11,6 +11,7 @@ import { GoogleOidcService, type OidcService } from './services/oidc.js';
 import { ProfileService } from './services/profile.js';
 import { FeedService } from './services/feed.js';
 import { ActivityService } from './services/activity.js';
+import { HomeService } from './services/home.js';
 import { SessionManager } from './plugins/session.js';
 import authPlugin from './plugins/auth.js';
 import { HttpError, sendError, badRequest } from './plugins/errors.js';
@@ -19,6 +20,7 @@ import { registerAuthRoutes } from './api/auth.js';
 import { registerMeRoutes } from './api/me.js';
 import { registerFeedRoutes } from './api/feed.js';
 import { registerActivityRoutes } from './api/activities.js';
+import { registerHomeRoutes } from './api/home.js';
 
 /** Overrides let tests inject stubs (prisma/cache/oidc) and a custom config. */
 export interface BuildAppOverrides {
@@ -52,8 +54,9 @@ export async function buildApp(overrides: BuildAppOverrides = {}): Promise<Fasti
   const profiles = new ProfileService(prisma);
   const feed = new FeedService(prisma, cache, config);
   const activities = new ActivityService(prisma, feed);
+  const home = new HomeService(prisma);
 
-  const ctx: AppContext = { config, prisma, cache, oidc, session, profiles, feed, activities };
+  const ctx: AppContext = { config, prisma, cache, oidc, session, profiles, feed, activities, home };
   app.decorate('ctx', ctx);
 
   // Signed cookies (session id + OIDC transaction state).
@@ -103,6 +106,7 @@ export async function buildApp(overrides: BuildAppOverrides = {}): Promise<Fasti
       await registerMeRoutes(api);
       await registerFeedRoutes(api);
       await registerActivityRoutes(api);
+      await registerHomeRoutes(api);
     },
     { prefix: '/api' },
   );

@@ -323,7 +323,7 @@ body {
 }
 
 .app-header__inner {
-  max-width: 720px;
+  max-width: 1120px;
   margin: 0 auto;
   height: 64px;
   padding: 0 16px;
@@ -332,12 +332,39 @@ body {
   gap: 12px;
 }
 
+/* Primary category navigation in the top app bar */
+.app-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+.app-nav__link {
+  position: relative;
+  padding: 8px 12px;
+  border-radius: var(--md-sys-shape-corner-full);
+  color: var(--md-sys-color-on-surface-variant);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.app-nav__link:hover {
+  background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);
+}
+.app-nav__link--active {
+  color: var(--md-sys-color-primary);
+  background: var(--md-sys-color-secondary-container);
+}
+
 .app-header__brand {
   margin: 0;
   font-size: 1.375rem;
   font-weight: 500;
   line-height: 1.75rem;
-  flex: 1;
+  flex: 0 0 auto;
+  white-space: nowrap;
+  color: var(--md-sys-color-on-surface);
+  text-decoration: none;
 }
 
 .app-header__user {
@@ -354,12 +381,124 @@ body {
 .app-main {
   flex: 1;
   width: 100%;
-  max-width: 720px;
+  max-width: 1120px;
   margin: 0 auto;
   padding: 24px 16px 96px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+/* ==========================================================================
+   Home — three-column layout (left: own items; center: hero + feed;
+   right: recommendations). Stacks to one column (center first) when narrow.
+   ========================================================================== */
+.home-grid {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr) 300px;
+  gap: 16px;
+  align-items: start;
+}
+
+.home-col {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.home-col--left,
+.home-col--right {
+  position: sticky;
+  top: 80px;
+}
+
+.home-hero {
+  width: 100%;
+  aspect-ratio: 16 / 7;
+  object-fit: cover;
+  border-radius: var(--md-sys-shape-corner-large);
+  display: block;
+}
+
+.home-panel {
+  background: var(--md-sys-color-surface-container-low);
+  border-radius: var(--md-sys-shape-corner-medium);
+  padding: 16px;
+}
+.home-panel__title {
+  margin: 0 0 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--md-sys-color-on-surface-variant);
+}
+.home-muted {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.8125rem;
+  margin: 0;
+}
+
+.home-own-list,
+.home-rec-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.home-own-item,
+.home-rec-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.home-own-item__title {
+  font-weight: 500;
+  font-size: 0.9375rem;
+}
+.home-own-item__author {
+  font-size: 0.8125rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+.home-own-item .badge {
+  align-self: flex-start;
+}
+
+.home-counts {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  font-size: 0.8125rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+.home-counts strong {
+  color: var(--md-sys-color-on-surface);
+}
+
+.home-quick-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* Stack to a single column on narrow viewports; center content first. */
+@media (max-width: 1000px) {
+  .home-grid {
+    grid-template-columns: 1fr;
+  }
+  .home-col--center {
+    order: -1;
+  }
+  .home-col--left,
+  .home-col--right {
+    position: static;
+  }
 }
 
 /* ==========================================================================
