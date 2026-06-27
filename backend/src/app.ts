@@ -12,6 +12,12 @@ import { ProfileService } from './services/profile.js';
 import { FeedService } from './services/feed.js';
 import { ActivityService } from './services/activity.js';
 import { HomeService } from './services/home.js';
+import { TrendingService } from './services/discover.js';
+import type { ContentProvider } from './providers/content-provider.js';
+import { NytBooksProvider } from './providers/nyt-books.js';
+import { SpotifyMusicProvider } from './providers/spotify-music.js';
+import { AppleAudiobookProvider } from './providers/apple-audiobooks.js';
+import type { MediaType } from '@dml/shared';
 import { SessionManager } from './plugins/session.js';
 import authPlugin from './plugins/auth.js';
 import { HttpError, sendError, badRequest } from './plugins/errors.js';
@@ -21,6 +27,7 @@ import { registerMeRoutes } from './api/me.js';
 import { registerFeedRoutes } from './api/feed.js';
 import { registerActivityRoutes } from './api/activities.js';
 import { registerHomeRoutes } from './api/home.js';
+import { registerDiscoverRoutes } from './api/discover.js';
 
 /** Overrides let tests inject stubs (prisma/cache/oidc) and a custom config. */
 export interface BuildAppOverrides {
@@ -28,6 +35,8 @@ export interface BuildAppOverrides {
   prisma?: PrismaClient;
   cache?: CacheService;
   oidc?: OidcService;
+  /** Inject fake content providers in tests (avoids real provider calls). */
+  providers?: Record<MediaType, ContentProvider>;
 }
 
 /**
@@ -55,8 +64,16 @@ export async function buildApp(overrides: BuildAppOverrides = {}): Promise<Fasti
   const feed = new FeedService(prisma, cache, config);
   const activities = new ActivityService(prisma, feed);
   const home = new HomeService(prisma);
+  const providers: Record<MediaType, ContentProvider> = overrides.providers ?? {
+    book: new NytBooksProvider(config),
+    music: new SpotifyMusicProvider(config, cache),
+    audiobook: new AppleAudiobookProvider(),
+  };
+  const discover = new TrendingService(cache, providers, config);
 
-  const ctx: AppContext = { config, prisma, cache, oidc, session, profiles, feed, activities, home };
+  const ctx: AppContext = {
+    config, prisma, cache, oidc, session, profiles, feed, activities, home, discover,
+  };
   app.decorate('ctx', ctx);
 
   // Signed cookies (session id + OIDC transaction state).
@@ -107,6 +124,7 @@ export async function buildApp(overrides: BuildAppOverrides = {}): Promise<Fasti
       await registerFeedRoutes(api);
       await registerActivityRoutes(api);
       await registerHomeRoutes(api);
+      await registerDiscoverRoutes(api);
     },
     { prefix: '/api' },
   );

@@ -832,3 +832,72 @@ body {
   font-weight: 700;
   font-size: 0.75rem;
 }
+
+/* ==========================================================================
+   Discover (feature 003) — trending grid + cards
+   ========================================================================== */
+.discover-page__title {
+  margin: 0 0 16px;
+  font-size: 1.5rem;
+  font-weight: 400;
+}
+
+.stale-banner {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border-radius: var(--md-sys-shape-corner-small);
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+  font-size: 0.8125rem;
+}
+
+.discover-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.discover-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--md-sys-color-surface-container-low);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-sys-shape-corner-medium);
+  overflow: hidden;
+}
+.discover-card__cover {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  background: var(--md-sys-color-surface-container-high);
+}
+.discover-card__cover--placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface-variant);
+}
+.discover-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  flex: 1;
+}
+.discover-card__title {
+  margin: 0;
+  font-weight: 500;
+  font-size: 0.9375rem;
+}
+.discover-card__creator {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+.discover-card__cta {
+  margin-top: auto;
+  height: 36px;
+  font-size: 0.8125rem;
+}

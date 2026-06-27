@@ -42,12 +42,19 @@ export async function buildTestApp(opts: {
   cache?: CacheService;
   oidc?: StubOidcService;
   config?: AppConfig;
+  providers?: Parameters<typeof buildApp>[0]['providers'];
 }): Promise<TestApp> {
   const config = opts.config ?? testConfig();
   const cache = opts.cache ?? new InMemoryCacheService();
   const oidc = opts.oidc ?? new StubOidcService();
 
-  const app = await buildApp({ config, prisma: opts.prisma, cache, oidc });
+  const app = await buildApp({
+    config,
+    prisma: opts.prisma,
+    cache,
+    oidc,
+    providers: opts.providers,
+  });
   await app.ready();
 
   const signer = new Signer(config.SESSION_SIGNING_KEY);

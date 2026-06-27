@@ -1,0 +1,55 @@
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MemoryRouter } from 'react-router-dom';
+import type { DiscoverPageDTO } from '@dml/shared';
+import { Discover } from '../src/pages/Discover';
+
+function mockDiscover(page: DiscoverPageDTO) {
+  vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+    new Response(JSON.stringify(page), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+  );
+}
+
+function renderDiscover() {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(
+    <QueryClientProvider client={qc}>
+      <MemoryRouter>
+        <Discover category="books" />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+}
+
+const page = (overrides: Partial<DiscoverPageDTO> = {}): DiscoverPageDTO => ({
+  category: 'book',
+  stale: false,
+  items: [
+    { mediaType: 'book', title: 'Dune', creator: 'Frank Herbert', coverUrl: null, providerId: 'b1' },
+  ],
+  ...overrides,
+});
+
+describe('Discover page', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('renders trending items', async () => {
+    mockDiscover(page());
+    renderDiscover();
+    expect(await screen.findByText('Dune')).toBeInTheDocument();
+    expect(screen.getByText('Frank Herbert')).toBeInTheDocument();
+  });
+
+  it('shows the stale banner when results are stale', async () => {
+    mockDiscover(page({ stale: true }));
+    renderDiscover();
+    expect(await screen.findByText(/may be out of date/i)).toBeInTheDocument();
+  });
+
+  it('shows an unavailable state when there are no items', async () => {
+    mockDiscover(page({ items: [] }));
+    renderDiscover();
+    expect(await screen.findByText(/temporarily unavailable/i)).toBeInTheDocument();
+  });
+});

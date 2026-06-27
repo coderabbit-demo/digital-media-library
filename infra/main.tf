@@ -288,6 +288,36 @@ resource "google_cloud_run_v2_service" "api" {
         }
       }
 
+      # Discover (feature 003) provider keys. Optional at runtime: a placeholder
+      # value just makes that category serve cached/empty.
+      env {
+        name = "NYT_API_KEY"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.nyt_api_key.secret_id
+            version = "latest"
+          }
+        }
+      }
+      env {
+        name = "SPOTIFY_CLIENT_ID"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.spotify_client_id.secret_id
+            version = "latest"
+          }
+        }
+      }
+      env {
+        name = "SPOTIFY_CLIENT_SECRET"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.spotify_client_secret.secret_id
+            version = "latest"
+          }
+        }
+      }
+
       # REDIS_URL only when Redis is enabled.
       dynamic "env" {
         for_each = var.enable_redis ? [1] : []

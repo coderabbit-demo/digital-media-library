@@ -21,12 +21,21 @@ const MEDIA_OPTIONS: { value: MediaType; label: string }[] = [
  * activity is optimistically added to the feed. A 429 rate-limit response
  * (FR-019) surfaces a friendly retry message.
  */
-export function PostUpdateForm({ onPosted }: { onPosted?: () => void } = {}) {
+export interface ComposeInitial {
+  mediaType?: MediaType;
+  title?: string;
+  itemAuthor?: string;
+}
+
+export function PostUpdateForm({
+  onPosted,
+  initial,
+}: { onPosted?: () => void; initial?: ComposeInitial } = {}) {
   const createActivity = useCreateActivity();
 
-  const [mediaType, setMediaType] = useState<MediaType>(MEDIA_TYPES[0]);
-  const [title, setTitle] = useState('');
-  const [itemAuthor, setItemAuthor] = useState('');
+  const [mediaType, setMediaType] = useState<MediaType>(initial?.mediaType ?? MEDIA_TYPES[0]);
+  const [title, setTitle] = useState(initial?.title ?? '');
+  const [itemAuthor, setItemAuthor] = useState(initial?.itemAuthor ?? '');
   const [validationError, setValidationError] = useState<string | null>(null);
   const [rateLimited, setRateLimited] = useState(false);
 

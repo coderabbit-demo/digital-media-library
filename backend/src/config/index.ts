@@ -33,6 +33,16 @@ const envSchema = z.object({
 
   // First-page feed cache TTL in seconds (short; SC-005).
   FEED_CACHE_TTL_SECONDS: z.coerce.number().int().positive().default(15),
+
+  // Discover (feature 003) external content providers. Optional: when a key is
+  // absent, that provider is simply unavailable (Discover serves stale/empty for
+  // its category) rather than failing startup. Apple/iTunes needs no key.
+  NYT_API_KEY: z.string().optional(),
+  SPOTIFY_CLIENT_ID: z.string().optional(),
+  SPOTIFY_CLIENT_SECRET: z.string().optional(),
+
+  // Trending freshness window in seconds (default 3h).
+  DISCOVER_TTL_SECONDS: z.coerce.number().int().positive().default(60 * 60 * 3),
 });
 
 export type AppConfig = z.infer<typeof envSchema>;

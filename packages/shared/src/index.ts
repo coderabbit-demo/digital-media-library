@@ -90,3 +90,37 @@ export interface HomeData {
   counts: HomeCounts;
   recommendations: RecommendationDTO[];
 }
+
+/** Discover route segments and their mapping to the singular MediaType. */
+export const DISCOVER_CATEGORIES = ['books', 'music', 'audiobooks'] as const;
+export type DiscoverCategory = (typeof DISCOVER_CATEGORIES)[number];
+
+const CATEGORY_TO_MEDIA: Record<DiscoverCategory, MediaType> = {
+  books: 'book',
+  music: 'music',
+  audiobooks: 'audiobook',
+};
+
+/** Map a Discover route segment to a MediaType, or null if unknown. */
+export function mediaTypeForCategory(segment: string): MediaType | null {
+  return (CATEGORY_TO_MEDIA as Record<string, MediaType | undefined>)[segment] ?? null;
+}
+
+/** A normalized trending item surfaced in a Discover view. */
+export interface TrendingItemDTO {
+  mediaType: MediaType;
+  title: string;
+  /** Author (books/audiobooks) or artist (music). */
+  creator: string | null;
+  coverUrl: string | null;
+  /** The source provider's stable identifier for the item. */
+  providerId: string;
+}
+
+/** A page of trending items for one category. */
+export interface DiscoverPageDTO {
+  category: MediaType;
+  items: TrendingItemDTO[];
+  /** True when served from the last-known-good snapshot (results may be out of date). */
+  stale: boolean;
+}
