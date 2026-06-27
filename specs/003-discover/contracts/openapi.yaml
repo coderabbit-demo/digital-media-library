@@ -22,12 +22,12 @@ components:
       type: object
       required: [mediaType, title, creator, coverUrl, providerId]
       properties:
-        mediaType: { type: string, enum: [book, music, audiobook] }
+        mediaType: { type: string, enum: [book, music, audiobook, podcast] }
         title: { type: string }
         creator:
           # OpenAPI 3.1 / JSON Schema nullable form (not the 3.0 `nullable: true`).
           type: [string, "null"]
-          description: Author (books/audiobooks) or artist (music).
+          description: Author (books/audiobooks), artist (music), or publisher (podcasts).
         coverUrl:
           type: [string, "null"]
           format: uri
@@ -40,7 +40,7 @@ components:
       type: object
       required: [category, items, stale]
       properties:
-        category: { type: string, enum: [book, music, audiobook] }
+        category: { type: string, enum: [book, music, audiobook, podcast] }
         items:
           type: array
           items: { $ref: '#/components/schemas/TrendingItem' }
@@ -71,7 +71,7 @@ paths:
         - name: category
           in: path
           required: true
-          schema: { type: string, enum: [books, music, audiobooks] }
+          schema: { type: string, enum: [books, music, audiobooks, podcasts] }
           description: Route segment; mapped to the singular media type internally.
         - name: limit
           in: query

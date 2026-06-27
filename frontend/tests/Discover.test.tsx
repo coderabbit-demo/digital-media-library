@@ -11,12 +11,12 @@ function mockDiscover(page: DiscoverPageDTO) {
   );
 }
 
-function renderDiscover() {
+function renderDiscover(category: 'books' | 'podcasts' = 'books') {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={qc}>
       <MemoryRouter>
-        <Discover category="books" />
+        <Discover category={category} />
       </MemoryRouter>
     </QueryClientProvider>,
   );
@@ -53,5 +53,18 @@ describe('Discover page', () => {
     mockDiscover(page({ items: [] }));
     renderDiscover();
     expect(await screen.findByText(/temporarily unavailable/i)).toBeInTheDocument();
+  });
+
+  it('renders the podcasts category grouped by genre', async () => {
+    mockDiscover({
+      category: 'podcast',
+      stale: false,
+      items: [
+        { mediaType: 'podcast', title: 'The Daily', creator: 'The New York Times', coverUrl: null, providerId: 'p1', genre: 'News' },
+      ],
+    });
+    renderDiscover('podcasts');
+    expect(await screen.findByText('The Daily')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'News' })).toBeInTheDocument();
   });
 });

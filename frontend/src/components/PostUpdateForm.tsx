@@ -13,6 +13,7 @@ const MEDIA_OPTIONS: { value: MediaType; label: string }[] = [
   { value: 'book', label: 'Book' },
   { value: 'music', label: 'Music' },
   { value: 'audiobook', label: 'Audiobook' },
+  { value: 'podcast', label: 'Podcast' },
 ];
 
 /**

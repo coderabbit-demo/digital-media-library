@@ -18,7 +18,8 @@ export class FakeProvider implements ContentProvider {
 
 /** Build `count` normalized items for a media type (books cycle through genres). */
 export function makeItems(mediaType: MediaType, count: number): TrendingItem[] {
-  const genres = mediaType === 'book' ? ['Fiction', 'Nonfiction', 'Mystery'] : [null];
+  // Books, music, and podcasts carry genres (sectioned in the UI); audiobooks don't.
+  const genres = mediaType === 'audiobook' ? [null] : ['Fiction', 'Nonfiction', 'Mystery'];
   return Array.from({ length: count }, (_, i) => ({
     mediaType,
     title: `${mediaType} ${i + 1}`,
@@ -36,5 +37,6 @@ export function fakeProviders(): Record<MediaType, FakeProvider> {
     book: new FakeProvider(makeItems('book', 25)),
     music: new FakeProvider(makeItems('music', 25)),
     audiobook: new FakeProvider(makeItems('audiobook', 25)),
+    podcast: new FakeProvider(makeItems('podcast', 25)),
   };
 }

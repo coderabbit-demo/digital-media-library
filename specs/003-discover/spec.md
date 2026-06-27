@@ -16,7 +16,7 @@ abstraction + caching layer** reused by later features. Also lets a user start a
 ### User Story 1 - Discover trending content by category (Priority: P1)
 
 A signed-in user selects a media category from the primary navigation — Books,
-Music, or Audiobooks — and opens its **Discover** view, seeing a list of
+Music, Audiobooks, or Podcasts — and opens its **Discover** view, seeing a list of
 trending/popular items for that media type (title, creator, and cover art where
 available), refreshed periodically. Each category's Discover view is independent.
 
@@ -24,12 +24,13 @@ available), refreshed periodically. Each category's Discover view is independent
 feature and is independently demonstrable as soon as one category returns items.
 
 **Independent Test**: Sign in, open Books → Discover and verify trending books with
-titles and creators; repeat for Music and Audiobooks and verify each is independent.
+titles and creators; repeat for Music, Audiobooks, and Podcasts and verify each is
+independent.
 
 **Acceptance Scenarios**:
 
 1. **Given** a signed-in user, **When** they open Books → Discover, **Then** they see trending books, each with at least a title and author (and cover art when the provider supplies it).
-2. **Given** a signed-in user, **When** they open Music → Discover then Audiobooks → Discover, **Then** each shows items appropriate to that media type, independent of the others.
+2. **Given** a signed-in user, **When** they open Music → Discover, then Audiobooks → Discover, then Podcasts → Discover, **Then** each shows items appropriate to that media type, independent of the others.
 3. **Given** trending data was recently retrieved, **When** another user opens the same Discover view shortly after, **Then** results are served from cache quickly without re-fetching from the provider.
 4. **Given** the provider for a category is unavailable or rate-limited, **When** a user opens that Discover view, **Then** the most recent cached results are shown (stale-but-available) with an indication they may be out of date, rather than an error.
 5. **Given** no data is available at all for a category (cold start, provider down), **When** the user opens it, **Then** they see a clear unavailable/empty state, not a crash.
@@ -83,7 +84,7 @@ the compose flow is pre-filled and the submitted activity appears in the feed.
 
 ### Key Entities *(include if feature involves data)*
 
-- **Media Category (referenced)**: Books, Music, Audiobooks — scopes a Discover view and its trending source (nav from feature 002).
+- **Media Category (referenced)**: Books, Music, Audiobooks, Podcasts — scopes a Discover view and its trending source (nav from feature 002).
 - **Trending Item**: An externally sourced content item within a category. Attributes: media type, title, creator, optional cover-art reference, provider identifier. Cached, not authoritative; rebuildable from the provider.
 - **Activity Update (referenced)**: From feature 001 — a Discover item can seed one.
 

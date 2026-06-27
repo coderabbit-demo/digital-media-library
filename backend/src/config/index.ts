@@ -36,10 +36,9 @@ const envSchema = z.object({
 
   // Discover (feature 003) external content providers. Optional: when a key is
   // absent, that provider is simply unavailable (Discover serves stale/empty for
-  // its category) rather than failing startup. Apple/iTunes needs no key.
+  // its category) rather than failing startup. Apple's RSS feeds (music,
+  // audiobooks, podcasts) need no key.
   NYT_API_KEY: z.string().optional(),
-  SPOTIFY_CLIENT_ID: z.string().optional(),
-  SPOTIFY_CLIENT_SECRET: z.string().optional(),
   // Google Books works keyless at low quota; a key raises the limit.
   GOOGLE_BOOKS_API_KEY: z.string().optional(),
 

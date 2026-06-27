@@ -17,8 +17,9 @@ import type { ContentProvider } from './providers/content-provider.js';
 import { NytBooksProvider } from './providers/nyt-books.js';
 import { GoogleBooksProvider } from './providers/google-books.js';
 import { CompositeBooksProvider } from './providers/composite-books.js';
-import { SpotifyMusicProvider } from './providers/spotify-music.js';
+import { AppleMusicProvider } from './providers/apple-music.js';
 import { AppleAudiobookProvider } from './providers/apple-audiobooks.js';
+import { ApplePodcastProvider } from './providers/apple-podcasts.js';
 import type { MediaType } from '@dml/shared';
 import { SessionManager } from './plugins/session.js';
 import authPlugin from './plugins/auth.js';
@@ -69,8 +70,10 @@ export async function buildApp(overrides: BuildAppOverrides = {}): Promise<Fasti
   const providers: Record<MediaType, ContentProvider> = overrides.providers ?? {
     // Books aggregate NYT (all bestseller genres) + Google Books, deduped.
     book: new CompositeBooksProvider([new NytBooksProvider(config), new GoogleBooksProvider(config)]),
-    music: new SpotifyMusicProvider(config, cache),
+    // Music, audiobooks, and podcasts all use Apple's keyless RSS marketing feeds.
+    music: new AppleMusicProvider(),
     audiobook: new AppleAudiobookProvider(),
+    podcast: new ApplePodcastProvider(),
   };
   const discover = new TrendingService(cache, providers, config);
 

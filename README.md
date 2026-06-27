@@ -1,8 +1,8 @@
 # Digital Media Library
 
-A multi-user web app for discovering trending books, music, and audiobooks and
-sharing what you're currently reading or listening to — a Goodreads-style activity
-feed where the community's updates appear on the home page.
+A multi-user web app for discovering trending books, music, audiobooks, and
+podcasts and sharing what you're currently reading or listening to — a
+Goodreads-style activity feed where the community's updates appear on the home page.
 
 > **Status**: Early development. Built spec-first with [GitHub Spec Kit](https://github.com/github/spec-kit).
 > The first feature (authentication + activity feed) is **implemented** — backend API,
@@ -14,8 +14,8 @@ feed where the community's updates appear on the home page.
 
 - **Sign in with Google** — no passwords; a profile is created on first sign-in.
 - **Activity feed** — a home-page feed of what users are currently reading/listening to.
-- **Trending content** *(planned)* — trending books, music, and audiobooks from
-  external providers, cached to stay fast and within API quotas.
+- **Trending content** *(planned)* — trending books, music, audiobooks, and
+  podcasts from external providers, cached to stay fast and within API quotas.
 - **Comments** *(planned)* — discussion on feed updates.
 
 ## Architecture

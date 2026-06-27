@@ -2,8 +2,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { NytBooksProvider } from '../../src/providers/nyt-books.js';
 import { GoogleBooksProvider } from '../../src/providers/google-books.js';
 import { AppleAudiobookProvider } from '../../src/providers/apple-audiobooks.js';
-import { SpotifyMusicProvider } from '../../src/providers/spotify-music.js';
-import { InMemoryCacheService } from '../../src/services/cache.js';
+import { AppleMusicProvider } from '../../src/providers/apple-music.js';
+import { ApplePodcastProvider } from '../../src/providers/apple-podcasts.js';
 import { testConfig } from '../helpers/test-app.js';
 
 function mockFetchOnce(body: unknown, status = 200) {
@@ -57,35 +57,29 @@ describe('provider adapters', () => {
     });
   });
 
-  it('SpotifyMusicProvider fetches a token then maps album search results', async () => {
-    const cache = new InMemoryCacheService();
-    const releases = () =>
-      new Response(
-        JSON.stringify({
-          albums: { items: [{ id: 'al1', name: 'Blue', artists: [{ name: 'Joni Mitchell' }], images: [{ url: 'http://img/b.jpg' }] }] },
-        }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } },
-      );
-    const spy = vi
-      .spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ access_token: 'tok', expires_in: 3600 }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }),
-      )
-      .mockResolvedValueOnce(releases()) // first getTrending → releases
-      .mockResolvedValueOnce(releases()); // second getTrending → releases (token cached)
-    const provider = new SpotifyMusicProvider(
-      testConfig({ SPOTIFY_CLIENT_ID: 'id', SPOTIFY_CLIENT_SECRET: 'secret' }),
-      cache,
-    );
-    const items = await provider.getTrending(10);
-    expect(items[0]).toMatchObject({ mediaType: 'music', title: 'Blue', creator: 'Joni Mitchell', providerId: 'al1' });
-    expect(spy).toHaveBeenCalledTimes(2);
-    // Token cached → a second call reuses it (only the releases request).
-    await provider.getTrending(10);
-    expect(spy).toHaveBeenCalledTimes(3);
+  it('AppleMusicProvider normalizes albums and picks a genre (skipping the "Music" parent)', async () => {
+    mockFetchOnce({
+      feed: {
+        results: [
+          {
+            id: 'al1',
+            name: 'ICEMAN',
+            artistName: 'Drake',
+            artworkUrl100: 'http://img/b.jpg',
+            genres: [{ name: 'Music' }, { name: 'Hip-Hop/Rap' }],
+          },
+        ],
+      },
+    });
+    const items = await new AppleMusicProvider().getTrending(10);
+    expect(items[0]).toMatchObject({
+      mediaType: 'music',
+      title: 'ICEMAN',
+      creator: 'Drake',
+      providerId: 'al1',
+      // The generic "Music" parent is skipped in favor of the specific genre.
+      genre: 'Hip-Hop/Rap',
+    });
   });
 
   it('GoogleBooksProvider normalizes volumes (deduped across genres)', async () => {
@@ -112,11 +106,33 @@ describe('provider adapters', () => {
     await expect(new GoogleBooksProvider(testConfig()).getTrending(5)).rejects.toThrow();
   });
 
-  it('SpotifyMusicProvider throws without credentials', async () => {
-    const provider = new SpotifyMusicProvider(
-      testConfig({ SPOTIFY_CLIENT_ID: undefined, SPOTIFY_CLIENT_SECRET: undefined }),
-      new InMemoryCacheService(),
-    );
-    await expect(provider.getTrending(5)).rejects.toThrow();
+  it('ApplePodcastProvider normalizes shows with publisher and genre', async () => {
+    mockFetchOnce({
+      feed: {
+        results: [
+          {
+            id: 'p1',
+            name: 'The Daily',
+            artistName: 'The New York Times',
+            artworkUrl100: 'http://img/p.jpg',
+            genres: [{ name: 'News' }],
+          },
+        ],
+      },
+    });
+    const items = await new ApplePodcastProvider().getTrending(10);
+    expect(items[0]).toMatchObject({
+      mediaType: 'podcast',
+      title: 'The Daily',
+      creator: 'The New York Times',
+      providerId: 'p1',
+      genre: 'News',
+    });
+  });
+
+  it('Apple RSS providers throw on upstream failure', async () => {
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('network down'));
+    await expect(new AppleMusicProvider().getTrending(5)).rejects.toThrow();
+    await expect(new ApplePodcastProvider().getTrending(5)).rejects.toThrow();
   });
 });

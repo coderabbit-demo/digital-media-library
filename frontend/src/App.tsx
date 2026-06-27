@@ -31,6 +31,7 @@ export function App() {
         <Route path="/books" element={<Discover category="books" />} />
         <Route path="/music" element={<Discover category="music" />} />
         <Route path="/audiobooks" element={<Discover category="audiobooks" />} />
+        <Route path="/podcasts" element={<Discover category="podcasts" />} />
         <Route path="/wishlist" element={<WishlistPlaceholder />} />
       </Route>
 

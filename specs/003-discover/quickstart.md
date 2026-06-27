@@ -6,12 +6,13 @@ stack (`docker compose up -d`, `backend/.env`, `pnpm install`, `prisma migrate d
 
 ## Provider credentials (local)
 
-Add to `backend/.env` (Apple/iTunes needs none):
+Add to `backend/.env` (the Apple RSS feeds for music, audiobooks, and podcasts need
+no key/auth):
 
 | Variable | Source |
 |----------|--------|
-| `NYT_API_KEY` | https://developer.nytimes.com (Books API) |
-| `SPOTIFY_CLIENT_ID` / `SPOTIFY_CLIENT_SECRET` | https://developer.spotify.com (app, client-credentials) |
+| `NYT_API_KEY` | optional; https://developer.nytimes.com (Books API) |
+| `GOOGLE_BOOKS_API_KEY` | optional; https://console.cloud.google.com (Books API) |
 | `DISCOVER_TTL_SECONDS` | optional; default ~10800 (3h) |
 
 ## Run
@@ -32,8 +33,8 @@ pnpm --filter @dml/frontend test   # Discover page: list, stale banner, empty st
 ## Manual validation scenarios (map to acceptance criteria)
 
 1. **Discover by category** (US1 / FR-001–FR-003, SC-001)
-   - Books → Discover, Music → Discover, Audiobooks → Discover.
-   - Expect: each shows trending items (title + creator, cover when available), category-appropriate, within ~2s.
+   - Books → Discover, Music → Discover, Audiobooks → Discover, Podcasts → Discover.
+   - Expect: each shows trending items (title + creator, cover when available), category-appropriate, within ~2s. Books, music, and podcasts are grouped into genre sections; audiobooks render ungrouped.
 
 2. **Served from cache** (FR-003/FR-005, SC-002)
    - Open the same Discover view twice quickly.
@@ -64,6 +65,7 @@ pnpm --filter @dml/frontend test   # Discover page: list, stale banner, empty st
 ## Cloud notes
 
 `terraform apply` provisions the new Secret Manager secrets (`NYT_API_KEY`,
-`SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`) and grants the runtime service account
-accessor; populate the secret values out-of-band. Confirm provider-call and cache
-hit/miss logs appear in Cloud Logging.
+`GOOGLE_BOOKS_API_KEY` — both optional) and grants the runtime service account
+accessor; populate the secret values out-of-band. The Apple RSS feeds (music,
+audiobooks, podcasts) need no secrets. Confirm provider-call and cache hit/miss logs
+appear in Cloud Logging.

@@ -24,9 +24,9 @@ function groupByGenre(items: TrendingItemDTO[]): { genre: string; items: Trendin
 }
 
 /**
- * Renders trending items for a category. Items carrying a genre (books) are shown
- * as labeled genre sections; ungrouped items (music/audiobooks) render as one
- * grid. Includes loading/empty/stale/error states.
+ * Renders trending items for a category. Items carrying a genre (books, music,
+ * podcasts) are shown as labeled genre sections; ungrouped items (audiobooks)
+ * render as one grid. Includes loading/empty/stale/error states.
  */
 export function DiscoverList({ category, onStartActivity }: DiscoverListProps) {
   const { data, isLoading, isError, refetch } = useDiscover(category);

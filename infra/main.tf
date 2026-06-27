@@ -299,24 +299,7 @@ resource "google_cloud_run_v2_service" "api" {
           }
         }
       }
-      env {
-        name = "SPOTIFY_CLIENT_ID"
-        value_source {
-          secret_key_ref {
-            secret  = google_secret_manager_secret.spotify_client_id.secret_id
-            version = "latest"
-          }
-        }
-      }
-      env {
-        name = "SPOTIFY_CLIENT_SECRET"
-        value_source {
-          secret_key_ref {
-            secret  = google_secret_manager_secret.spotify_client_secret.secret_id
-            version = "latest"
-          }
-        }
-      }
+      # Music, audiobooks, and podcasts use Apple's keyless RSS feeds — no env needed.
       env {
         name = "GOOGLE_BOOKS_API_KEY"
         value_source {

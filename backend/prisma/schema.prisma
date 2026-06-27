@@ -28,6 +28,7 @@ enum MediaType {
   book
   music
   audiobook
+  podcast
 }
 
 model UserProfile {

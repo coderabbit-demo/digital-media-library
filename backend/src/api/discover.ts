@@ -1,11 +1,16 @@
 import type { FastifyInstance } from 'fastify';
-import { mediaTypeForCategory, type DiscoverPageDTO, type TrendingItemDTO } from '@dml/shared';
+import { mediaTypeForCategory, type DiscoverPageDTO, type MediaType, type TrendingItemDTO } from '@dml/shared';
 import { badRequest } from '../plugins/errors.js';
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
-// Books span many genres (NYT lists + Google subjects); fetch enough to fill sections.
-const BOOKS_BATCH = 96;
+// Genre-sectioned categories fetch a generous batch so the UI can fill many
+// sections: books (NYT lists + Google subjects), music & podcasts (Apple genres).
+const SECTION_BATCH: Partial<Record<MediaType, number>> = {
+  book: 96,
+  music: 50,
+  podcast: 50,
+};
 
 /**
  * GET /api/discover/{category} — authenticated trending for a media category,
@@ -21,9 +26,9 @@ export async function registerDiscoverRoutes(app: FastifyInstance): Promise<void
     if (!Number.isFinite(rawLimit) || rawLimit < 1 || rawLimit > MAX_LIMIT) {
       throw badRequest(`limit must be between 1 and ${MAX_LIMIT}`);
     }
-    // Books are grouped into genre sections in the UI, so fetch a generous batch
-    // to span many genres; other categories use the requested limit.
-    const limit = mediaType === 'book' ? BOOKS_BATCH : Math.floor(rawLimit);
+    // Genre-sectioned categories fetch a generous batch to span many genres;
+    // other categories use the requested limit.
+    const limit = SECTION_BATCH[mediaType] ?? Math.floor(rawLimit);
 
     const { items, stale, cacheHit } = await app.ctx.discover.getDiscover(mediaType, limit);
 

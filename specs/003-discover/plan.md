@@ -6,11 +6,12 @@
 
 ## Summary
 
-Add per-category Discover views (Books, Music, Audiobooks) showing trending items
-from external providers, accessed exclusively through a new **provider-abstraction
+Add per-category Discover views (Books, Music, Audiobooks, Podcasts) showing trending
+items from external providers, accessed exclusively through a new **provider-abstraction
 layer** and **cached with stale-on-failure** behavior — the realization of
 constitution Principle III. A single internal `ContentProvider` interface has one
-adapter per category (NYT Books, Spotify, Apple/iTunes); a `TrendingService` serves
+adapter per category (NYT/Google Books, Apple Music, Apple audiobooks, Apple podcasts);
+a `TrendingService` serves
 from Redis (fresh within TTL), refreshes lazily on expiry, and falls back to the
 last-known-good snapshot (flagged stale) or a clear empty state when a provider is
 unavailable. One auth-guarded endpoint `GET /api/discover/{category}` returns
@@ -25,11 +26,11 @@ Manager (Terraform). Frontend fills in the category Discover pages (placeholders
 
 **Primary Dependencies**: Backend — Fastify, existing Redis `CacheService`, `undici` (HTTP to providers), zod (validate/normalize provider payloads), `@dml/shared`. Frontend — React + Vite, TanStack Query, Material Design 3.
 
-**External providers** (chosen here; research §1): **Books → NYT Books API** (bestseller lists as "trending"); **Music → Spotify Web API** (new releases / featured, client-credentials); **Audiobooks → Apple iTunes** (RSS top-audiobooks / Search, no key). All accessed only via the provider abstraction.
+**External providers** (chosen here; research §1): **Books → NYT Books API + Google Books** (bestseller lists / newest-per-genre as "trending"); **Music → Apple Music RSS** (most-played albums marketing feed, keyless); **Audiobooks → Apple RSS** (top-audiobooks marketing feed, keyless); **Podcasts → Apple RSS** (top-podcasts marketing feed, keyless). All accessed only via the provider abstraction.
 
-**Storage**: No new persistent tables. Trending data is **cached in Memorystore Redis** (existing), not authoritative. CloudSQL unchanged.
+**Storage**: No new persistent tables. Trending data is **cached in Memorystore Redis** (existing), not authoritative. CloudSQL gains only the `podcast` value on the `MediaType` enum (Prisma migration `add_podcast_media_type`).
 
-**Secrets**: `NYT_API_KEY`, `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET` in Secret Manager (Apple needs none) — added via Terraform; runtime SA granted accessor.
+**Secrets**: `NYT_API_KEY` and `GOOGLE_BOOKS_API_KEY` (both optional) in Secret Manager — added via Terraform; runtime SA granted accessor. The Apple RSS feeds (music, audiobooks, podcasts) need no key/auth.
 
 **Testing**: Vitest unit (provider adapters with mocked HTTP via `undici` MockAgent; cache/stale logic); Fastify `inject` contract test for `/api/discover/{category}`; integration (cache hit / lazy refresh / stale fallback) with a fake provider + real Redis or in-memory cache; frontend component tests for the Discover page (list, stale banner, empty/unavailable state, start-activity).
 
@@ -78,19 +79,20 @@ backend/src/
 ├── providers/
 │   ├── content-provider.ts     # ContentProvider interface + TrendingItem (raw→normalized)
 │   ├── nyt-books.ts            # Books adapter (NYT bestseller lists)
-│   ├── spotify-music.ts       # Music adapter (Spotify new releases/featured; token mgmt)
-│   └── apple-audiobooks.ts    # Audiobooks adapter (Apple iTunes RSS/Search)
+│   ├── apple-music.ts         # Music adapter (Apple Music RSS most-played albums)
+│   ├── apple-audiobooks.ts    # Audiobooks adapter (Apple RSS top audiobooks)
+│   └── apple-podcasts.ts      # Podcasts adapter (Apple RSS top podcasts)
 ├── services/discover.ts        # TrendingService: cache-through + lazy refresh + stale fallback
 ├── api/discover.ts             # GET /api/discover/{category} (auth-guarded)
-└── config/index.ts             # + NYT/Spotify secrets
+└── config/index.ts             # + NYT/Google Books secrets (optional)
 
 frontend/src/
-├── pages/Discover.tsx          # replaces CategoryPlaceholder for /books|/music|/audiobooks
+├── pages/Discover.tsx          # replaces CategoryPlaceholder for /books|/music|/audiobooks|/podcasts
 ├── components/DiscoverList.tsx, DiscoverItemCard.tsx, StaleBanner.tsx
 └── services/discover.ts        # useDiscover(category)
 
 packages/shared/src/index.ts    # + TrendingItemDTO, DiscoverPageDTO, category helpers
-infra/                          # + Secret Manager secrets (NYT/Spotify) + SA accessor
+infra/                          # + Secret Manager secrets (NYT/Google Books) + SA accessor
 ```
 
 **Structure Decision**: Extends the existing monorepo. The new `backend/src/providers/`

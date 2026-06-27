@@ -21,8 +21,9 @@ export class AppleAudiobookProvider implements ContentProvider {
 
   async getTrending(limit: number): Promise<TrendingItem[]> {
     const count = Math.min(Math.max(limit, 1), 50);
-    // Apple's media slug is "audio-books" (hyphenated); "audiobooks" 404s.
-    const url = `https://rss.applemarketingtools.com/api/v2/us/audio-books/top/${count}/audio-books.json`;
+    // Canonical host is rss.marketingtools.apple.com (the older applemarketingtools.com
+    // 301-redirects). Apple's media slug is "audio-books" (hyphenated); "audiobooks" 404s.
+    const url = `https://rss.marketingtools.apple.com/api/v2/us/audio-books/top/${count}/audio-books.json`;
     const data = await fetchJson<AppleRssFeed>(url);
 
     const items: TrendingItem[] = [];

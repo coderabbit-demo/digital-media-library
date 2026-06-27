@@ -9,6 +9,7 @@ function build(book: FakeProvider, cache = new InMemoryCacheService()) {
     book,
     music: new FakeProvider(makeItems('music', 5)),
     audiobook: new FakeProvider(makeItems('audiobook', 5)),
+    podcast: new FakeProvider(makeItems('podcast', 5)),
   };
   return new TrendingService(cache, providers, testConfig());
 }

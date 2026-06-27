@@ -7,6 +7,7 @@ const NAV = [
   { to: '/books', label: 'Books' },
   { to: '/music', label: 'Music' },
   { to: '/audiobooks', label: 'Audiobooks' },
+  { to: '/podcasts', label: 'Podcasts' },
   { to: '/wishlist', label: 'Wishlist' },
 ];
 

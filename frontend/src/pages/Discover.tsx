@@ -8,6 +8,7 @@ const TITLES: Record<DiscoverCategory, string> = {
   books: 'Books · Discover',
   music: 'Music · Discover',
   audiobooks: 'Audiobooks · Discover',
+  podcasts: 'Podcasts · Discover',
 };
 
 /**

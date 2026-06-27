@@ -152,33 +152,7 @@ resource "google_secret_manager_secret_version" "nyt_api_key_placeholder" {
   secret_data = "REPLACE_ME"
 }
 
-resource "google_secret_manager_secret" "spotify_client_id" {
-  secret_id = "${var.env}-spotify-client-id"
-  labels    = local.secret_labels
-  replication {
-    auto {}
-  }
-  depends_on = [google_project_service.services]
-}
-
-resource "google_secret_manager_secret_version" "spotify_client_id_placeholder" {
-  secret      = google_secret_manager_secret.spotify_client_id.id
-  secret_data = "REPLACE_ME"
-}
-
-resource "google_secret_manager_secret" "spotify_client_secret" {
-  secret_id = "${var.env}-spotify-client-secret"
-  labels    = local.secret_labels
-  replication {
-    auto {}
-  }
-  depends_on = [google_project_service.services]
-}
-
-resource "google_secret_manager_secret_version" "spotify_client_secret_placeholder" {
-  secret      = google_secret_manager_secret.spotify_client_secret.id
-  secret_data = "REPLACE_ME"
-}
+# Music, audiobooks, and podcasts use Apple's keyless RSS feeds — no secret needed.
 
 resource "google_secret_manager_secret" "google_books_api_key" {
   secret_id = "${var.env}-google-books-api-key"
@@ -206,8 +180,6 @@ locals {
       oauth_client_secret   = google_secret_manager_secret.google_oauth_client_secret.secret_id
       database_url          = google_secret_manager_secret.database_url.secret_id
       nyt_api_key           = google_secret_manager_secret.nyt_api_key.secret_id
-      spotify_client_id     = google_secret_manager_secret.spotify_client_id.secret_id
-      spotify_client_secret = google_secret_manager_secret.spotify_client_secret.secret_id
       google_books_api_key  = google_secret_manager_secret.google_books_api_key.secret_id
     },
     var.enable_redis ? {

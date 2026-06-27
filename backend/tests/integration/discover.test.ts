@@ -27,6 +27,7 @@ describe('integration: discover caching & resilience', () => {
         book: books,
         music: new FakeProvider(makeItems('music', 25)),
         audiobook: new FakeProvider(makeItems('audiobook', 25)),
+        podcast: new FakeProvider(makeItems('podcast', 25)),
       },
     });
     const user = db.seedProfile();

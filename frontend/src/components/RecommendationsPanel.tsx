@@ -16,8 +16,8 @@ export function RecommendationsPanel() {
 
       {recommendations.length === 0 ? (
         <p className="home-muted">
-          No recommendations yet. When people recommend books, music, and audiobooks,
-          they’ll show up here.
+          No recommendations yet. When people recommend books, music, audiobooks, and
+          podcasts, they’ll show up here.
         </p>
       ) : (
         <ul className="home-rec-list">

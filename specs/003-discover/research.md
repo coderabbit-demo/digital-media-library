@@ -16,18 +16,28 @@ resolved below).
     fails or is unconfigured, the other still serves. (Amazon was considered but
     deferred: the Product Advertising/Creators API is credential-gated and no key is
     available.)
-  - **Music → Spotify Web API** (New Releases + Featured/curated charts playlist).
-    Client-credentials flow (no user auth), well-documented, predictable limits.
-  - **Audiobooks → Apple iTunes** (RSS "top audiobooks" feed + iTunes Search API).
-    No API key, stable, covers audiobooks where most APIs don't.
+  - **Music → Apple Music RSS** (keyless "most-played albums" marketing feed:
+    `https://rss.marketingtools.apple.com/api/v2/us/music/most-played/{n}/albums.json`).
+    No API key, stable, and each album carries a genre for genre-sectioned grouping.
+    (Spotify was originally chosen but dropped: its `/browse/new-releases` is
+    deprecated and now requires user auth — 403 under client-credentials — and
+    `/v1/search` proved flaky with intermittent 400s.)
+  - **Audiobooks → Apple RSS** (keyless "top audiobooks" marketing feed on the
+    canonical host `rss.marketingtools.apple.com`; the older
+    `rss.applemarketingtools.com` 301-redirects). No API key, stable, covers
+    audiobooks where most APIs don't.
+  - **Podcasts → Apple RSS** (keyless "top podcasts" marketing feed:
+    `https://rss.marketingtools.apple.com/api/v2/us/podcasts/top/{n}/podcasts.json`).
+    No API key; each podcast carries a genre for genre-sectioned grouping.
 - **Rationale**: The constitution requires stable, documented providers with
   predictable quotas (Principle III/V). These are the strongest free, well-known
   sources per category; "trending" is mapped to each provider's closest concept
-  (bestsellers / new-and-featured / top charts).
-- **Alternatives considered**: Google Books (great for metadata/search but weaker
-  "trending" signal — may use later for enrichment/search in 004); Last.fm/Apple
-  Music for music (Spotify's free client-credentials is simpler); a single provider
-  for all three (none covers books+music+audiobooks well).
+  (bestsellers / most-played / top charts). The Apple RSS marketing feeds are keyless
+  and consistent across music, audiobooks, and podcasts.
+- **Alternatives considered**: Spotify for music (dropped — deprecated/auth-gated
+  endpoints, see above); Last.fm for music (Apple's keyless RSS is simpler and needs
+  no credentials); a single provider for all four categories (none covers
+  books+music+audiobooks+podcasts well).
 
 ## 2. Provider-abstraction boundary
 
@@ -37,7 +47,8 @@ resolved below).
   `providers/` imports a provider SDK/URL** (Principle III).
 - **Rationale**: Lets us swap providers, add caching/resilience uniformly, and test
   with a fake provider. Each adapter normalizes its provider's payload to a common
-  `TrendingItem` (mediaType, title, creator, coverUrl, providerId).
+  `TrendingItem` (mediaType, title, creator, coverUrl, providerId, and genre where the
+  provider supplies one).
 - **Alternatives considered**: Calling providers directly from the route/service —
   violates the principle and spreads provider quirks/secret handling.
 
@@ -62,12 +73,12 @@ resolved below).
 
 ## 4. Secrets & configuration
 
-- **Decision**: `NYT_API_KEY`, `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET` are added
+- **Decision**: `NYT_API_KEY` and `GOOGLE_BOOKS_API_KEY` (both optional) are added
   as Secret Manager secrets (Terraform) and injected into Cloud Run; loaded/validated
-  in the config module. Apple/iTunes needs no key. Spotify access tokens
-  (client-credentials) are fetched on demand and cached in Redis until expiry.
-- **Rationale**: No keys in source (Principle IV); IaC for all resources. Caching the
-  Spotify token avoids a token call per request.
+  in the config module. The Apple RSS feeds (music, audiobooks, podcasts) need no key
+  or auth, so no provider tokens are fetched or cached.
+- **Rationale**: No keys in source (Principle IV); IaC for all resources. Keyless
+  Apple feeds keep the secret surface minimal.
 - **Alternatives considered**: Env-only/local files in cloud — violates the secrets rule.
 
 ## 5. API shape & start-activity reuse
@@ -91,7 +102,10 @@ resolved below).
   `useDiscover(category)`; render a responsive grid of `DiscoverItemCard`s (cover,
   title, creator) with a `StaleBanner` when `stale`, an empty/unavailable state, and a
   per-item "I'm reading/listening to this" action that opens the compose overlay
-  pre-filled. MD3 styling/tokens reused.
+  pre-filled. Books, music, and podcasts carry a genre and are grouped into genre
+  sections (the genre picker skips Apple's generic top-level parent — "Music"/"Podcasts"
+  — in favor of the specific genre, e.g. Hip-Hop/Rap, News); audiobooks have no genre
+  and render ungrouped. MD3 styling/tokens reused.
 - **Rationale**: Fits the existing shell/nav and MD3 system; minimal new UI surface.
 
 ## Resolved unknowns

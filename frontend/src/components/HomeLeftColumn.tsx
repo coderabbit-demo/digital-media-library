@@ -7,6 +7,7 @@ const MEDIA_BADGE: Record<MediaType, string> = {
   book: 'Book',
   music: 'Music',
   audiobook: 'Audiobook',
+  podcast: 'Podcast',
 };
 
 /**

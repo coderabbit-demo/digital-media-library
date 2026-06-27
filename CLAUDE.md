@@ -5,8 +5,9 @@ shell commands, and other important information, read the current plan:
 
 Active feature: 003-discover (per-category trending Discover; **introduces the
 provider-abstraction + Redis cache + stale-on-failure layer** — Principle III).
-Providers: Books→NYT Books API, Music→Spotify Web API, Audiobooks→Apple/iTunes; keys
-in Secret Manager (Terraform). Adds `GET /api/discover/{category}` and `backend/src/providers/`
+Providers: Books→NYT Books API (+Google Books), Music→Apple Music RSS, Audiobooks→Apple
+RSS, Podcasts→Apple RSS (Apple feeds are keyless); NYT/Google Books keys (optional) in
+Secret Manager (Terraform). Adds `GET /api/discover/{category}` and `backend/src/providers/`
 adapters; reuses 001 posting for "start activity from item". Builds on shipped 001
 (auth+feed), MD3, 002 (shell/home).
 
