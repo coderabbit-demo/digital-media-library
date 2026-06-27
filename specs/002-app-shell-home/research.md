@@ -18,20 +18,24 @@ to this feature are recorded here; no `NEEDS CLARIFICATION` remain.
 - **Alternatives considered**: Per-page `useMe` redirects (already used by HomeFeed in
   001) — works but duplicates logic and risks a page being added without a guard.
 
-## 2. Home data fetch — single aggregated local endpoint
+## 2. Home data fetch — local aggregated endpoint + existing feed
 
 - **Decision**: Add `GET /api/home` (auth-guarded) returning, in one response: the
-  current user's own current items, the community feed's first page, and counts
-  (currently-on; wishlisted = 0 until feature 005). The SPA loads the home from this
-  one call.
+  current user's own current items, counts (currently-on; wishlisted = 0 until
+  feature 005), and recommendations (empty until feature 004). The community feed
+  (center column) is loaded separately via the existing paginated `GET /api/feed`.
+  Both are local DB-backed calls; the home makes no external content-provider calls.
 - **Rationale**: The spec requires a sub-3s home built from **local data only**
-  (FR-006/FR-007). One aggregated DB-backed call minimizes round-trips and external
-  exposure (there are no external providers here). It reuses 001's feed query for the
-  community page and adds an owner-scoped query for the user's items.
-- **Alternatives considered**: Multiple parallel calls (`/api/me`, `/api/feed`,
-  `/api/me/activities`) — more round-trips and more moving parts for the same data;
-  the aggregate keeps the home fast and simple. (The individual endpoints remain
-  available for other screens.)
+  (FR-006/FR-007). `/api/home` aggregates the small, page-specific data (own items +
+  counts + recommendations) in one DB-backed call, while the community feed reuses
+  the proven keyset-paginated `/feed` (and its load-more) rather than duplicating
+  pagination inside the aggregate. Both calls are local and run in parallel, keeping
+  the home fast.
+- **Alternatives considered**: Embedding the feed's first page in `/api/home` — would
+  duplicate the feed/pagination logic and re-serve a page `/feed` already provides;
+  reusing `/feed` keeps one source of truth for the community stream. Splitting
+  own-items/counts into separate calls (`/api/me`, `/api/me/activities`) — more
+  round-trips for the same page-specific data.
 
 ## 3. Own current items vs. the global feed
 

@@ -44,7 +44,7 @@ proven feed pagination component is reused as-is.
 ## Shared DTOs (add to `packages/shared`)
 
 - `HomeCounts`: `{ currentlyOn: number; wishlisted: number }`
-- `HomeData`: `{ ownItems: ActivityDTO[]; feed: FeedPageDTO; counts: HomeCounts; recommendations: RecommendationDTO[] }`
+- `HomeData`: `{ ownItems: ActivityDTO[]; counts: HomeCounts; recommendations: RecommendationDTO[] }` (no `feed` — the community feed is fetched via `GET /api/feed`)
   - `RecommendationDTO[]` is typed but always empty here; the concrete `RecommendationDTO`
     is finalized in feature 004 (a minimal placeholder type is acceptable now).
 
