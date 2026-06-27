@@ -378,6 +378,25 @@ body {
   color: var(--md-sys-color-on-surface-variant);
 }
 
+/* User avatar (profile pic or initials) */
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--md-sys-shape-corner-full);
+  object-fit: cover;
+  flex: 0 0 auto;
+}
+.avatar--initials {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  user-select: none;
+}
+
 .app-main {
   flex: 1;
   width: 100%;
@@ -387,6 +406,50 @@ body {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+/* ==========================================================================
+   Modal dialog (MD3) — compose overlay
+   ========================================================================== */
+.modal-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: color-mix(in srgb, var(--md-sys-color-scrim) 40%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.modal {
+  width: 100%;
+  max-width: 480px;
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  background: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface);
+  border-radius: var(--md-sys-shape-corner-extra-large);
+  padding: 24px;
+  box-shadow: 0 8px 24px rgb(var(--md-ref-shadow-rgb) / 0.28);
+}
+.modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.modal__title {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 500;
+}
+/* Inside the dialog the form card shouldn't double up surface/padding. */
+.modal .post-form {
+  background: transparent;
+  padding: 0;
+}
+.modal .post-form__heading {
+  display: none;
 }
 
 /* ==========================================================================

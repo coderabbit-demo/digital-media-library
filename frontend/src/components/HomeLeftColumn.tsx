@@ -9,19 +9,12 @@ const MEDIA_BADGE: Record<MediaType, string> = {
   audiobook: 'Audiobook',
 };
 
-/** Focus the compose form's title field (the center column's PostUpdateForm). */
-function focusCompose() {
-  const el = document.getElementById('pf-title');
-  el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  el?.focus();
-}
-
 /**
  * Home left column: the user's own current "currently reading/listening" items,
  * simple counts, and quick links (post an update, open Wishlist). Backed by the
- * local-only `GET /api/home` payload.
+ * local-only `GET /api/home` payload. "Post an update" opens the compose overlay.
  */
-export function HomeLeftColumn() {
+export function HomeLeftColumn({ onPostUpdate }: { onPostUpdate: () => void }) {
   const { data, isLoading } = useHome();
 
   return (
@@ -65,7 +58,7 @@ export function HomeLeftColumn() {
       </div>
 
       <div className="home-quick-links">
-        <button type="button" className="btn btn-primary" onClick={focusCompose}>
+        <button type="button" className="btn btn-primary" onClick={onPostUpdate}>
           Post an update
         </button>
         <Link to="/wishlist" className="btn">
