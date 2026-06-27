@@ -4,7 +4,7 @@
 
 **Created**: 2026-06-26
 
-**Status**: Draft
+**Status**: Ready for implementation
 
 **Input**: Split from the original content-discovery spec. Media search plus a
 user-driven recommendation system that populates the home-page recommendations
@@ -66,7 +66,7 @@ the compose flow is pre-filled and the submitted activity appears in the feed.
 
 ### Functional Requirements
 
-- **FR-001**: Authenticated users MUST be able to search for media items by title and/or creator within the supported categories; results MUST be sourced through the provider-abstraction layer and cached (no direct provider calls, respecting the refresh cadence).
+- **FR-001**: Authenticated users MUST be able to search for media items by title and/or creator within the supported categories; repeated searches for the same terms MUST be reused so the experience stays fast and stays within external rate limits.
 - **FR-002**: Every media item (in search results and Discover views) MUST expose a "Recommend" action that records the signed-in user's recommendation of that item.
 - **FR-003**: The home-page recommendations section MUST display media that users have recommended (community-wide), most recent first, each showing the item and who recommended it; externally sourced text rendered as plain text.
 - **FR-004**: The home-page recommendations section MUST be populated solely by user-initiated recommendations; it MUST NOT contain auto-generated or algorithmic recommendations. (Auto/curated recommendations are deferred to future media-specific pages.)
@@ -76,7 +76,7 @@ the compose flow is pre-filled and the submitted activity appears in the feed.
 
 ### Key Entities *(include if feature involves data)*
 
-- **Trending Item / Media Item (referenced)**: From feature 003 — the searchable/recommendable content item (media type, title, creator, optional cover art, provider id), sourced through the shared provider abstraction + cache.
+- **Trending Item / Media Item (referenced)**: From feature 003 — the searchable/recommendable content item (media type, title, creator, optional cover art, and a stable identifier from its source).
 - **Recommendation**: A user-initiated endorsement of a media item. Attributes: the recommending user, the media item, and when it was made. Surfaced in the home recommendations region; one user may recommend a given item once and may remove it.
 - **Activity Update (referenced)**: From feature 001 — a search item can seed one.
 

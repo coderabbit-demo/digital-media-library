@@ -17,23 +17,29 @@ const CATEGORY_LABELS: Record<DiscoverCategory, string> = {
  * provider-backed endpoint. Each result can be recommended or seed an activity.
  */
 export function Search() {
+  // Live form inputs.
   const [category, setCategory] = useState<DiscoverCategory>('books');
   const [input, setInput] = useState('');
-  const [query, setQuery] = useState('');
+  // The submitted (category, query) pair drives results, so changing the category
+  // dropdown alone never re-runs a stale query — only Search does.
+  const [submitted, setSubmitted] = useState<{ category: DiscoverCategory; query: string }>({
+    category: 'books',
+    query: '',
+  });
   const [compose, setCompose] = useState<ComposeInitial | null>(null);
 
-  const { data, isFetching, isError, refetch } = useSearch(category, query);
+  const { data, isFetching, isError, refetch } = useSearch(submitted.category, submitted.query);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    setQuery(input);
+    setSubmitted({ category, query: input });
   };
 
   const startActivity = (item: TrendingItemDTO) =>
     setCompose({ mediaType: item.mediaType, title: item.title, itemAuthor: item.creator ?? undefined });
 
   const items = data?.items ?? [];
-  const hasQuery = query.trim().length > 0;
+  const hasQuery = submitted.query.trim().length > 0;
 
   return (
     <div className="discover-page">
@@ -81,7 +87,10 @@ export function Search() {
       ) : items.length === 0 ? (
         <div className="feed-empty">
           <h2>No results</h2>
-          <p>No {CATEGORY_LABELS[category].toLowerCase()} matched “{query}”. Try different terms.</p>
+          <p>
+            No {CATEGORY_LABELS[submitted.category].toLowerCase()} matched “{submitted.query}”. Try
+            different terms.
+          </p>
         </div>
       ) : (
         <div className="discover-grid">

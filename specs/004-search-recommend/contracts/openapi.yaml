@@ -8,12 +8,6 @@ info:
     feature-001 session cookie. New text is plain text only.
 servers:
   - url: /api
-components:
-  securitySchemes:
-    sessionCookie:
-      type: apiKey
-      in: cookie
-      name: dml_session
 security:
   - sessionCookie: []
 paths:
@@ -69,6 +63,11 @@ paths:
         '204': { description: Removed (or not present / not owned — no-op) }
         '401': { description: Not authenticated }
 components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: dml_session
   schemas:
     TrendingItem:
       type: object

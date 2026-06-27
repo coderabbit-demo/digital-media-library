@@ -7,8 +7,11 @@ import type { SearchProvider } from '../providers/search-provider.js';
 /**
  * Media search through the provider abstraction with cache-aside (Principle III).
  * Repeat queries for the same (mediaType, normalized query) within the TTL are
- * served from Redis without hitting the provider (feature 004, SC-003). On
- * provider failure, returns an empty result set (search has no stale semantics).
+ * served from Redis without hitting the provider (feature 004, SC-003).
+ *
+ * Cache access is best-effort: a Redis hiccup never fails an otherwise-successful
+ * provider search. A genuine provider failure propagates so the client can show
+ * an error state — distinct from a true zero-result search (an empty list).
  */
 export class SearchService {
   constructor(
@@ -27,18 +30,29 @@ export class SearchService {
     if (!normalized) return [];
 
     const cacheKey = `search:${mediaType}:${normalized}`;
-    const cached = await this.cache.get<TrendingItem[]>(cacheKey);
+    const cached = await this.safeGet(cacheKey);
     if (cached) return cached.slice(0, limit);
 
+    // A provider failure propagates (the route surfaces an error to the UI).
+    const items = await this.providers[mediaType].search(normalized, Math.max(limit, 20));
+    // Best-effort cache write — a Redis failure must not discard a good result.
+    await this.safeSet(cacheKey, items);
+    return items.slice(0, limit);
+  }
+
+  private async safeGet(key: string): Promise<TrendingItem[] | null> {
     try {
-      // Cache a generous batch so different limits share one cached result.
-      const items = await this.providers[mediaType].search(normalized, Math.max(limit, 20));
-      await this.cache.set(cacheKey, items, this.config.SEARCH_TTL_SECONDS);
-      return items.slice(0, limit);
+      return await this.cache.get<TrendingItem[]>(key);
     } catch {
-      // Search has no last-known-good; surface an empty set and let the UI show
-      // an empty/unavailable state rather than erroring.
-      return [];
+      return null;
+    }
+  }
+
+  private async safeSet(key: string, items: TrendingItem[]): Promise<void> {
+    try {
+      await this.cache.set(key, items, this.config.SEARCH_TTL_SECONDS);
+    } catch {
+      // Ignore cache write failures; the result is still returned.
     }
   }
 }

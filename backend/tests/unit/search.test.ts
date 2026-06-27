@@ -77,7 +77,7 @@ describe('SearchService (cache-aside)', () => {
     expect(provider.calls).toBe(1);
   });
 
-  it('returns an empty list when the provider fails (no stale semantics)', async () => {
+  it('propagates a provider failure (distinct from a zero-result search)', async () => {
     const provider: SearchProvider = {
       name: 'fake',
       async search() {
@@ -85,7 +85,28 @@ describe('SearchService (cache-aside)', () => {
       },
     };
     const { svc } = makeService(provider);
-    expect(await svc.search('music', 'anything', 10)).toEqual([]);
+    await expect(svc.search('music', 'anything', 10)).rejects.toThrow('provider down');
+  });
+
+  it('still returns provider results when the cache read/write fails (best-effort)', async () => {
+    const flakyCache = {
+      get: async () => {
+        throw new Error('redis down');
+      },
+      set: async () => {
+        throw new Error('redis down');
+      },
+      delByPrefix: async () => undefined,
+    } as unknown as InMemoryCacheService;
+    const provider: SearchProvider = {
+      name: 'fake',
+      async search() {
+        return [{ mediaType: 'book', title: 'Dune', creator: null, coverUrl: null, providerId: 'b1', provider: 'fake', genre: null }];
+      },
+    };
+    const { svc } = makeService(provider, flakyCache);
+    const items = await svc.search('book', 'dune', 10);
+    expect(items).toHaveLength(1);
   });
 
   it('returns empty for a blank query without calling the provider', async () => {

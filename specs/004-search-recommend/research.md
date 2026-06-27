@@ -16,10 +16,17 @@ a local catalog (out of scope per spec).
 
 **Decision**: `SearchService` does cache-aside keyed by
 `search:{mediaType}:{normalizedQuery}` (query lowercased + trimmed + whitespace-
-collapsed), TTL `SEARCH_TTL_SECONDS` (default 1h). On provider failure, return an
-empty result set (search has no "last known good" semantics like trending) and
-let the UI show an empty/error state. Repeat queries within TTL never hit the
-provider → satisfies SC-003.
+collapsed), TTL `SEARCH_TTL_SECONDS` (default 1h). Repeat queries within TTL never
+hit the provider → satisfies SC-003.
+
+Failure handling distinguishes two cases:
+- **Provider failure** propagates as an error so the UI can show a distinct
+  "search failed / try again" state (search has no "last known good" snapshot
+  like trending).
+- **A genuine zero-result query** returns an empty list → the UI shows the clear
+  empty state.
+- **Cache access is best-effort**: a Redis get/set failure is swallowed so it
+  never discards an otherwise-successful provider result.
 
 ## 3. Recommendation data + idempotency
 

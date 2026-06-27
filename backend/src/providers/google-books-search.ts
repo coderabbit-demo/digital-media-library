@@ -3,6 +3,14 @@ import type { TrendingItem } from './content-provider.js';
 import type { SearchProvider } from './search-provider.js';
 import { fetchJson } from './http.js';
 
+/** Google Books thumbnails come back as http://; upgrade to https:// (else null). */
+function toHttps(url: string | undefined): string | null {
+  if (!url) return null;
+  if (url.startsWith('https://')) return url;
+  if (url.startsWith('http://')) return `https://${url.slice('http://'.length)}`;
+  return null;
+}
+
 interface GoogleVolumesResponse {
   items?: Array<{
     id?: string;
@@ -47,8 +55,9 @@ export class GoogleBooksSearchProvider implements SearchProvider {
         mediaType: 'book',
         title,
         creator: v.volumeInfo?.authors?.[0]?.trim() || null,
-        coverUrl:
-          v.volumeInfo?.imageLinks?.thumbnail ?? v.volumeInfo?.imageLinks?.smallThumbnail ?? null,
+        coverUrl: toHttps(
+          v.volumeInfo?.imageLinks?.thumbnail ?? v.volumeInfo?.imageLinks?.smallThumbnail,
+        ),
         providerId: v.id,
         provider: this.name,
         genre: v.volumeInfo?.categories?.[0]?.trim() || null,
