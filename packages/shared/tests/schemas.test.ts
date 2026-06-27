@@ -24,7 +24,11 @@ describe('createActivitySchema', () => {
   });
 
   it('rejects an unknown media type', () => {
-    expect(createActivitySchema.safeParse({ mediaType: 'podcast', title: 'X' }).success).toBe(false);
+    expect(createActivitySchema.safeParse({ mediaType: 'magazine', title: 'X' }).success).toBe(false);
+  });
+
+  it('accepts the podcast media type', () => {
+    expect(createActivitySchema.safeParse({ mediaType: 'podcast', title: 'The Daily' }).success).toBe(true);
   });
 
   it('allows an optional itemAuthor', () => {
