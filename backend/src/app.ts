@@ -15,6 +15,7 @@ import { HomeService } from './services/home.js';
 import { TrendingService } from './services/discover.js';
 import { SearchService } from './services/search.js';
 import { RecommendationService } from './services/recommendations.js';
+import { WishlistService } from './services/wishlist.js';
 import type { ContentProvider } from './providers/content-provider.js';
 import type { SearchProvider } from './providers/search-provider.js';
 import { GoogleBooksSearchProvider } from './providers/google-books-search.js';
@@ -38,6 +39,7 @@ import { registerHomeRoutes } from './api/home.js';
 import { registerDiscoverRoutes } from './api/discover.js';
 import { registerSearchRoutes } from './api/search.js';
 import { registerRecommendationRoutes } from './api/recommendations.js';
+import { registerWishlistRoutes } from './api/wishlist.js';
 
 /** Overrides let tests inject stubs (prisma/cache/oidc) and a custom config. */
 export interface BuildAppOverrides {
@@ -76,7 +78,8 @@ export async function buildApp(overrides: BuildAppOverrides = {}): Promise<Fasti
   const feed = new FeedService(prisma, cache, config);
   const activities = new ActivityService(prisma, feed);
   const recommendations = new RecommendationService(prisma);
-  const home = new HomeService(prisma, recommendations);
+  const wishlist = new WishlistService(prisma);
+  const home = new HomeService(prisma, recommendations, wishlist);
   const providers: Record<MediaType, ContentProvider> = overrides.providers ?? {
     // Books aggregate NYT (all bestseller genres) + Google Books, deduped.
     book: new CompositeBooksProvider([new NytBooksProvider(config), new GoogleBooksProvider(config)]),
@@ -96,7 +99,7 @@ export async function buildApp(overrides: BuildAppOverrides = {}): Promise<Fasti
   const search = new SearchService(cache, searchProviders, config);
 
   const ctx: AppContext = {
-    config, prisma, cache, oidc, session, profiles, feed, activities, home, discover, search, recommendations,
+    config, prisma, cache, oidc, session, profiles, feed, activities, home, discover, search, recommendations, wishlist,
   };
   app.decorate('ctx', ctx);
 
@@ -151,6 +154,7 @@ export async function buildApp(overrides: BuildAppOverrides = {}): Promise<Fasti
       await registerDiscoverRoutes(api);
       await registerSearchRoutes(api);
       await registerRecommendationRoutes(api);
+      await registerWishlistRoutes(api);
     },
     { prefix: '/api' },
   );

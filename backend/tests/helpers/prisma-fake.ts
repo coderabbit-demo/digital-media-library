@@ -41,6 +41,7 @@ interface RecommendationRow {
   providerId: string;
   createdAt: Date;
 }
+type WishlistRow = RecommendationRow;
 
 export interface FakePrisma {
   client: PrismaClient;
@@ -48,6 +49,7 @@ export interface FakePrisma {
   seedActivity(userId: string, partial?: Partial<ActivityRow>): ActivityRow;
   seedSession(userId: string, partial?: Partial<SessionRow>): SessionRow;
   seedRecommendation(userId: string, partial?: Partial<RecommendationRow>): RecommendationRow;
+  seedWishlistItem(userId: string, partial?: Partial<WishlistRow>): WishlistRow;
 }
 
 export function createFakePrisma(): FakePrisma {
@@ -55,6 +57,7 @@ export function createFakePrisma(): FakePrisma {
   const activities = new Map<string, ActivityRow>();
   const sessions = new Map<string, SessionRow>();
   const recommendations = new Map<string, RecommendationRow>();
+  const wishlist = new Map<string, WishlistRow>();
 
   const selectUser = (id: string) => {
     const u = profiles.get(id);
@@ -215,6 +218,57 @@ export function createFakePrisma(): FakePrisma {
         return { count };
       },
     },
+    wishlistItem: {
+      upsert: async ({ where, create, update, select }: any) => {
+        const key = where.uq_wishlist_user_item;
+        const existing = [...wishlist.values()].find(
+          (r) =>
+            r.userId === key.userId &&
+            r.mediaType === key.mediaType &&
+            r.providerId === key.providerId,
+        );
+        if (existing) {
+          Object.assign(existing, update);
+          return select ? projectRecommendation(existing, select, selectUser) : existing;
+        }
+        const row: WishlistRow = {
+          id: randomUUID(),
+          userId: create.userId,
+          mediaType: create.mediaType,
+          title: create.title,
+          creator: create.creator ?? null,
+          coverUrl: create.coverUrl ?? null,
+          providerId: create.providerId,
+          createdAt: new Date(),
+        };
+        wishlist.set(row.id, row);
+        return select ? projectRecommendation(row, select, selectUser) : row;
+      },
+      findMany: async ({ where, select }: any = {}) => {
+        let rows = [...wishlist.values()];
+        if (where?.userId) rows = rows.filter((r) => r.userId === where.userId);
+        if (where?.mediaType) rows = rows.filter((r) => r.mediaType === where.mediaType);
+        rows.sort(
+          (a, b) => b.createdAt.getTime() - a.createdAt.getTime() || (a.id < b.id ? 1 : -1),
+        );
+        return rows.map((r) => (select ? projectRecommendation(r, select, selectUser) : r));
+      },
+      count: async ({ where }: any = {}) => {
+        let rows = [...wishlist.values()];
+        if (where?.userId) rows = rows.filter((r) => r.userId === where.userId);
+        return rows.length;
+      },
+      deleteMany: async ({ where }: any) => {
+        let count = 0;
+        for (const [id, row] of wishlist) {
+          if (where.id && row.id !== where.id) continue;
+          if (where.userId && row.userId !== where.userId) continue;
+          wishlist.delete(id);
+          count++;
+        }
+        return { count };
+      },
+    },
     $disconnect: async () => undefined,
   } as unknown as PrismaClient;
 
@@ -270,6 +324,20 @@ export function createFakePrisma(): FakePrisma {
         createdAt: partial.createdAt ?? new Date(),
       };
       recommendations.set(row.id, row);
+      return row;
+    },
+    seedWishlistItem(userId, partial = {}) {
+      const row: WishlistRow = {
+        id: partial.id ?? randomUUID(),
+        userId,
+        mediaType: partial.mediaType ?? 'book',
+        title: partial.title ?? 'Seed Wish',
+        creator: partial.creator ?? null,
+        coverUrl: partial.coverUrl ?? null,
+        providerId: partial.providerId ?? `prov-${randomUUID()}`,
+        createdAt: partial.createdAt ?? new Date(),
+      };
+      wishlist.set(row.id, row);
       return row;
     },
   };

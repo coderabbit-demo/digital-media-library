@@ -152,3 +152,29 @@ export const createRecommendationSchema = z.object({
   providerId: z.string().trim().min(1).max(512),
 });
 export type CreateRecommendationInput = z.infer<typeof createRecommendationSchema>;
+
+/** An item saved on the current user's private wishlist (feature 005). */
+export interface WishlistItemDTO {
+  id: string;
+  mediaType: MediaType;
+  title: string;
+  itemAuthor: string | null;
+  coverUrl: string | null;
+  providerId: string;
+  createdAt: string;
+}
+
+/** The current user's wishlist (feature 005). */
+export interface WishlistPageDTO {
+  items: WishlistItemDTO[];
+}
+
+/** Request body for adding a wishlist item (feature 005). Plain text only. */
+export const createWishlistItemSchema = z.object({
+  mediaType: mediaTypeSchema,
+  title: z.string().trim().min(1).max(TITLE_MAX_LENGTH),
+  creator: z.string().trim().max(ITEM_AUTHOR_MAX_LENGTH).optional().nullable(),
+  coverUrl: z.string().trim().url().max(2048).optional().nullable(),
+  providerId: z.string().trim().min(1).max(512),
+});
+export type CreateWishlistItemInput = z.infer<typeof createWishlistItemSchema>;

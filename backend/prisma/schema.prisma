@@ -43,6 +43,7 @@ model UserProfile {
   activities      Activity[]
   sessions        Session[]
   recommendations Recommendation[]
+  wishlistItems   WishlistItem[]
 
   @@map("user_profile")
 }
@@ -84,6 +85,25 @@ model Recommendation {
   // Recent-first community listing.
   @@index([createdAt(sort: Desc), id(sort: Desc)], name: "idx_recommendation_recent")
   @@map("recommendation")
+}
+
+model WishlistItem {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  mediaType  MediaType @map("media_type")
+  title      String
+  creator    String?
+  coverUrl   String?   @map("cover_url")
+  providerId String    @map("provider_id")
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // One entry per user per item (add is idempotent — FR-005). Private to the owner.
+  @@unique([userId, mediaType, providerId], name: "uq_wishlist_user_item")
+  // Owner's recent-first list.
+  @@index([userId, createdAt(sort: Desc)], name: "idx_wishlist_user_recent")
+  @@map("wishlist_item")
 }
 
 model Session {

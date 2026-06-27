@@ -1,0 +1,87 @@
+openapi: 3.1.0
+info:
+  title: Digital Media Library — Wishlist (005)
+  version: 0.1.0
+  description: >
+    A personal, private wishlist. All routes require the feature-001 session
+    cookie and operate only on the current user's items. Text is plain text only.
+servers:
+  - url: /api
+security:
+  - sessionCookie: []
+paths:
+  /wishlist:
+    get:
+      summary: List the current user's wishlist (optionally filtered by media type).
+      parameters:
+        - in: query
+          name: mediaType
+          required: false
+          schema: { type: string, enum: [book, music, audiobook, podcast] }
+      responses:
+        '200':
+          description: The user's wishlist items, most recent first.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WishlistPage' }
+        '401': { description: Not authenticated }
+    post:
+      summary: Add an item to the wishlist (idempotent per user+item).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateWishlistItem' }
+      responses:
+        '201':
+          description: Created (or already present — idempotent).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WishlistItem' }
+        '400': { description: Invalid body }
+        '401': { description: Not authenticated }
+  /wishlist/{id}:
+    delete:
+      summary: Remove an item from the current user's wishlist.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '204': { description: Removed (or not present / not owned — no-op) }
+        '401': { description: Not authenticated }
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: dml_session
+  schemas:
+    WishlistItem:
+      type: object
+      required: [id, mediaType, title, itemAuthor, coverUrl, providerId, createdAt]
+      properties:
+        id: { type: string }
+        mediaType: { type: string, enum: [book, music, audiobook, podcast] }
+        title: { type: string }
+        itemAuthor: { type: [string, "null"] }
+        coverUrl: { type: [string, "null"], format: uri }
+        providerId: { type: string }
+        createdAt: { type: string, format: date-time }
+    WishlistPage:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/WishlistItem' }
+    CreateWishlistItem:
+      type: object
+      required: [mediaType, title, providerId]
+      properties:
+        mediaType: { type: string, enum: [book, music, audiobook, podcast] }
+        title: { type: string, minLength: 1, maxLength: 300 }
+        creator: { type: [string, "null"], maxLength: 200 }
+        coverUrl: { type: [string, "null"], format: uri }
+        providerId: { type: string }
