@@ -8,6 +8,7 @@ interface AppleRssFeed {
       name?: string;
       artistName?: string;
       artworkUrl100?: string;
+      url?: string;
     }>;
   };
 }
@@ -40,6 +41,8 @@ export class AppleAudiobookProvider implements ContentProvider {
         providerId: r.id,
         provider: this.name,
         genre: null,
+        description: null,
+        providerUrl: r.url ?? null,
       });
       if (items.length >= limit) break;
     }

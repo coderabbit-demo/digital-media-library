@@ -27,6 +27,12 @@ export interface ComposeInitial {
   mediaType?: MediaType;
   title?: string;
   itemAuthor?: string;
+  // Snapshot of the source item (when composing from Discover/Search/Library), so
+  // the resulting feed card can show cover art, a synopsis, and a provider link.
+  coverUrl?: string | null;
+  providerId?: string | null;
+  description?: string | null;
+  providerUrl?: string | null;
 }
 
 export function PostUpdateForm({
@@ -60,6 +66,11 @@ export function PostUpdateForm({
       title,
       itemAuthor: itemAuthor.trim() === '' ? null : itemAuthor,
       note: note.trim() === '' ? null : note,
+      // Forward the (non-editable) item snapshot from the source item, if any.
+      coverUrl: initial?.coverUrl ?? null,
+      providerId: initial?.providerId ?? null,
+      description: initial?.description ?? null,
+      providerUrl: initial?.providerUrl ?? null,
     });
 
     if (!parsed.success) {

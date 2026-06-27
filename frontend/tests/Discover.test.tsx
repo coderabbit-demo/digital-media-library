@@ -26,7 +26,7 @@ const page = (overrides: Partial<DiscoverPageDTO> = {}): DiscoverPageDTO => ({
   category: 'book',
   stale: false,
   items: [
-    { mediaType: 'book', title: 'Dune', creator: 'Frank Herbert', coverUrl: null, providerId: 'b1', genre: 'Fiction' },
+    { mediaType: 'book', title: 'Dune', creator: 'Frank Herbert', coverUrl: null, providerId: 'b1', genre: 'Fiction', description: null, providerUrl: null },
   ],
   ...overrides,
 });
@@ -60,7 +60,7 @@ describe('Discover page', () => {
       category: 'podcast',
       stale: false,
       items: [
-        { mediaType: 'podcast', title: 'The Daily', creator: 'The New York Times', coverUrl: null, providerId: 'p1', genre: 'News' },
+        { mediaType: 'podcast', title: 'The Daily', creator: 'The New York Times', coverUrl: null, providerId: 'p1', genre: 'News', description: null, providerUrl: null },
       ],
     });
     renderDiscover('podcasts');

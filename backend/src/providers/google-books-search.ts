@@ -18,6 +18,9 @@ interface GoogleVolumesResponse {
       title?: string;
       authors?: string[];
       categories?: string[];
+      description?: string;
+      infoLink?: string;
+      canonicalVolumeLink?: string;
       imageLinks?: { thumbnail?: string; smallThumbnail?: string };
     };
   }>;
@@ -61,6 +64,8 @@ export class GoogleBooksSearchProvider implements SearchProvider {
         providerId: v.id,
         provider: this.name,
         genre: v.volumeInfo?.categories?.[0]?.trim() || null,
+        description: v.volumeInfo?.description?.trim() || null,
+        providerUrl: v.volumeInfo?.infoLink ?? v.volumeInfo?.canonicalVolumeLink ?? null,
       });
       if (items.length >= limit) break;
     }

@@ -8,6 +8,9 @@ interface GoogleVolumesResponse {
     volumeInfo?: {
       title?: string;
       authors?: string[];
+      description?: string;
+      infoLink?: string;
+      canonicalVolumeLink?: string;
       imageLinks?: { thumbnail?: string; smallThumbnail?: string };
     };
   }>;
@@ -53,6 +56,8 @@ export class GoogleBooksProvider implements ContentProvider {
         providerId: v.id,
         provider: this.name,
         genre,
+        description: v.volumeInfo?.description?.trim() || null,
+        providerUrl: v.volumeInfo?.infoLink ?? v.volumeInfo?.canonicalVolumeLink ?? null,
       });
     }
     return items;

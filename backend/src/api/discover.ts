@@ -52,6 +52,8 @@ export async function registerDiscoverRoutes(app: FastifyInstance): Promise<void
           coverUrl: i.coverUrl,
           providerId: i.providerId,
           genre: i.genre,
+          description: i.description,
+          providerUrl: i.providerUrl,
         }),
       ),
     };

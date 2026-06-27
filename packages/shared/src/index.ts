@@ -24,6 +24,12 @@ export const createActivitySchema = z.object({
   itemAuthor: z.string().trim().max(ITEM_AUTHOR_MAX_LENGTH).optional().nullable(),
   // Optional free-text author note (feature 006), plain text.
   note: z.string().trim().max(NOTE_MAX_LENGTH).optional().nullable(),
+  // Optional snapshot of the source item (when started from Discover/Search/Library)
+  // so feed cards can show cover art, a synopsis, and a provider link (UI refresh).
+  coverUrl: z.string().trim().url().max(2048).optional().nullable(),
+  providerId: z.string().trim().max(512).optional().nullable(),
+  description: z.string().trim().max(5000).optional().nullable(),
+  providerUrl: z.string().trim().url().max(2048).optional().nullable(),
 });
 export type CreateActivityInput = z.infer<typeof createActivitySchema>;
 
@@ -57,6 +63,11 @@ export interface ActivityDTO {
   note: string | null;
   /** Number of (non-deleted) replies in this update's conversation (feature 006). */
   replyCount: number;
+  /** Snapshot of the source item for richer feed cards (UI refresh); null when hand-typed. */
+  coverUrl: string | null;
+  providerId: string | null;
+  description: string | null;
+  providerUrl: string | null;
   createdAt: string;
   /** True when the requesting user authored this activity. */
   canDelete: boolean;
@@ -170,6 +181,10 @@ export interface TrendingItemDTO {
   providerId: string;
   /** Genre/list this item came from (e.g., an NYT list name, Google subject, or Apple genre); null when the source has no genre. */
   genre: string | null;
+  /** Short synopsis when the provider supplies one; null otherwise. */
+  description: string | null;
+  /** Canonical URL to the item on the provider (for a "Preview/View" link); null if none. */
+  providerUrl: string | null;
 }
 
 /** A page of trending items for one category. */
