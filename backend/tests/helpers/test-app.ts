@@ -43,6 +43,7 @@ export async function buildTestApp(opts: {
   oidc?: StubOidcService;
   config?: AppConfig;
   providers?: Parameters<typeof buildApp>[0]['providers'];
+  searchProviders?: Parameters<typeof buildApp>[0]['searchProviders'];
 }): Promise<TestApp> {
   const config = opts.config ?? testConfig();
   const cache = opts.cache ?? new InMemoryCacheService();
@@ -54,6 +55,7 @@ export async function buildTestApp(opts: {
     cache,
     oidc,
     providers: opts.providers,
+    searchProviders: opts.searchProviders,
   });
   await app.ready();
 

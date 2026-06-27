@@ -898,10 +898,51 @@ body {
   font-size: 0.8125rem;
   color: var(--md-sys-color-on-surface-variant);
 }
-.discover-card__cta {
+.discover-card__actions {
   margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.discover-card__cta {
   height: 36px;
   font-size: 0.8125rem;
+}
+.discover-card__recommend {
+  height: 32px;
+  font-size: 0.8125rem;
+}
+
+/* Search form */
+.search-form {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 20px;
+  flex-wrap: wrap;
+}
+.search-form__category {
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--md-sys-shape-corner-small);
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+}
+.search-form__input {
+  flex: 1;
+  min-width: 200px;
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--md-sys-shape-corner-small);
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+}
+.home-rec-item__remove {
+  align-self: flex-start;
+  height: 28px;
+  padding: 0 8px;
+  font-size: 0.75rem;
 }
 
 /* Discover genre sections (books) */

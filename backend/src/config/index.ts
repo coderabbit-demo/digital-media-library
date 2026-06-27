@@ -44,6 +44,9 @@ const envSchema = z.object({
 
   // Trending freshness window in seconds (default 3h).
   DISCOVER_TTL_SECONDS: z.coerce.number().int().positive().default(60 * 60 * 3),
+  // Search result cache window in seconds (default 1h); repeat queries within
+  // the window are served from cache (feature 004, SC-003).
+  SEARCH_TTL_SECONDS: z.coerce.number().int().positive().default(60 * 60),
 });
 
 export type AppConfig = z.infer<typeof envSchema>;

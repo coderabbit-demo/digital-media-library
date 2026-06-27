@@ -7,6 +7,8 @@ import type { FeedService } from './services/feed.js';
 import type { ActivityService } from './services/activity.js';
 import type { HomeService } from './services/home.js';
 import type { TrendingService } from './services/discover.js';
+import type { SearchService } from './services/search.js';
+import type { RecommendationService } from './services/recommendations.js';
 import type { SessionManager } from './plugins/session.js';
 import type { ProfileDTO } from '@dml/shared';
 
@@ -26,6 +28,8 @@ export interface AppContext {
   activities: ActivityService;
   home: HomeService;
   discover: TrendingService;
+  search: SearchService;
+  recommendations: RecommendationService;
 }
 
 declare module 'fastify' {
