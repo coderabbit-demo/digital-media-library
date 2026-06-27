@@ -57,7 +57,7 @@ describe('provider adapters', () => {
     });
   });
 
-  it('SpotifyMusicProvider fetches a token then maps new releases', async () => {
+  it('SpotifyMusicProvider fetches a token then maps album search results', async () => {
     const cache = new InMemoryCacheService();
     const releases = () =>
       new Response(

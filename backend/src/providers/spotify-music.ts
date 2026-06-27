@@ -8,7 +8,7 @@ interface SpotifyTokenResponse {
   expires_in: number;
 }
 
-interface SpotifyNewReleases {
+interface SpotifyAlbumSearch {
   albums?: {
     items?: Array<{
       id?: string;
@@ -22,9 +22,11 @@ interface SpotifyNewReleases {
 const TOKEN_CACHE_KEY = 'provider:spotify:token';
 
 /**
- * Music trending via the Spotify Web API "new releases" (client-credentials flow).
- * The access token is cached in Redis until shortly before expiry. Requires
- * `SPOTIFY_CLIENT_ID`/`SPOTIFY_CLIENT_SECRET`; throws when absent or on failure.
+ * Music trending via the Spotify Web API Search endpoint with the `tag:new`
+ * filter (newly released albums). NOTE: `/browse/new-releases` now requires user
+ * auth and is deprecated, so it 403s under the client-credentials flow; Search
+ * works with client credentials. The access token is cached in Redis until
+ * shortly before expiry. Requires `SPOTIFY_CLIENT_ID`/`SPOTIFY_CLIENT_SECRET`.
  */
 export class SpotifyMusicProvider implements ContentProvider {
   readonly name = 'spotify-music';
@@ -59,8 +61,14 @@ export class SpotifyMusicProvider implements ContentProvider {
 
   async getTrending(limit: number): Promise<TrendingItem[]> {
     const token = await this.getToken();
-    const url = `https://api.spotify.com/v1/browse/new-releases?limit=${Math.min(Math.max(limit, 1), 50)}`;
-    const data = await fetchJson<SpotifyNewReleases>(url, {
+    const params = new URLSearchParams({
+      q: 'tag:new', // Spotify search filter for newly released albums
+      type: 'album',
+      market: 'US',
+      limit: String(Math.min(Math.max(limit, 1), 50)),
+    });
+    const url = `https://api.spotify.com/v1/search?${params.toString()}`;
+    const data = await fetchJson<SpotifyAlbumSearch>(url, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
