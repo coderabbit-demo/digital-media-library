@@ -37,7 +37,7 @@ function DiscoverMenu() {
       <button
         type="button"
         className={active ? 'app-nav__link app-nav__link--active' : 'app-nav__link'}
-        aria-haspopup="menu"
+        aria-haspopup="true"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
       >
@@ -47,12 +47,13 @@ function DiscoverMenu() {
         </span>
       </button>
       {open ? (
-        <div className="app-nav__menu" role="menu">
+        // A disclosure of plain links (not an ARIA menu), so standard link/tab
+        // keyboard behavior applies; Escape and outside-click close it.
+        <div className="app-nav__menu">
           {DISCOVER_ITEMS.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
-              role="menuitem"
               className={({ isActive }) =>
                 isActive ? 'app-nav__menu-item app-nav__menu-item--active' : 'app-nav__menu-item'
               }
