@@ -1,0 +1,119 @@
+openapi: 3.1.0
+info:
+  title: Digital Media Library — Search & Recommendations (004)
+  version: 0.1.0
+  description: >
+    Adds media search (provider-backed + cached) and a user-driven recommendation
+    system that populates the home recommendations region. All routes require the
+    feature-001 session cookie. New text is plain text only.
+servers:
+  - url: /api
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: dml_session
+security:
+  - sessionCookie: []
+paths:
+  /search:
+    get:
+      summary: Search media items in a category (provider-backed, cached).
+      parameters:
+        - in: query
+          name: category
+          required: true
+          schema: { type: string, enum: [books, music, audiobooks, podcasts] }
+        - in: query
+          name: q
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 200 }
+        - in: query
+          name: limit
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+      responses:
+        '200':
+          description: Search results (possibly empty).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SearchPage' }
+        '400': { description: Missing/invalid query or unknown category }
+        '401': { description: Not authenticated }
+  /recommendations:
+    post:
+      summary: Recommend a media item (idempotent per user+item).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateRecommendation' }
+      responses:
+        '201':
+          description: Created (or already existed — idempotent).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Recommendation' }
+        '400': { description: Invalid body }
+        '401': { description: Not authenticated }
+  /recommendations/{id}:
+    delete:
+      summary: Remove a recommendation the current user made.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '204': { description: Removed (or not present / not owned — no-op) }
+        '401': { description: Not authenticated }
+components:
+  schemas:
+    TrendingItem:
+      type: object
+      required: [mediaType, title, creator, coverUrl, providerId, genre]
+      properties:
+        mediaType: { type: string, enum: [book, music, audiobook, podcast] }
+        title: { type: string }
+        creator: { type: [string, "null"] }
+        coverUrl: { type: [string, "null"], format: uri }
+        providerId: { type: string }
+        genre: { type: [string, "null"] }
+    SearchPage:
+      type: object
+      required: [category, query, items]
+      properties:
+        category: { type: string, enum: [book, music, audiobook, podcast] }
+        query: { type: string }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/TrendingItem' }
+    CreateRecommendation:
+      type: object
+      required: [mediaType, title, providerId]
+      properties:
+        mediaType: { type: string, enum: [book, music, audiobook, podcast] }
+        title: { type: string, minLength: 1, maxLength: 300 }
+        creator: { type: [string, "null"], maxLength: 200 }
+        coverUrl: { type: [string, "null"], format: uri }
+        providerId: { type: string }
+    Recommendation:
+      type: object
+      required: [id, recommender, mediaType, title, itemAuthor, coverUrl, providerId, createdAt, canRemove]
+      properties:
+        id: { type: string }
+        recommender:
+          type: object
+          required: [id, displayName, avatarUrl]
+          properties:
+            id: { type: string }
+            displayName: { type: string }
+            avatarUrl: { type: [string, "null"] }
+        mediaType: { type: string, enum: [book, music, audiobook, podcast] }
+        title: { type: string }
+        itemAuthor: { type: [string, "null"] }
+        coverUrl: { type: [string, "null"], format: uri }
+        providerId: { type: string }
+        createdAt: { type: string, format: date-time }
+        canRemove: { type: boolean }

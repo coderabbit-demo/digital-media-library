@@ -68,9 +68,8 @@ export interface HomeCounts {
 }
 
 /**
- * A user-initiated recommendation surfaced on the home page. Always an empty list
- * in feature 002; the recommendation system is delivered in feature 004 (this shape
- * may be refined there).
+ * A user-initiated recommendation surfaced on the home page (feature 004).
+ * Populated solely by user "Recommend" actions — never auto-generated.
  */
 export interface RecommendationDTO {
   id: string;
@@ -78,7 +77,11 @@ export interface RecommendationDTO {
   mediaType: MediaType;
   title: string;
   itemAuthor: string | null;
+  coverUrl: string | null;
+  providerId: string;
   createdAt: string;
+  /** True when the requesting user made this recommendation (can remove it). */
+  canRemove: boolean;
 }
 
 /**
@@ -129,3 +132,23 @@ export interface DiscoverPageDTO {
   /** True when served from the last-known-good snapshot (results may be out of date). */
   stale: boolean;
 }
+
+/** Max length of a search query string. */
+export const SEARCH_QUERY_MAX_LENGTH = 200;
+
+/** Search results for one category + query (feature 004). */
+export interface SearchPageDTO {
+  category: MediaType;
+  query: string;
+  items: TrendingItemDTO[];
+}
+
+/** Request body for creating a recommendation (feature 004). Plain text only. */
+export const createRecommendationSchema = z.object({
+  mediaType: mediaTypeSchema,
+  title: z.string().trim().min(1).max(TITLE_MAX_LENGTH),
+  creator: z.string().trim().max(ITEM_AUTHOR_MAX_LENGTH).optional().nullable(),
+  coverUrl: z.string().trim().url().max(2048).optional().nullable(),
+  providerId: z.string().trim().min(1).max(512),
+});
+export type CreateRecommendationInput = z.infer<typeof createRecommendationSchema>;

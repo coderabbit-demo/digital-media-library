@@ -4,6 +4,7 @@ import { useLogout, useMe } from '../services/auth';
 import { Avatar } from './Avatar';
 
 const NAV = [
+  { to: '/search', label: 'Search' },
   { to: '/books', label: 'Books' },
   { to: '/music', label: 'Music' },
   { to: '/audiobooks', label: 'Audiobooks' },

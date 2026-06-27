@@ -13,7 +13,12 @@ import { FeedService } from './services/feed.js';
 import { ActivityService } from './services/activity.js';
 import { HomeService } from './services/home.js';
 import { TrendingService } from './services/discover.js';
+import { SearchService } from './services/search.js';
+import { RecommendationService } from './services/recommendations.js';
 import type { ContentProvider } from './providers/content-provider.js';
+import type { SearchProvider } from './providers/search-provider.js';
+import { GoogleBooksSearchProvider } from './providers/google-books-search.js';
+import { ItunesSearchProvider } from './providers/itunes-search.js';
 import { NytBooksProvider } from './providers/nyt-books.js';
 import { GoogleBooksProvider } from './providers/google-books.js';
 import { CompositeBooksProvider } from './providers/composite-books.js';
@@ -31,6 +36,8 @@ import { registerFeedRoutes } from './api/feed.js';
 import { registerActivityRoutes } from './api/activities.js';
 import { registerHomeRoutes } from './api/home.js';
 import { registerDiscoverRoutes } from './api/discover.js';
+import { registerSearchRoutes } from './api/search.js';
+import { registerRecommendationRoutes } from './api/recommendations.js';
 
 /** Overrides let tests inject stubs (prisma/cache/oidc) and a custom config. */
 export interface BuildAppOverrides {
@@ -40,6 +47,8 @@ export interface BuildAppOverrides {
   oidc?: OidcService;
   /** Inject fake content providers in tests (avoids real provider calls). */
   providers?: Record<MediaType, ContentProvider>;
+  /** Inject fake search providers in tests (avoids real provider calls). */
+  searchProviders?: Record<MediaType, SearchProvider>;
 }
 
 /**
@@ -66,7 +75,8 @@ export async function buildApp(overrides: BuildAppOverrides = {}): Promise<Fasti
   const profiles = new ProfileService(prisma);
   const feed = new FeedService(prisma, cache, config);
   const activities = new ActivityService(prisma, feed);
-  const home = new HomeService(prisma);
+  const recommendations = new RecommendationService(prisma);
+  const home = new HomeService(prisma, recommendations);
   const providers: Record<MediaType, ContentProvider> = overrides.providers ?? {
     // Books aggregate NYT (all bestseller genres) + Google Books, deduped.
     book: new CompositeBooksProvider([new NytBooksProvider(config), new GoogleBooksProvider(config)]),
@@ -76,9 +86,17 @@ export async function buildApp(overrides: BuildAppOverrides = {}): Promise<Fasti
     podcast: new ApplePodcastProvider(),
   };
   const discover = new TrendingService(cache, providers, config);
+  const searchProviders: Record<MediaType, SearchProvider> = overrides.searchProviders ?? {
+    // Books via Google Books search; music/audiobooks/podcasts via keyless iTunes Search.
+    book: new GoogleBooksSearchProvider(config),
+    music: new ItunesSearchProvider('music'),
+    audiobook: new ItunesSearchProvider('audiobook'),
+    podcast: new ItunesSearchProvider('podcast'),
+  };
+  const search = new SearchService(cache, searchProviders, config);
 
   const ctx: AppContext = {
-    config, prisma, cache, oidc, session, profiles, feed, activities, home, discover,
+    config, prisma, cache, oidc, session, profiles, feed, activities, home, discover, search, recommendations,
   };
   app.decorate('ctx', ctx);
 
@@ -131,6 +149,8 @@ export async function buildApp(overrides: BuildAppOverrides = {}): Promise<Fasti
       await registerActivityRoutes(api);
       await registerHomeRoutes(api);
       await registerDiscoverRoutes(api);
+      await registerSearchRoutes(api);
+      await registerRecommendationRoutes(api);
     },
     { prefix: '/api' },
   );

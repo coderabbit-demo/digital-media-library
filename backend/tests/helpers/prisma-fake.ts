@@ -31,18 +31,30 @@ interface SessionRow {
   expiresAt: Date;
   lastSeenAt: Date;
 }
+interface RecommendationRow {
+  id: string;
+  userId: string;
+  mediaType: string;
+  title: string;
+  creator: string | null;
+  coverUrl: string | null;
+  providerId: string;
+  createdAt: Date;
+}
 
 export interface FakePrisma {
   client: PrismaClient;
   seedProfile(partial?: Partial<ProfileRow>): ProfileRow;
   seedActivity(userId: string, partial?: Partial<ActivityRow>): ActivityRow;
   seedSession(userId: string, partial?: Partial<SessionRow>): SessionRow;
+  seedRecommendation(userId: string, partial?: Partial<RecommendationRow>): RecommendationRow;
 }
 
 export function createFakePrisma(): FakePrisma {
   const profiles = new Map<string, ProfileRow>();
   const activities = new Map<string, ActivityRow>();
   const sessions = new Map<string, SessionRow>();
+  const recommendations = new Map<string, RecommendationRow>();
 
   const selectUser = (id: string) => {
     const u = profiles.get(id);
@@ -158,6 +170,51 @@ export function createFakePrisma(): FakePrisma {
         return { count };
       },
     },
+    recommendation: {
+      upsert: async ({ where, create, update, select }: any) => {
+        const key = where.uq_recommendation_user_item;
+        const existing = [...recommendations.values()].find(
+          (r) =>
+            r.userId === key.userId &&
+            r.mediaType === key.mediaType &&
+            r.providerId === key.providerId,
+        );
+        if (existing) {
+          Object.assign(existing, update);
+          return select ? projectRecommendation(existing, select, selectUser) : existing;
+        }
+        const row: RecommendationRow = {
+          id: randomUUID(),
+          userId: create.userId,
+          mediaType: create.mediaType,
+          title: create.title,
+          creator: create.creator ?? null,
+          coverUrl: create.coverUrl ?? null,
+          providerId: create.providerId,
+          createdAt: new Date(),
+        };
+        recommendations.set(row.id, row);
+        return select ? projectRecommendation(row, select, selectUser) : row;
+      },
+      findMany: async ({ take, select }: any = {}) => {
+        let rows = [...recommendations.values()];
+        rows.sort(
+          (a, b) => b.createdAt.getTime() - a.createdAt.getTime() || (a.id < b.id ? 1 : -1),
+        );
+        if (typeof take === 'number') rows = rows.slice(0, take);
+        return rows.map((r) => (select ? projectRecommendation(r, select, selectUser) : r));
+      },
+      deleteMany: async ({ where }: any) => {
+        let count = 0;
+        for (const [id, row] of recommendations) {
+          if (where.id && row.id !== where.id) continue;
+          if (where.userId && row.userId !== where.userId) continue;
+          recommendations.delete(id);
+          count++;
+        }
+        return { count };
+      },
+    },
     $disconnect: async () => undefined,
   } as unknown as PrismaClient;
 
@@ -201,6 +258,20 @@ export function createFakePrisma(): FakePrisma {
       sessions.set(row.id, row);
       return row;
     },
+    seedRecommendation(userId, partial = {}) {
+      const row: RecommendationRow = {
+        id: partial.id ?? randomUUID(),
+        userId,
+        mediaType: partial.mediaType ?? 'book',
+        title: partial.title ?? 'Seed Rec',
+        creator: partial.creator ?? null,
+        coverUrl: partial.coverUrl ?? null,
+        providerId: partial.providerId ?? `prov-${randomUUID()}`,
+        createdAt: partial.createdAt ?? new Date(),
+      };
+      recommendations.set(row.id, row);
+      return row;
+    },
   };
 }
 
@@ -227,6 +298,24 @@ function projectActivity(
   if (select.author) out.author = row.author;
   if (select.createdAt) out.createdAt = row.createdAt;
   if (select.userId) out.userId = row.userId;
+  if (select.user) out.user = selectUser(row.userId);
+  return out;
+}
+
+function projectRecommendation(
+  row: RecommendationRow,
+  select: any,
+  selectUser: (id: string) => unknown,
+): unknown {
+  const out: Record<string, unknown> = {};
+  if (select.id) out.id = row.id;
+  if (select.userId) out.userId = row.userId;
+  if (select.mediaType) out.mediaType = row.mediaType;
+  if (select.title) out.title = row.title;
+  if (select.creator) out.creator = row.creator;
+  if (select.coverUrl) out.coverUrl = row.coverUrl;
+  if (select.providerId) out.providerId = row.providerId;
+  if (select.createdAt) out.createdAt = row.createdAt;
   if (select.user) out.user = selectUser(row.userId);
   return out;
 }

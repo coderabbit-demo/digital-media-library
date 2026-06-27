@@ -40,8 +40,9 @@ model UserProfile {
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  activities Activity[]
-  sessions   Session[]
+  activities      Activity[]
+  sessions        Session[]
+  recommendations Recommendation[]
 
   @@map("user_profile")
 }
@@ -63,6 +64,26 @@ model Activity {
   // Author lookups and cascade efficiency.
   @@index([userId], name: "idx_activity_user")
   @@map("activity")
+}
+
+model Recommendation {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  mediaType  MediaType @map("media_type")
+  title      String
+  // Author/artist/publisher of the item; surfaced as `itemAuthor` in the API.
+  creator    String?
+  coverUrl   String?   @map("cover_url")
+  providerId String    @map("provider_id")
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // One recommendation per user per item (add is idempotent — FR-006).
+  @@unique([userId, mediaType, providerId], name: "uq_recommendation_user_item")
+  // Recent-first community listing.
+  @@index([createdAt(sort: Desc), id(sort: Desc)], name: "idx_recommendation_recent")
+  @@map("recommendation")
 }
 
 model Session {

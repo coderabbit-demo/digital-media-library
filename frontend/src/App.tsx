@@ -5,6 +5,7 @@ import { HomeFeed } from './pages/HomeFeed';
 import { SignIn } from './pages/SignIn';
 import { AuthCallback } from './pages/AuthCallback';
 import { Discover } from './pages/Discover';
+import { Search } from './pages/Search';
 import { WishlistPlaceholder } from './pages/WishlistPlaceholder';
 
 /** Auth gate + shell wrapping every protected route (FR-001/FR-002). */
@@ -28,6 +29,7 @@ export function App() {
       {/* Everything else requires authentication and renders in the shell. */}
       <Route element={<ProtectedLayout />}>
         <Route path="/" element={<HomeFeed />} />
+        <Route path="/search" element={<Search />} />
         <Route path="/books" element={<Discover category="books" />} />
         <Route path="/music" element={<Discover category="music" />} />
         <Route path="/audiobooks" element={<Discover category="audiobooks" />} />
