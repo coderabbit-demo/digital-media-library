@@ -40,6 +40,7 @@ export function DiscoverItemCard({ item, onStartActivity }: DiscoverItemCardProp
   // required state change); only once that succeeds do we open the compose overlay
   // to optionally share it.
   const startActivity = () => {
+    if (addToLibrary.isPending) return;
     addToLibrary.mutate({ item, shelf: 'current' }, { onSuccess: () => onStartActivity(item) });
   };
 
@@ -73,7 +74,12 @@ export function DiscoverItemCard({ item, onStartActivity }: DiscoverItemCardProp
               ))}
             </select>
           </label>
-          <button type="button" className="btn btn-primary discover-card__cta" onClick={startActivity}>
+          <button
+            type="button"
+            className="btn btn-primary discover-card__cta"
+            onClick={startActivity}
+            disabled={addToLibrary.isPending}
+          >
             I’m {verb(item.mediaType)} this
           </button>
           <button
