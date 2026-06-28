@@ -5,6 +5,7 @@ import { ReplyThread } from './ReplyThread';
 import { useAddToLibrary, useLibraryShelves, libraryKey, shelfLabel } from '../services/library';
 import { useRatings, useSetRating, useClearRating, ratingKey } from '../services/ratings';
 import { useToggleLike } from '../services/likes';
+import { ItemLink } from './ItemLink';
 
 /** "X is currently reading / listening to …" verb per media type. */
 function currentlyVerb(mediaType: MediaType): string {
@@ -106,10 +107,16 @@ export function ActivityCard({ activity, onDelete, deleting = false }: ActivityC
 
         <div className="activity-card__item">
           {coverUrl ? (
-            <img className="activity-card__cover" src={coverUrl} alt="" referrerPolicy="no-referrer" />
+            <ItemLink mediaType={mediaType} providerId={providerId}>
+              <img className="activity-card__cover" src={coverUrl} alt="" referrerPolicy="no-referrer" />
+            </ItemLink>
           ) : null}
           <div className="activity-card__item-main">
-            <p className="activity-card__title">{title}</p>
+            <p className="activity-card__title">
+              <ItemLink mediaType={mediaType} providerId={providerId} className="item-titlelink">
+                {title}
+              </ItemLink>
+            </p>
             {itemAuthor ? <p className="activity-card__item-author">by {itemAuthor}</p> : null}
 
             {providerId ? (

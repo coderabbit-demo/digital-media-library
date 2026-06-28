@@ -50,9 +50,10 @@ The project's non-negotiable principles live in the
 | 003 | Discover (trending by category) | ✅ Merged | [spec](specs/003-discover/spec.md) · [plan](specs/003-discover/plan.md) |
 | 004 | Search & recommendations | ✅ Merged | [spec](specs/004-search-recommend/spec.md) · [plan](specs/004-search-recommend/plan.md) |
 | 005 | My Library (private, Goodreads-style shelves) | ✅ Merged | [spec](specs/005-wishlist/spec.md) · [plan](specs/005-wishlist/plan.md) |
-| 006 | Conversations (update notes & threaded replies) | 🛠️ Implemented (in review) | [spec](specs/006-conversations/spec.md) · [plan](specs/006-conversations/plan.md) |
+| 006 | Conversations (update notes & threaded replies) | ✅ Merged | [spec](specs/006-conversations/spec.md) · [plan](specs/006-conversations/plan.md) |
+| 007 | Item detail page (deep-linkable, Goodreads-style) | 🛠️ Implemented (in review) | [spec](specs/007-item-page/spec.md) · [plan](specs/007-item-page/plan.md) |
 
-*Content-discovery roadmap: 003 Discover (trending) → 004 Search & recommendations → 005 My Library (shelves) → 006 Conversations (replies). Built on the provider-abstraction + cache layer introduced in 003. Search is provider-backed + cached: books via Google Books, music/audiobooks/podcasts via the keyless iTunes Search API.*
+*Content-discovery roadmap: 003 Discover (trending) → 004 Search & recommendations → 005 My Library (shelves) → 006 Conversations (replies) → 007 Item detail page. Built on the provider-abstraction + cache layer introduced in 003. Search is provider-backed + cached: books via Google Books, music/audiobooks/podcasts via the keyless iTunes Search API. The item page adds a provider-backed by-id lookup (`GET /api/items/:mediaType/:providerId`, cached) plus community aggregates (average rating, per-shelf counts, recent activity) computed from our own data.*
 
 ## Repository layout
 

@@ -302,3 +302,68 @@ export const upsertRatingSchema = z.object({
   coverUrl: httpUrl().optional().nullable(),
 });
 export type UpsertRatingInput = z.infer<typeof upsertRatingSchema>;
+
+/* ============================================================================
+ * Item detail page (feature 007)
+ * ========================================================================== */
+
+/** Builds the client route for an item detail page. */
+export function itemPathFor(mediaType: MediaType, providerId: string): string {
+  return `/item/${mediaType}/${encodeURIComponent(providerId)}`;
+}
+
+/** Provider-sourced detail for a single item (feature 007). */
+export interface ItemDetailDTO {
+  mediaType: MediaType;
+  providerId: string;
+  title: string;
+  creator: string | null;
+  coverUrl: string | null;
+  /** Full synopsis/description when the provider supplies one. */
+  description: string | null;
+  /** Genre tags when the provider supplies them; empty array otherwise. */
+  genres: string[];
+  /** Canonical URL to the item on the provider; null if none. */
+  providerUrl: string | null;
+  /** Series/edition label when the provider offers one; null otherwise. */
+  series: string | null;
+}
+
+/** Per-shelf counts of distinct users holding an item (feature 007). */
+export interface ShelfCountsDTO {
+  want: number;
+  current: number;
+  done: number;
+  dnf: number;
+}
+
+/** A recent feed update referencing an item (feature 007). */
+export interface ItemActivityDTO {
+  id: string;
+  author: ActivityAuthorDTO;
+  /** The author's note/comment (plain text); null when none. */
+  note: string | null;
+  createdAt: string;
+}
+
+/** Community aggregates for an item, computed from our own data (feature 007). */
+export interface ItemStatsDTO {
+  /** Mean stars; null when there are no ratings. */
+  ratingAverage: number | null;
+  ratingCount: number;
+  shelfCounts: ShelfCountsDTO;
+  /** Recent activity referencing the item, newest first, capped. */
+  recentActivity: ItemActivityDTO[];
+}
+
+/** Maximum number of recent activities surfaced on an item page. */
+export const ITEM_ACTIVITY_LIMIT = 10;
+
+/** The full payload for an item detail page (feature 007). */
+export interface ItemPageDTO {
+  /** Provider detail; null when the lookup failed but the item is otherwise known. */
+  item: ItemDetailDTO | null;
+  /** False when the provider detail lookup failed (stats are still present). */
+  detailAvailable: boolean;
+  stats: ItemStatsDTO;
+}

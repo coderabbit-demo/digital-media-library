@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { SHELVES, type Shelf, type TrendingItemDTO } from '@dml/shared';
 import { useRecommend } from '../services/recommendations';
 import { useAddToLibrary, useLibraryShelves, libraryKey, shelfLabel } from '../services/library';
+import { ItemLink } from './ItemLink';
 
 /** Verb for the "start an activity" CTA based on media type. */
 function verb(mediaType: TrendingItemDTO['mediaType']): string {
@@ -46,15 +47,21 @@ export function DiscoverItemCard({ item, onStartActivity }: DiscoverItemCardProp
 
   return (
     <article className="discover-card">
-      {item.coverUrl ? (
-        <img className="discover-card__cover" src={item.coverUrl} alt="" referrerPolicy="no-referrer" />
-      ) : (
-        <div className="discover-card__cover discover-card__cover--placeholder" aria-hidden="true">
-          {item.title.charAt(0).toUpperCase()}
-        </div>
-      )}
+      <ItemLink mediaType={item.mediaType} providerId={item.providerId} className="discover-card__cover-link">
+        {item.coverUrl ? (
+          <img className="discover-card__cover" src={item.coverUrl} alt="" referrerPolicy="no-referrer" />
+        ) : (
+          <div className="discover-card__cover discover-card__cover--placeholder" aria-hidden="true">
+            {item.title.charAt(0).toUpperCase()}
+          </div>
+        )}
+      </ItemLink>
       <div className="discover-card__body">
-        <p className="discover-card__title">{item.title}</p>
+        <p className="discover-card__title">
+          <ItemLink mediaType={item.mediaType} providerId={item.providerId} className="item-titlelink">
+            {item.title}
+          </ItemLink>
+        </p>
         {item.creator ? <p className="discover-card__creator">{item.creator}</p> : null}
         <div className="discover-card__actions">
           <label className="library-shelf-select">

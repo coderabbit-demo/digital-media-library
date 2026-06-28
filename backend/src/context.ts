@@ -13,6 +13,8 @@ import type { LibraryService } from './services/library.js';
 import type { ReplyService } from './services/reply.js';
 import type { RatingService } from './services/rating.js';
 import type { LikeService } from './services/like.js';
+import type { ItemService } from './services/item.js';
+import type { ItemStatsService } from './services/item-stats.js';
 import type { SessionManager } from './plugins/session.js';
 import type { ProfileDTO } from '@dml/shared';
 
@@ -38,6 +40,8 @@ export interface AppContext {
   replies: ReplyService;
   ratings: RatingService;
   likes: LikeService;
+  items: ItemService;
+  itemStats: ItemStatsService;
 }
 
 declare module 'fastify' {

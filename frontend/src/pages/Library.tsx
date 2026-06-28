@@ -8,6 +8,7 @@ import {
   shelfLabel,
 } from '../services/library';
 import { ComposeDialog } from '../components/ComposeDialog';
+import { ItemLink } from '../components/ItemLink';
 import type { ComposeInitial } from '../components/PostUpdateForm';
 
 const TYPE_LABELS: Record<MediaType, string> = {
@@ -77,15 +78,21 @@ export function Library() {
 
   const renderCard = (item: LibraryItemDTO) => (
     <article key={item.id} className="discover-card">
-      {item.coverUrl ? (
-        <img className="discover-card__cover" src={item.coverUrl} alt="" referrerPolicy="no-referrer" />
-      ) : (
-        <div className="discover-card__cover discover-card__cover--placeholder" aria-hidden="true">
-          {item.title.charAt(0).toUpperCase()}
-        </div>
-      )}
+      <ItemLink mediaType={item.mediaType} providerId={item.providerId} className="discover-card__cover-link">
+        {item.coverUrl ? (
+          <img className="discover-card__cover" src={item.coverUrl} alt="" referrerPolicy="no-referrer" />
+        ) : (
+          <div className="discover-card__cover discover-card__cover--placeholder" aria-hidden="true">
+            {item.title.charAt(0).toUpperCase()}
+          </div>
+        )}
+      </ItemLink>
       <div className="discover-card__body">
-        <p className="discover-card__title">{item.title}</p>
+        <p className="discover-card__title">
+          <ItemLink mediaType={item.mediaType} providerId={item.providerId} className="item-titlelink">
+            {item.title}
+          </ItemLink>
+        </p>
         {item.itemAuthor ? <p className="discover-card__creator">{item.itemAuthor}</p> : null}
         <div className="discover-card__actions">
           <label className="library-shelf-select">

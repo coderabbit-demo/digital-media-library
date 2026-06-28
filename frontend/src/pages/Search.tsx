@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { DISCOVER_CATEGORIES, type DiscoverCategory, type TrendingItemDTO } from '@dml/shared';
 import { useSearch } from '../services/search';
 import { DiscoverItemCard } from '../components/DiscoverItemCard';
@@ -17,22 +18,26 @@ const CATEGORY_LABELS: Record<DiscoverCategory, string> = {
  * provider-backed endpoint. Each result can be recommended or seed an activity.
  */
 export function Search() {
-  // Live form inputs.
-  const [category, setCategory] = useState<DiscoverCategory>('books');
-  const [input, setInput] = useState('');
-  // The submitted (category, query) pair drives results, so changing the category
-  // dropdown alone never re-runs a stale query — only Search does.
-  const [submitted, setSubmitted] = useState<{ category: DiscoverCategory; query: string }>({
-    category: 'books',
-    query: '',
-  });
+  // The submitted (category, query) pair lives in the URL so results survive
+  // navigation away and back (e.g. opening an item, then pressing back) and are
+  // shareable. The query cache (keyed by category+query) restores them instantly.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const paramCategory = searchParams.get('category');
+  const submittedCategory: DiscoverCategory = DISCOVER_CATEGORIES.includes(paramCategory as DiscoverCategory)
+    ? (paramCategory as DiscoverCategory)
+    : 'books';
+  const submittedQuery = searchParams.get('q') ?? '';
+
+  // Live form inputs, seeded from the URL so the form reflects the active search.
+  const [category, setCategory] = useState<DiscoverCategory>(submittedCategory);
+  const [input, setInput] = useState(submittedQuery);
   const [compose, setCompose] = useState<ComposeInitial | null>(null);
 
-  const { data, isFetching, isError, refetch } = useSearch(submitted.category, submitted.query);
+  const { data, isFetching, isError, refetch } = useSearch(submittedCategory, submittedQuery);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted({ category, query: input });
+    setSearchParams({ category, q: input });
   };
 
   const startActivity = (item: TrendingItemDTO) =>
@@ -47,7 +52,7 @@ export function Search() {
     });
 
   const items = data?.items ?? [];
-  const hasQuery = submitted.query.trim().length > 0;
+  const hasQuery = submittedQuery.trim().length > 0;
 
   return (
     <div className="discover-page">
@@ -96,7 +101,7 @@ export function Search() {
         <div className="feed-empty">
           <h2>No results</h2>
           <p>
-            No {CATEGORY_LABELS[submitted.category].toLowerCase()} matched “{submitted.query}”. Try
+            No {CATEGORY_LABELS[submittedCategory].toLowerCase()} matched “{submittedQuery}”. Try
             different terms.
           </p>
         </div>
