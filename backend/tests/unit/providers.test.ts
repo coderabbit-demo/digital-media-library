@@ -44,6 +44,21 @@ describe('provider adapters', () => {
     await expect(new NytBooksProvider(testConfig({ NYT_API_KEY: undefined })).getTrending(5)).rejects.toThrow();
   });
 
+  it('NytBooksProvider excludes NYT audio lists (audiobooks, not books)', async () => {
+    mockFetchOnce({
+      results: {
+        lists: [
+          { list_name: 'Hardcover Fiction', books: [{ title: 'Dune', author: 'F. Herbert', primary_isbn13: '111' }] },
+          { list_name: 'Audio Fiction', books: [{ title: 'Audio Only', author: 'Narrator', primary_isbn13: '999' }] },
+          { list_name: 'Audio Nonfiction', books: [{ title: 'Audio Doc', author: 'Reader', primary_isbn13: '888' }] },
+        ],
+      },
+    });
+    const items = await new NytBooksProvider(testConfig({ NYT_API_KEY: 'k' })).getTrending(10);
+    expect(items.map((i) => i.title)).toEqual(['Dune']);
+    expect(items.some((i) => /audio/i.test(i.genre ?? ''))).toBe(false);
+  });
+
   it('AppleAudiobookProvider normalizes the RSS feed', async () => {
     mockFetchOnce({
       feed: { results: [{ id: 'a1', name: 'Becoming', artistName: 'Michelle Obama', artworkUrl100: 'http://img/a.jpg' }] },

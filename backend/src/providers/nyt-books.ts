@@ -41,6 +41,10 @@ export class NytBooksProvider implements ContentProvider {
     const perList: TrendingItem[][] = [];
     for (const list of data.results?.lists ?? []) {
       const genre = list.list_name?.trim() || 'Bestsellers';
+      // NYT publishes "Audio Fiction"/"Audio Nonfiction" lists — those are
+      // audiobooks (their ISBNs aren't in Google Books and they don't belong in
+      // the books category), so skip any audio list.
+      if (/audio/i.test(genre)) continue;
       const items: TrendingItem[] = [];
       for (const book of list.books ?? []) {
         const title = book.title?.trim();
