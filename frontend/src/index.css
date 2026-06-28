@@ -1049,6 +1049,45 @@ body {
   outline-offset: 1px;
 }
 
+/* My Library page header: title paired with a live item count for orientation. */
+.library-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 0 0 20px;
+}
+.library-header .discover-page__title {
+  margin: 0;
+}
+.library-header__count {
+  font-size: 0.875rem;
+  color: var(--ink-muted);
+}
+
+/* Goodreads-style shelf sections in the "All" view: a section header (label +
+   count) over each shelf's grid. Generous separation between sections, tight
+   spacing under each header — page title › section title › card title. */
+.library-section {
+  margin: 0 0 36px;
+}
+.library-section:last-child {
+  margin-bottom: 0;
+}
+.library-section__title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 14px;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+.library-section__count {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+
 /* My Library filter toolbar: one labeled row per filter dimension (shelf, media),
    each label paired with its segmented track. Generous row rhythm; the label
    gives the two tracks a clear hierarchy instead of two undifferentiated rows. */
