@@ -11,47 +11,71 @@ The canonical production target: a fully-private GCP stack provisioned by Terraf
 ## Prerequisites
 
 - [ ] Terraform ≥ 1.6 and `gcloud` installed
-- [ ] `gcloud auth application-default login` with rights to create the resources above
+- [ ] **Application Default Credentials** for Terraform: `gcloud auth application-default login`. This is **separate** from the `gcloud` CLI login — Terraform uses ADC, and an expired/reauth-required ADC session fails with `invalid_grant ... invalid_rapt`. (Optionally `gcloud auth application-default set-quota-project <project>`.)
 - [ ] A GCP project with **billing enabled** (Terraform enables the needed APIs)
-- [ ] A **Google OAuth 2.0 client** (Web application) created in the Cloud Console
-- [ ] Docker installed (to build the API image), or rely on the CI workflow
-- [ ] A domain you control (for managed TLS) — optional but recommended
+- [ ] Docker with **buildx** (the API runs on Cloud Run = linux/amd64; on Apple Silicon you **must** build `--platform linux/amd64`), or rely on the CI workflow
+- [ ] A **Google OAuth 2.0 client** (Web application) — needed for sign-in. Sign-in also needs **HTTPS**, which the LB only gets with a `domain` (managed cert). You can deploy IP-only first and add the domain + OAuth client afterward.
 
 ---
 
-## 1. Provision infrastructure (Terraform)
+> **Order matters (chicken-and-egg).** The Cloud Run service references the API image and the OAuth secret's `latest` version, so both must exist *before* a full `terraform apply`, and the Artifact Registry repo (which holds the image) is itself created by Terraform. So: bootstrap the repo + OAuth secret → build/push images + seed the OAuth secret → full apply. The steps below follow that order.
+
+## 1. Configure + initialize
 
 ```bash
 cd infra
 cp terraform.tfvars.example terraform.tfvars   # then edit
 terraform init
-terraform plan  -var project_id=YOUR_PROJECT_ID
-terraform apply -var project_id=YOUR_PROJECT_ID
 ```
 
 - [ ] Set `project_id`, `env` (e.g. `prod`), `region`
-- [ ] Set `google_client_id` (the OAuth **client ID**)
-- [ ] Set `domain=app.example.com` to provision a Google-managed cert + HTTP→HTTPS redirect (then point an `A` record at the `load_balancer_ip` output)
-- [ ] Production sizing reviewed: `cloud_run_min_instances ≥ 1` (avoid cold starts), `enable_redis=true`, `cloudsql_ha` and `cloudsql_deletion_protection` as desired
-- [ ] `terraform apply` completed; note the outputs (`artifact_registry_repo`, `load_balancer_ip`, bucket, service name)
+- [ ] `google_client_id` — set the real OAuth client ID, **or a placeholder like `placeholder.apps.googleusercontent.com`** for an IP-only first deploy (the app's config requires a non-empty value to boot; sign-in stays inert until a real ID + domain are set)
+- [ ] `domain` — `app.example.com` for managed TLS + HTTP→HTTPS redirect (then point an `A` record at the `load_balancer_ip` output), or `""` to serve over the LB IP (HTTP)
+- [ ] Sizing reviewed: `cloud_run_min_instances` (0 = scale-to-zero/cold starts; ≥1 = warm), `enable_redis`, `cloudsql_ha`, `cloudsql_deletion_protection`
+- [ ] `cloudsql_edition` defaults to `ENTERPRISE` (required for shared-core tiers like `db-f1-micro`; new projects otherwise default to ENTERPRISE_PLUS, which rejects them)
 
-## 2. Populate secrets (Secret Manager)
-
-Terraform creates the secret **containers**; it generates `db-password`, `session-signing-key`, `database-url`, and `redis-url` values itself. You must add the externally-issued values:
+## 1a. Bootstrap the registry + OAuth secret container
 
 ```bash
-# OAuth client secret (issued by Google; never stored in source)
-printf '%s' 'THE-CLIENT-SECRET' | gcloud secrets versions add ${ENV}-google-oauth-client-secret \
-  --project=$PROJECT --data-file=-
+terraform apply \
+  -target=google_artifact_registry_repository.api \
+  -target=google_secret_manager_secret.google_oauth_client_secret
+```
 
-# Optional provider keys (placeholders are created; replace to activate)
+- [ ] Repo + OAuth secret container created; note `artifact_registry_repo`
+
+Then seed the OAuth client secret **before** the service is created (Cloud Run can't start if `<env>-google-oauth-client-secret` has no version — a placeholder is fine for an IP-only deploy):
+
+```bash
+printf '%s' 'THE-CLIENT-SECRET-OR-placeholder' | \
+  gcloud secrets versions add ${ENV}-google-oauth-client-secret --project=$PROJECT --data-file=-
+```
+
+## 1b. Full apply
+
+After pushing both images (§3) and seeding the OAuth secret above:
+
+```bash
+terraform apply      # uses terraform.tfvars
+```
+
+- [ ] `terraform apply` completed (**CloudSQL alone takes ~10–15 min**)
+- [ ] Note outputs: `load_balancer_ip` (the app URL), `artifact_registry_repo`, `spa_bucket_name`, `migrate_job_name`
+
+## 2. Secrets (Secret Manager)
+
+Terraform generates `db-password`, `session-signing-key`, `database-url`, and `redis-url` itself, and creates **placeholder** versions for the provider keys. The OAuth client secret is seeded in §1a. The optional provider keys can be replaced any time:
+
+```bash
 printf '%s' 'NYT_KEY'          | gcloud secrets versions add ${ENV}-nyt-api-key          --project=$PROJECT --data-file=-
 printf '%s' 'GOOGLE_BOOKS_KEY' | gcloud secrets versions add ${ENV}-google-books-api-key --project=$PROJECT --data-file=-
 ```
 
-- [ ] `${ENV}-google-oauth-client-secret` has a version (**required** — Cloud Run won't start without it)
-- [ ] `${ENV}-nyt-api-key` / `${ENV}-google-books-api-key` set (optional; leave placeholder to run without)
-- [ ] Verify the runtime service account has `secretAccessor` on each (Terraform grants this via `runtime_secret_ids`)
+- [ ] `${ENV}-google-oauth-client-secret` has a version (seeded in §1a; replace placeholder with the real value when OAuth is set up)
+- [ ] `${ENV}-nyt-api-key` / `${ENV}-google-books-api-key` set (optional; placeholders are inert — Discover still works via keyless Google Books/Apple)
+- [ ] Runtime SA has `secretAccessor` on each (Terraform grants this via `runtime_secret_ids`)
+
+> **Adding/replacing a secret version requires a new Cloud Run revision to pick it up** — secrets are resolved at deploy time. After updating a secret, redeploy: `gcloud run services update ${ENV}-dml-api --region $REGION` (or re-run `terraform apply`).
 
 ### Spotify (feature 007 item-page links) — optional, wired into Terraform
 
@@ -67,33 +91,36 @@ The `${ENV}-spotify-client-secret` secret (placeholder), the `SPOTIFY_CLIENT_ID`
 
 > The optional TTL knobs (`ITEM_TTL_SECONDS`, `SEARCH_TTL_SECONDS`, etc.) have sane defaults and need no wiring unless you want to override them.
 
-## 3. Build & push the API image
+## 3. Build & push the images (before §1b)
 
-The image is the multi-stage [`backend/Dockerfile`](../../backend/Dockerfile) (built from the repo root for workspace context).
+Both the API and migration images are the multi-stage [`backend/Dockerfile`](../../backend/Dockerfile) (built from the repo root for workspace context). **Build for linux/amd64** — Cloud Run won't run an arm64 image (Apple Silicon default):
 
 ```bash
 REPO=$(cd infra && terraform output -raw artifact_registry_repo)
 gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
-docker build -f backend/Dockerfile -t "$REPO/api:v1" .
-docker push "$REPO/api:v1"
+# API (runtime) image
+docker buildx build --platform linux/amd64 -f backend/Dockerfile -t "$REPO/api:${TAG}" --push .
+# Migration image (Prisma CLI; used by the migrate Job)
+docker buildx build --platform linux/amd64 -f backend/Dockerfile --target migrate -t "$REPO/migrate:${TAG}" --push .
 ```
 
-- [ ] Image built and pushed
-- [ ] `terraform apply -var image_tag=v1` to roll Cloud Run to the new tag
+- [ ] Both images built `--platform linux/amd64` and pushed (`${TAG}` matches `image_tag`, default `latest`)
+- [ ] Proceed to **§1b** (full apply), which creates the Cloud Run service from `api:${TAG}`
 
 ## 4. Publish the SPA
 
 Build with the API on the same origin (so `VITE_API_BASE_URL` defaults to `/api`) and sync to the hosting bucket:
 
 ```bash
+BUCKET=$(cd infra && terraform output -raw spa_bucket_name)
 corepack pnpm --filter @dml/frontend build
-gcloud storage rsync frontend/dist gs://${ENV}-dml-spa-bucket \
+gcloud storage rsync frontend/dist gs://$BUCKET \
   --recursive --delete-unmatched-destination-objects
-gcloud compute url-maps invalidate-cdn-cache ${ENV}-dml-api-urlmap --path "/*" --async
+gcloud compute url-maps invalidate-cdn-cache ${ENV}-dml-urlmap --path "/*" --async || true
 ```
 
-- [ ] SPA built and synced to the bucket
-- [ ] CDN cache invalidated
+- [ ] SPA built and synced to the bucket (`spa_bucket_name` output)
+- [ ] CDN cache invalidated (url map `${ENV}-dml-urlmap`)
 
 ## 5. Database migrations
 

@@ -16,6 +16,9 @@ RUN corepack enable
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json tsconfig.base.json ./
 COPY packages/shared/package.json packages/shared/
 COPY backend/package.json backend/
+# The backend's postinstall runs `prisma generate`, so the schema must be present
+# during install — copy it before installing.
+COPY backend/prisma backend/prisma
 
 # Install all workspace deps (including dev for the build).
 RUN pnpm install --frozen-lockfile
@@ -29,7 +32,15 @@ RUN pnpm --filter @dml/backend prisma generate \
   && pnpm --filter @dml/backend build
 
 # Prune to production dependencies for a slim runtime.
-RUN pnpm --filter @dml/backend deploy --prod --legacy /app/deploy
+RUN pnpm --filter @dml/backend deploy --prod /app/deploy
+
+# `pnpm deploy` reinstalls @prisma/client from the store (the un-generated stub),
+# dropping the client generated above. Copy the generated client into the pruned
+# tree so the runtime can import it. Both trees share the same .pnpm layout.
+RUN set -eux; \
+  gen="$(ls -d /app/node_modules/.pnpm/@prisma+client@*/node_modules/.prisma)"; \
+  dst="$(ls -d /app/deploy/node_modules/.pnpm/@prisma+client@*/node_modules)"; \
+  rm -rf "$dst/.prisma"; cp -R "$gen" "$dst/.prisma"
 
 # ---- Migration runner -------------------------------------------------------
 # Reuses the builder (full deps incl. the Prisma CLI + migrations) to apply
@@ -59,4 +70,7 @@ COPY --chown=node:node --from=builder /app/backend/prisma ./prisma
 ENV PORT=8080
 EXPOSE 8080
 
-CMD ["node", "dist/server.js"]
+# --conditions=dml-runtime makes @dml/shared resolve to its built dist (the JS),
+# not its TS source — Node can't strip types under node_modules. Only the prod
+# container sets this; dev/test/build keep using the source via the default.
+CMD ["node", "--conditions=dml-runtime", "dist/server.js"]
