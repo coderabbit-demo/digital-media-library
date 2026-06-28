@@ -68,6 +68,9 @@ export function DiscoverList({ category, onStartActivity }: DiscoverListProps) {
   const genres = sections.map((s) => s.genre);
   const activeGenre = genres.includes(genre) ? genre : 'all';
   const visibleSections = activeGenre === 'all' ? sections : sections.filter((s) => s.genre === activeGenre);
+  // Items without a genre still belong in the "All" view; they'd otherwise be
+  // dropped whenever the payload mixes tagged and untagged items.
+  const ungrouped = data.items.filter((item) => !item.genre);
 
   return (
     <div>
@@ -98,16 +101,25 @@ export function DiscoverList({ category, onStartActivity }: DiscoverListProps) {
       ) : null}
 
       {sections.length > 0 ? (
-        visibleSections.map((section) => (
-          <section key={section.genre} className="discover-section">
-            <h2 className="discover-section__title">{section.genre}</h2>
+        <>
+          {visibleSections.map((section) => (
+            <section key={section.genre} className="discover-section">
+              <h2 className="discover-section__title">{section.genre}</h2>
+              <div className="discover-grid">
+                {section.items.map((item) => (
+                  <DiscoverItemCard key={item.providerId} item={item} onStartActivity={onStartActivity} />
+                ))}
+              </div>
+            </section>
+          ))}
+          {activeGenre === 'all' && ungrouped.length > 0 ? (
             <div className="discover-grid">
-              {section.items.map((item) => (
+              {ungrouped.map((item) => (
                 <DiscoverItemCard key={item.providerId} item={item} onStartActivity={onStartActivity} />
               ))}
             </div>
-          </section>
-        ))
+          ) : null}
+        </>
       ) : (
         <div className="discover-grid">
           {data.items.map((item) => (
