@@ -1,0 +1,131 @@
+openapi: 3.0.3
+info:
+  title: Digital Media Library — Item Detail API (feature 007)
+  version: 0.1.0
+  description: >
+    Item detail endpoint: a deep-linkable, provider-backed view of a single media
+    item plus community aggregates computed from our own database. Authenticated
+    users only. All provider/user text is plain text. Mutations (shelf, rating,
+    recommend) are NOT defined here — they reuse the existing endpoints from
+    features 001/004/005.
+
+paths:
+  /api/items/{mediaType}/{providerId}:
+    get:
+      summary: Get item detail and community stats
+      operationId: getItem
+      security:
+        - sessionCookie: []
+      parameters:
+        - name: mediaType
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/MediaType'
+        - name: providerId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: >
+            Item resolved (fully, or stats-only if the provider detail lookup
+            failed while the item is otherwise known).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemPageDTO'
+        '400':
+          description: Invalid media type.
+        '401':
+          description: Not authenticated.
+        '404':
+          description: >
+            Item not found by any provider and unreferenced by any rating, shelf,
+            or activity in our database.
+
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: session
+
+  schemas:
+    MediaType:
+      type: string
+      enum: [book, music, audiobook, podcast]
+
+    Shelf:
+      type: string
+      enum: [want, current, done, dnf]
+
+    ItemDetailDTO:
+      type: object
+      required: [mediaType, providerId, title, genres]
+      properties:
+        mediaType: { $ref: '#/components/schemas/MediaType' }
+        providerId: { type: string }
+        title: { type: string }
+        creator: { type: string, nullable: true }
+        coverUrl: { type: string, nullable: true }
+        description: { type: string, nullable: true }
+        genres:
+          type: array
+          items: { type: string }
+        providerUrl: { type: string, nullable: true }
+        series: { type: string, nullable: true }
+
+    ShelfCountsDTO:
+      type: object
+      required: [want, current, done, dnf]
+      properties:
+        want: { type: integer, minimum: 0 }
+        current: { type: integer, minimum: 0 }
+        done: { type: integer, minimum: 0 }
+        dnf: { type: integer, minimum: 0 }
+
+    ActivityAuthorDTO:
+      type: object
+      required: [id, displayName]
+      properties:
+        id: { type: string }
+        displayName: { type: string }
+        avatarUrl: { type: string, nullable: true }
+
+    ItemActivityDTO:
+      type: object
+      required: [id, author, createdAt]
+      properties:
+        id: { type: string }
+        author: { $ref: '#/components/schemas/ActivityAuthorDTO' }
+        note: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+
+    ItemStatsDTO:
+      type: object
+      required: [ratingAverage, ratingCount, shelfCounts, recentActivity]
+      properties:
+        ratingAverage:
+          type: number
+          nullable: true
+          description: Mean stars; null when there are no ratings.
+        ratingCount: { type: integer, minimum: 0 }
+        shelfCounts: { $ref: '#/components/schemas/ShelfCountsDTO' }
+        recentActivity:
+          type: array
+          items: { $ref: '#/components/schemas/ItemActivityDTO' }
+
+    ItemPageDTO:
+      type: object
+      required: [item, detailAvailable, stats]
+      properties:
+        item:
+          allOf: [{ $ref: '#/components/schemas/ItemDetailDTO' }]
+          nullable: true
+        detailAvailable:
+          type: boolean
+          description: false when the provider detail lookup failed (stats still present).
+        stats: { $ref: '#/components/schemas/ItemStatsDTO' }
