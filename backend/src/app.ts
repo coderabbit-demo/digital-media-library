@@ -19,8 +19,13 @@ import { LibraryService } from './services/library.js';
 import { ReplyService } from './services/reply.js';
 import { RatingService } from './services/rating.js';
 import { LikeService } from './services/like.js';
+import { ItemService } from './services/item.js';
+import { ItemStatsService } from './services/item-stats.js';
 import type { ContentProvider } from './providers/content-provider.js';
 import type { SearchProvider } from './providers/search-provider.js';
+import type { ItemProvider } from './providers/item-provider.js';
+import { GoogleBooksItemProvider } from './providers/google-books-item.js';
+import { ItunesItemProvider } from './providers/itunes-item.js';
 import { GoogleBooksSearchProvider } from './providers/google-books-search.js';
 import { ItunesSearchProvider } from './providers/itunes-search.js';
 import { NytBooksProvider } from './providers/nyt-books.js';
@@ -46,6 +51,7 @@ import { registerLibraryRoutes } from './api/library.js';
 import { registerReplyRoutes } from './api/replies.js';
 import { registerRatingRoutes } from './api/ratings.js';
 import { registerLikeRoutes } from './api/likes.js';
+import { registerItemRoutes } from './api/items.js';
 
 /** Overrides let tests inject stubs (prisma/cache/oidc) and a custom config. */
 export interface BuildAppOverrides {
@@ -57,6 +63,8 @@ export interface BuildAppOverrides {
   providers?: Record<MediaType, ContentProvider>;
   /** Inject fake search providers in tests (avoids real provider calls). */
   searchProviders?: Record<MediaType, SearchProvider>;
+  /** Inject fake item-detail providers in tests (avoids real provider calls). */
+  itemProviders?: Record<MediaType, ItemProvider>;
 }
 
 /**
@@ -106,9 +114,18 @@ export async function buildApp(overrides: BuildAppOverrides = {}): Promise<Fasti
     podcast: new ItunesSearchProvider('podcast'),
   };
   const search = new SearchService(cache, searchProviders, config);
+  const itemProviders: Record<MediaType, ItemProvider> = overrides.itemProviders ?? {
+    // Books via Google Books volume-by-id; the rest via keyless iTunes Lookup.
+    book: new GoogleBooksItemProvider(config),
+    music: new ItunesItemProvider('music'),
+    audiobook: new ItunesItemProvider('audiobook'),
+    podcast: new ItunesItemProvider('podcast'),
+  };
+  const items = new ItemService(cache, itemProviders, config);
+  const itemStats = new ItemStatsService(prisma);
 
   const ctx: AppContext = {
-    config, prisma, cache, oidc, session, profiles, feed, activities, home, discover, search, recommendations, library, replies, ratings, likes,
+    config, prisma, cache, oidc, session, profiles, feed, activities, home, discover, search, recommendations, library, replies, ratings, likes, items, itemStats,
   };
   app.decorate('ctx', ctx);
 
@@ -167,6 +184,7 @@ export async function buildApp(overrides: BuildAppOverrides = {}): Promise<Fasti
       await registerReplyRoutes(api);
       await registerRatingRoutes(api);
       await registerLikeRoutes(api);
+      await registerItemRoutes(api);
     },
     { prefix: '/api' },
   );

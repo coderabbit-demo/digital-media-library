@@ -87,6 +87,7 @@ export interface FakePrisma {
   seedSession(userId: string, partial?: Partial<SessionRow>): SessionRow;
   seedRecommendation(userId: string, partial?: Partial<RecommendationRow>): RecommendationRow;
   seedLibraryItem(userId: string, partial?: Partial<LibraryRow>): LibraryRow;
+  seedRating(userId: string, partial?: Partial<RatingRow>): RatingRow;
   seedReply(activityId: string, userId: string, partial?: Partial<ReplyRow>): ReplyRow;
 }
 
@@ -168,6 +169,8 @@ export function createFakePrisma(): FakePrisma {
         if (where?.userId) {
           rows = rows.filter((r) => r.userId === where.userId);
         }
+        if (where?.mediaType) rows = rows.filter((r) => r.mediaType === where.mediaType);
+        if (where?.providerId) rows = rows.filter((r) => r.providerId === where.providerId);
         rows.sort(
           (a, b) => b.createdAt.getTime() - a.createdAt.getTime() || (a.id < b.id ? 1 : -1),
         );
@@ -322,6 +325,22 @@ export function createFakePrisma(): FakePrisma {
         if (where?.shelf) rows = rows.filter((r) => r.shelf === where.shelf);
         return rows.length;
       },
+      groupBy: async ({ by, where, _count }: any) => {
+        let rows = [...library.values()];
+        if (where?.userId) rows = rows.filter((r) => r.userId === where.userId);
+        if (where?.mediaType) rows = rows.filter((r) => r.mediaType === where.mediaType);
+        if (where?.providerId) rows = rows.filter((r) => r.providerId === where.providerId);
+        const field = by[0];
+        const groups = new Map<string, number>();
+        for (const r of rows) {
+          const key = (r as any)[field];
+          groups.set(key, (groups.get(key) ?? 0) + 1);
+        }
+        return [...groups.entries()].map(([val, n]) => ({
+          [field]: val,
+          _count: _count?._all ? { _all: n } : n,
+        }));
+      },
       updateMany: async ({ where, data }: any) => {
         let count = 0;
         for (const row of library.values()) {
@@ -373,6 +392,18 @@ export function createFakePrisma(): FakePrisma {
         let rows = [...ratings.values()];
         if (where?.userId) rows = rows.filter((r) => r.userId === where.userId);
         return rows.map((r) => (select ? pick(r as any, select) : r));
+      },
+      aggregate: async ({ where, _avg, _count }: any = {}) => {
+        let rows = [...ratings.values()];
+        if (where?.userId) rows = rows.filter((r) => r.userId === where.userId);
+        if (where?.mediaType) rows = rows.filter((r) => r.mediaType === where.mediaType);
+        if (where?.providerId) rows = rows.filter((r) => r.providerId === where.providerId);
+        const out: any = {};
+        if (_count) out._count = rows.length;
+        if (_avg?.stars) {
+          out._avg = { stars: rows.length ? rows.reduce((s, r) => s + r.stars, 0) / rows.length : null };
+        }
+        return out;
       },
       deleteMany: async ({ where }: any) => {
         let count = 0;
@@ -505,6 +536,23 @@ export function createFakePrisma(): FakePrisma {
         createdAt: partial.createdAt ?? new Date(),
       };
       activities.set(row.id, row);
+      return row;
+    },
+    seedRating(userId, partial = {}) {
+      const now = new Date();
+      const row: RatingRow = {
+        id: partial.id ?? randomUUID(),
+        userId,
+        mediaType: partial.mediaType ?? 'book',
+        providerId: partial.providerId ?? `prov-${randomUUID()}`,
+        stars: partial.stars ?? 5,
+        title: partial.title ?? 'Seed Rated',
+        creator: partial.creator ?? null,
+        coverUrl: partial.coverUrl ?? null,
+        createdAt: partial.createdAt ?? now,
+        updatedAt: partial.updatedAt ?? now,
+      };
+      ratings.set(row.id, row);
       return row;
     },
     seedReply(activityId, userId, partial = {}) {

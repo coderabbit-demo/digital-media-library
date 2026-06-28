@@ -47,6 +47,14 @@ const envSchema = z.object({
   // Search result cache window in seconds (default 1h); repeat queries within
   // the window are served from cache (feature 004, SC-003).
   SEARCH_TTL_SECONDS: z.coerce.number().int().positive().default(60 * 60),
+
+  // Item detail cache window in seconds (feature 007). Detail is far more stable
+  // than trending, so it's cached aggressively (default 24h).
+  ITEM_TTL_SECONDS: z.coerce.number().int().positive().default(60 * 60 * 24),
+  // Item community-stats cache window in seconds (feature 007). Short, since
+  // counts move as users rate/shelve (default 60s); aggregate consistency is
+  // allowed to lag within this window.
+  ITEM_STATS_TTL_SECONDS: z.coerce.number().int().positive().default(60),
 });
 
 export type AppConfig = z.infer<typeof envSchema>;

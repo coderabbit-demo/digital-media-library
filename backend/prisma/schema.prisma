@@ -86,6 +86,8 @@ model Activity {
   @@index([createdAt(sort: Desc), id(sort: Desc)], name: "idx_activity_feed")
   // Author lookups and cascade efficiency.
   @@index([userId], name: "idx_activity_user")
+  // Recent activity for an item detail page (feature 007).
+  @@index([mediaType, providerId, createdAt(sort: Desc)], name: "idx_activity_item")
   @@map("activity")
 }
 
@@ -129,6 +131,8 @@ model Rating {
   user UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, mediaType, providerId], name: "uq_rating_user_item")
+  // Rating aggregate for an item detail page (feature 007).
+  @@index([mediaType, providerId], name: "idx_rating_item")
   @@map("rating")
 }
 
@@ -189,6 +193,8 @@ model LibraryItem {
   @@unique([userId, mediaType, providerId], name: "uq_library_user_item")
   // Owner's recent-first list.
   @@index([userId, createdAt(sort: Desc)], name: "idx_library_user_recent")
+  // Per-shelf counts for an item detail page (feature 007).
+  @@index([mediaType, providerId], name: "idx_library_item")
   @@map("library_item")
 }
 

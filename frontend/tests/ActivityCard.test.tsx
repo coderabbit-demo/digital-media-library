@@ -2,6 +2,7 @@ import { describe, expect, it, vi, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MemoryRouter } from 'react-router-dom';
 import type { ActivityDTO } from '@dml/shared';
 import { ActivityCard } from '../src/components/ActivityCard';
 
@@ -37,7 +38,9 @@ function renderCard(activity: ActivityDTO, onDelete?: (id: string) => void) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
     <QueryClientProvider client={qc}>
-      <ActivityCard activity={activity} onDelete={onDelete} />
+      <MemoryRouter>
+        <ActivityCard activity={activity} onDelete={onDelete} />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
   return { calls };

@@ -7,6 +7,7 @@ import { AuthCallback } from './pages/AuthCallback';
 import { Discover } from './pages/Discover';
 import { Search } from './pages/Search';
 import { Library } from './pages/Library';
+import { ItemPage } from './pages/ItemPage';
 
 /** Auth gate + shell wrapping every protected route (FR-001/FR-002). */
 function ProtectedLayout() {
@@ -35,6 +36,7 @@ export function App() {
         <Route path="/audiobooks" element={<Discover category="audiobooks" />} />
         <Route path="/podcasts" element={<Discover category="podcasts" />} />
         <Route path="/library" element={<Library />} />
+        <Route path="/item/:mediaType/:providerId" element={<ItemPage />} />
         {/* Back-compat: the old Wishlist route now lives in My Library. */}
         <Route path="/wishlist" element={<Navigate to="/library" replace />} />
       </Route>

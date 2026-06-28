@@ -24,6 +24,8 @@ export function testConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     RATE_LIMIT_POSTS_PER_MINUTE: 10,
     SESSION_TTL_SECONDS: 3600,
     FEED_CACHE_TTL_SECONDS: 15,
+    ITEM_TTL_SECONDS: 86400,
+    ITEM_STATS_TTL_SECONDS: 60,
     ...overrides,
   };
 }
@@ -44,6 +46,7 @@ export async function buildTestApp(opts: {
   config?: AppConfig;
   providers?: Parameters<typeof buildApp>[0]['providers'];
   searchProviders?: Parameters<typeof buildApp>[0]['searchProviders'];
+  itemProviders?: Parameters<typeof buildApp>[0]['itemProviders'];
 }): Promise<TestApp> {
   const config = opts.config ?? testConfig();
   const cache = opts.cache ?? new InMemoryCacheService();
@@ -56,6 +59,7 @@ export async function buildTestApp(opts: {
     oidc,
     providers: opts.providers,
     searchProviders: opts.searchProviders,
+    itemProviders: opts.itemProviders,
   });
   await app.ready();
 

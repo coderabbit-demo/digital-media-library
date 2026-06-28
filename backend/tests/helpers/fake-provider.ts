@@ -42,3 +42,50 @@ export function fakeProviders(): Record<MediaType, FakeProvider> {
     podcast: new FakeProvider(makeItems('podcast', 25)),
   };
 }
+
+import type { ItemDetail, ItemProvider } from '../../src/providers/item-provider.js';
+
+/** A controllable in-memory ItemProvider for tests (no network). */
+export class FakeItemProvider implements ItemProvider {
+  readonly name = 'fake-item';
+  fail = false;
+  calls = 0;
+
+  constructor(private readonly item: ItemDetail | null) {}
+
+  async getItem(_providerId: string): Promise<ItemDetail | null> {
+    this.calls += 1;
+    if (this.fail) throw new Error('fake item provider down');
+    return this.item;
+  }
+}
+
+/** Build a normalized ItemDetail for tests. */
+export function makeItemDetail(
+  mediaType: MediaType,
+  providerId: string,
+  overrides: Partial<ItemDetail> = {},
+): ItemDetail {
+  return {
+    mediaType,
+    providerId,
+    title: `${mediaType} ${providerId}`,
+    creator: 'Creator',
+    coverUrl: `https://img.example/${mediaType}/${providerId}.jpg`,
+    description: 'A synopsis.',
+    genres: mediaType === 'audiobook' ? [] : ['Fiction', 'Mystery'],
+    providerUrl: `https://provider.example/${providerId}`,
+    series: null,
+    ...overrides,
+  };
+}
+
+/** A full item-providers map returning a detail for any id, per media type. */
+export function fakeItemProviders(): Record<MediaType, FakeItemProvider> {
+  return {
+    book: new FakeItemProvider(makeItemDetail('book', 'b1')),
+    music: new FakeItemProvider(makeItemDetail('music', 'm1')),
+    audiobook: new FakeItemProvider(makeItemDetail('audiobook', 'a1')),
+    podcast: new FakeItemProvider(makeItemDetail('podcast', 'p1')),
+  };
+}

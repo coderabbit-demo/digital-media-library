@@ -75,9 +75,9 @@ pnpm test:integration                  # needs Docker
 |------|----------|
 | Project overview & setup | [README.md](README.md) |
 | Binding principles | [.specify/memory/constitution.md](.specify/memory/constitution.md) |
-| Current feature spec/plan | [specs/006-conversations/](specs/006-conversations/) |
-| API contract | [specs/006-conversations/contracts/openapi.yaml](specs/006-conversations/contracts/openapi.yaml) |
-| Local run & validation | [specs/006-conversations/quickstart.md](specs/006-conversations/quickstart.md) |
+| Current feature spec/plan | [specs/007-item-page/](specs/007-item-page/) |
+| API contract | [specs/007-item-page/contracts/openapi.yaml](specs/007-item-page/contracts/openapi.yaml) |
+| Local run & validation | [specs/007-item-page/quickstart.md](specs/007-item-page/quickstart.md) |
 | Agent context (Claude Code) | [CLAUDE.md](CLAUDE.md) |
 
 ---
