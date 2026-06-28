@@ -129,7 +129,10 @@ resource "google_sql_database_instance" "main" {
   ]
 
   settings {
-    tier              = var.cloudsql_tier
+    tier = var.cloudsql_tier
+    # Shared-core tiers (e.g. db-f1-micro) require the ENTERPRISE edition; newer
+    # projects otherwise default to ENTERPRISE_PLUS, which rejects them.
+    edition           = var.cloudsql_edition
     availability_type = var.cloudsql_ha ? "REGIONAL" : "ZONAL"
     disk_size         = var.cloudsql_disk_size_gb
     disk_autoresize   = var.cloudsql_disk_autoresize
@@ -203,6 +206,9 @@ resource "google_cloud_run_v2_service" "api" {
   name     = "${var.env}-dml-api"
   location = var.region
 
+  # Stateless API — let Terraform replace it freely (no deletion protection).
+  deletion_protection = false
+
   # Internal + load-balancer ingress only; public traffic arrives via the LB.
   ingress = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
 
@@ -243,10 +249,7 @@ resource "google_cloud_run_v2_service" "api" {
         name  = "NODE_ENV"
         value = "production"
       }
-      env {
-        name  = "PORT"
-        value = "8080"
-      }
+      # PORT is reserved — Cloud Run injects it automatically (the app reads it).
       env {
         name  = "APP_BASE_URL"
         value = local.app_base_url

@@ -63,6 +63,12 @@ variable "cloudsql_tier" {
   default     = "db-f1-micro"
 }
 
+variable "cloudsql_edition" {
+  description = "CloudSQL edition. ENTERPRISE supports shared-core tiers (db-f1-micro); ENTERPRISE_PLUS requires db-perf-optimized tiers."
+  type        = string
+  default     = "ENTERPRISE"
+}
+
 variable "cloudsql_ha" {
   description = "Enable CloudSQL high availability (REGIONAL). Carries ~2x standing cost; off by default."
   type        = bool
