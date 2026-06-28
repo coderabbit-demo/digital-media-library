@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { PostUpdateForm, type ComposeInitial } from './PostUpdateForm';
+import { Icon } from './Icon';
 
 interface ComposeDialogProps {
   open: boolean;
@@ -53,9 +54,7 @@ export function ComposeDialog({ open, onClose, initial }: ComposeDialogProps) {
             aria-label="Close"
             title="Close"
           >
-            <span className="material-symbols-outlined" aria-hidden="true">
-              close
-            </span>
+            <Icon name="close" />
           </button>
         </div>
         <PostUpdateForm onPosted={onClose} initial={initial} />
