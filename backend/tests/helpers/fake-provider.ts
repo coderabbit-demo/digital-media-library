@@ -76,6 +76,7 @@ export function makeItemDetail(
     genres: mediaType === 'audiobook' ? [] : ['Fiction', 'Mystery'],
     providerUrl: `https://provider.example/${providerId}`,
     series: null,
+    spotifyUrl: null,
     ...overrides,
   };
 }

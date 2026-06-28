@@ -19,6 +19,7 @@ function makePage(overrides: Partial<ItemPageDTO> = {}): ItemPageDTO {
       genres: ['Science Fiction', 'Adventure'],
       providerUrl: 'https://example.com/b1',
       series: null,
+      spotifyUrl: null,
     },
     stats: {
       ratingAverage: 4.4,

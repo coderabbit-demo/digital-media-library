@@ -1652,6 +1652,11 @@ body {
 .item-genre {
   cursor: default;
 }
+.item-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
 
 /* Controls cluster: rating row, shelf select, then the action buttons. */
 .item-controls {

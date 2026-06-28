@@ -26,6 +26,7 @@ import type { SearchProvider } from './providers/search-provider.js';
 import type { ItemProvider } from './providers/item-provider.js';
 import { GoogleBooksItemProvider } from './providers/google-books-item.js';
 import { ItunesItemProvider } from './providers/itunes-item.js';
+import { SpotifyLinkProvider } from './providers/spotify.js';
 import { GoogleBooksSearchProvider } from './providers/google-books-search.js';
 import { ItunesSearchProvider } from './providers/itunes-search.js';
 import { NytBooksProvider } from './providers/nyt-books.js';
@@ -121,7 +122,8 @@ export async function buildApp(overrides: BuildAppOverrides = {}): Promise<Fasti
     audiobook: new ItunesItemProvider('audiobook'),
     podcast: new ItunesItemProvider('podcast'),
   };
-  const items = new ItemService(cache, itemProviders, config);
+  const spotify = new SpotifyLinkProvider(config);
+  const items = new ItemService(cache, itemProviders, config, spotify);
   const itemStats = new ItemStatsService(prisma);
 
   const ctx: AppContext = {

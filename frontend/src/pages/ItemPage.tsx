@@ -95,6 +95,7 @@ export function ItemPage() {
     });
 
   const previewUrl = item?.providerUrl && /^https?:\/\//i.test(item.providerUrl) ? item.providerUrl : null;
+  const spotifyUrl = item?.spotifyUrl && /^https?:\/\//i.test(item.spotifyUrl) ? item.spotifyUrl : null;
 
   return (
     <div className="item-page">
@@ -153,10 +154,19 @@ export function ItemPage() {
 
               <ItemControls item={toTrendingItem(item)} onStartActivity={startActivity} />
 
-              {previewUrl ? (
-                <a className="card-link" href={previewUrl} target="_blank" rel="noreferrer noopener">
-                  View on provider
-                </a>
+              {previewUrl || spotifyUrl ? (
+                <div className="item-links">
+                  {previewUrl ? (
+                    <a className="card-link" href={previewUrl} target="_blank" rel="noreferrer noopener">
+                      View on provider
+                    </a>
+                  ) : null}
+                  {spotifyUrl ? (
+                    <a className="card-link" href={spotifyUrl} target="_blank" rel="noreferrer noopener">
+                      Listen on Spotify
+                    </a>
+                  ) : null}
+                </div>
               ) : null}
             </>
           ) : null}

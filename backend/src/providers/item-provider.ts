@@ -15,6 +15,8 @@ export interface ItemDetail {
   genres: string[];
   providerUrl: string | null;
   series: string | null;
+  /** "Listen on Spotify" deep link (music/podcast/audiobook); enriched by ItemService. */
+  spotifyUrl: string | null;
 }
 
 /**

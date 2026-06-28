@@ -19,6 +19,7 @@ function toItemDetailDTO(d: ItemDetail): ItemDetailDTO {
     genres: d.genres,
     providerUrl: d.providerUrl,
     series: d.series,
+    spotifyUrl: d.spotifyUrl,
   };
 }
 

@@ -2,6 +2,7 @@ import type { MediaType } from '@dml/shared';
 import type { CacheService } from './cache.js';
 import type { AppConfig } from '../config/index.js';
 import type { ItemDetail, ItemProvider } from '../providers/item-provider.js';
+import type { SpotifyLinkProvider } from '../providers/spotify.js';
 
 /** Last-known-good detail is kept far longer than the fresh window (30 days). */
 const LKG_TTL_SECONDS = 60 * 60 * 24 * 30;
@@ -21,6 +22,7 @@ export class ItemService {
     private readonly cache: CacheService,
     private readonly providers: Record<MediaType, ItemProvider>,
     private readonly config: AppConfig,
+    private readonly spotify: SpotifyLinkProvider,
   ) {}
 
   async getItem(mediaType: MediaType, providerId: string): Promise<ItemDetail | null> {
@@ -38,6 +40,11 @@ export class ItemService {
       const stale = await this.safeGet(lkgKey);
       if (stale) return stale;
       throw err;
+    }
+
+    // Enrich with a "Listen on Spotify" link (best-effort; never blocks detail).
+    if (detail) {
+      detail.spotifyUrl = await this.spotify.findUrl(mediaType, detail.title, detail.creator);
     }
 
     // Only cache hits; a genuine miss (null) stays uncached so a later fix is seen.
