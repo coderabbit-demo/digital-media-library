@@ -53,13 +53,17 @@ printf '%s' 'GOOGLE_BOOKS_KEY' | gcloud secrets versions add ${ENV}-google-books
 - [ ] `${ENV}-nyt-api-key` / `${ENV}-google-books-api-key` set (optional; leave placeholder to run without)
 - [ ] Verify the runtime service account has `secretAccessor` on each (Terraform grants this via `runtime_secret_ids`)
 
-### ⚠️ Spotify secrets are not yet in Terraform
+### Spotify (feature 007 item-page links) — optional, wired into Terraform
 
-The Spotify item-page links (`SPOTIFY_CLIENT_ID` / `SPOTIFY_CLIENT_SECRET`) were added after the infra was authored and are **not** wired into `infra/secrets.tf` / `infra/main.tf` yet. To enable them in production, either:
+The `${ENV}-spotify-client-secret` secret (placeholder), the `SPOTIFY_CLIENT_ID` env, and the `SPOTIFY_CLIENT_SECRET` secret ref are provisioned by Terraform. To enable the "Listen on Spotify" links:
 
-- [ ] **Recommended:** add a `${ENV}-spotify-client-secret` secret + the `SPOTIFY_CLIENT_ID` env / `SPOTIFY_CLIENT_SECRET` secret to the Cloud Run env block in `infra/main.tf` (mirroring the `google_books_api_key` wiring), `terraform apply`, then add the secret version; **or**
-- [ ] **Quick path:** set them directly on the service — `gcloud run services update ${ENV}-dml-api --update-env-vars SPOTIFY_CLIENT_ID=... ` and a secret mount for the secret (note: a manual env change is reconciled away on the next `terraform apply`, so prefer wiring it in).
-- [ ] If left unset, the app runs fine — the "Listen on Spotify" link is simply omitted.
+- [ ] Set `spotify_client_id` in `terraform.tfvars` (non-secret) and `terraform apply`
+- [ ] Add the real client secret value:
+  ```bash
+  printf '%s' 'SPOTIFY_SECRET' | gcloud secrets versions add ${ENV}-spotify-client-secret \
+    --project=$PROJECT --data-file=-
+  ```
+- [ ] Leave `spotify_client_id` empty to disable — the app no-ops and the link is omitted (a placeholder secret is inert without the ID).
 
 > The optional TTL knobs (`ITEM_TTL_SECONDS`, `SEARCH_TTL_SECONDS`, etc.) have sane defaults and need no wiring unless you want to override them.
 
@@ -93,19 +97,23 @@ gcloud compute url-maps invalidate-cdn-cache ${ENV}-dml-api-urlmap --path "/*" -
 
 ## 5. Database migrations
 
-No automated migration step exists yet — run it explicitly before serving traffic. Two options:
+Migrations run as a **one-off Cloud Run Job** (`${ENV}-dml-migrate`, provisioned by Terraform) that executes `prisma migrate deploy` inside the VPC against private CloudSQL — no proxy needed. It uses a dedicated **migration image** built from `backend/Dockerfile --target migrate` (the slim API runtime image prunes the Prisma CLI).
 
-**A. Cloud SQL Auth Proxy (from CI or a workstation):**
+Build/push the migration image and run the job (the CI workflow does this automatically — see §7):
+
 ```bash
-cloud-sql-proxy $PROJECT:$REGION:${ENV}-dml-postgres &      # private IP via proxy
-DATABASE_URL='postgresql://USER:PASS@127.0.0.1:5432/DB' \
-  corepack pnpm --filter @dml/backend exec prisma migrate deploy
+REPO=$(cd infra && terraform output -raw artifact_registry_repo)
+JOB=$(cd infra && terraform output -raw migrate_job_name)
+docker build -f backend/Dockerfile --target migrate -t "$REPO/migrate:v1" .
+docker push "$REPO/migrate:v1"
+# Point the job at the freshly-built image, then run it.
+gcloud run jobs update "$JOB" --image "$REPO/migrate:v1" --region $REGION --quiet
+gcloud run jobs execute "$JOB" --region $REGION --wait
 ```
 
-**B. One-off Cloud Run Job** using the same API image with command `pnpm --filter @dml/backend exec prisma migrate deploy` and the `DATABASE_URL` secret attached (runs inside the VPC, no proxy needed).
-
-- [ ] Migrations applied against the production database
-- [ ] (Optional) automate as a pre-deploy Cloud Run Job step
+- [ ] Migration image built and pushed (tag matches `image_tag`)
+- [ ] Migration job executed and **completed successfully** before deploying new API code
+- [ ] (Fallback) Cloud SQL Auth Proxy from a VPC-connected host if you must run migrations manually
 
 ## 6. OAuth configuration
 
@@ -117,10 +125,10 @@ DATABASE_URL='postgresql://USER:PASS@127.0.0.1:5432/DB' \
 
 [`deploy.yml`](../../.github/workflows/deploy.yml) is `workflow_dispatch` by default and authenticates via **Workload Identity Federation** (no long-lived keys). Configure repo/org settings:
 
-- [ ] Repo **variables**: `GCP_PROJECT_ID`, `GCP_REGION`, `ARTIFACT_REPO`, `GCS_SPA_BUCKET`, `CLOUD_RUN_SERVICE`, `WORKLOAD_IDENTITY_PROVIDER`, `DEPLOY_SERVICE_ACCOUNT`
+- [ ] Repo **variables**: `GCP_PROJECT_ID`, `GCP_REGION`, `ARTIFACT_REPO`, `GCS_SPA_BUCKET`, `CLOUD_RUN_SERVICE`, `CLOUD_RUN_MIGRATE_JOB` (e.g. `prod-dml-migrate`), `WORKLOAD_IDENTITY_PROVIDER`, `DEPLOY_SERVICE_ACCOUNT`
 - [ ] Workload Identity pool/provider bound to the deploy service account (roles: Artifact Registry writer, Cloud Run admin, Storage admin, Service Account user)
-- [ ] Run the workflow (`image_tag`) and confirm it builds, deploys Cloud Run, syncs the SPA, and invalidates the CDN
-- [ ] (Optional) add a migration job step and flip the trigger to `push: branches: [main]`
+- [ ] Run the workflow (`image_tag`) and confirm it: builds + pushes the API and migration images, **runs the migration job (waits for success)**, deploys Cloud Run, syncs the SPA, and invalidates the CDN
+- [ ] (Optional) flip the trigger to `push: branches: [main]` once verified
 
 ## 8. Verify & observe
 

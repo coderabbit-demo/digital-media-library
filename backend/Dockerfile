@@ -31,6 +31,14 @@ RUN pnpm --filter @dml/backend prisma generate \
 # Prune to production dependencies for a slim runtime.
 RUN pnpm --filter @dml/backend deploy --prod --legacy /app/deploy
 
+# ---- Migration runner -------------------------------------------------------
+# Reuses the builder (full deps incl. the Prisma CLI + migrations) to apply
+# pending migrations and exit. Run as a one-off Cloud Run Job (build with
+# `--target migrate`); the slim runtime image below has no Prisma CLI.
+FROM builder AS migrate
+WORKDIR /app
+CMD ["pnpm", "--filter", "@dml/backend", "exec", "prisma", "migrate", "deploy"]
+
 # ---- Runtime ----------------------------------------------------------------
 FROM node:22-slim AS runtime
 WORKDIR /app

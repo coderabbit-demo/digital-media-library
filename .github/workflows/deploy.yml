@@ -21,6 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       IMAGE: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.ARTIFACT_REPO }}/api:${{ inputs.image_tag }}
+      MIGRATE_IMAGE: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.ARTIFACT_REPO }}/migrate:${{ inputs.image_tag }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -42,6 +43,20 @@ jobs:
         run: |
           docker build -f backend/Dockerfile -t "$IMAGE" .
           docker push "$IMAGE"
+
+      # --- Migration image + run migrations (before deploying new API code) ---
+      - name: Build & push migration image
+        run: |
+          docker build -f backend/Dockerfile --target migrate -t "$MIGRATE_IMAGE" .
+          docker push "$MIGRATE_IMAGE"
+
+      - name: Run database migrations (Cloud Run Job)
+        run: |
+          gcloud run jobs update ${{ vars.CLOUD_RUN_MIGRATE_JOB }} \
+            --image "$MIGRATE_IMAGE" \
+            --region ${{ vars.GCP_REGION }} --quiet
+          gcloud run jobs execute ${{ vars.CLOUD_RUN_MIGRATE_JOB }} \
+            --region ${{ vars.GCP_REGION }} --wait
 
       - name: Deploy Cloud Run
         run: |
