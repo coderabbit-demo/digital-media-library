@@ -79,26 +79,38 @@ export function Library() {
     <div className="discover-page">
       <h1 className="discover-page__title">My Library</h1>
 
-      <div className="wishlist-filters" role="tablist" aria-label="Shelves">
-        <button type="button" className={`chip${shelf === 'all' ? ' chip--active' : ''}`} onClick={() => setShelf('all')}>
-          All
-        </button>
-        {SHELVES.map((s) => (
-          <button key={s} type="button" className={`chip${shelf === s ? ' chip--active' : ''}`} onClick={() => setShelf(s)}>
-            {SHELF_TAB_LABELS[s]}
-          </button>
-        ))}
-      </div>
+      <div className="library-filters">
+        <div className="filter-row">
+          <span className="filter-row__label" id="lib-shelf-label">
+            Shelf
+          </span>
+          <div className="wishlist-filters" role="tablist" aria-labelledby="lib-shelf-label">
+            <button type="button" className={`chip${shelf === 'all' ? ' chip--active' : ''}`} onClick={() => setShelf('all')}>
+              All
+            </button>
+            {SHELVES.map((s) => (
+              <button key={s} type="button" className={`chip${shelf === s ? ' chip--active' : ''}`} onClick={() => setShelf(s)}>
+                {SHELF_TAB_LABELS[s]}
+              </button>
+            ))}
+          </div>
+        </div>
 
-      <div className="wishlist-filters" aria-label="Filter by media type">
-        <button type="button" className={`chip${mediaType === 'all' ? ' chip--active' : ''}`} onClick={() => setMediaType('all')}>
-          All media
-        </button>
-        {MEDIA_TYPES.map((t) => (
-          <button key={t} type="button" className={`chip${mediaType === t ? ' chip--active' : ''}`} onClick={() => setMediaType(t)}>
-            {TYPE_LABELS[t]}
-          </button>
-        ))}
+        <div className="filter-row">
+          <span className="filter-row__label" id="lib-media-label">
+            Media
+          </span>
+          <div className="wishlist-filters" role="tablist" aria-labelledby="lib-media-label">
+            <button type="button" className={`chip${mediaType === 'all' ? ' chip--active' : ''}`} onClick={() => setMediaType('all')}>
+              All
+            </button>
+            {MEDIA_TYPES.map((t) => (
+              <button key={t} type="button" className={`chip${mediaType === t ? ' chip--active' : ''}`} onClick={() => setMediaType(t)}>
+                {TYPE_LABELS[t]}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {isLoading ? (
