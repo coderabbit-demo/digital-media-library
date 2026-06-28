@@ -24,20 +24,27 @@ const configured = () =>
 describe('SpotifyLinkProvider', () => {
   afterEach(() => vi.restoreAllMocks());
 
-  it('returns the album URL for music', async () => {
-    mockSpotify({ albums: { items: [{ external_urls: { spotify: 'https://open.spotify.com/album/1' } }] } });
+  const searchUrl = (calls: string[]) => calls.find((u) => u.includes('/v1/search')) ?? '';
+
+  it('searches type=album and returns the album URL for music', async () => {
+    const calls = mockSpotify({ albums: { items: [{ external_urls: { spotify: 'https://open.spotify.com/album/1' } }] } });
     const url = await configured().findUrl('music', 'Random Access Memories', 'Daft Punk');
     expect(url).toBe('https://open.spotify.com/album/1');
+    expect(searchUrl(calls)).toContain('type=album');
+    expect(searchUrl(calls)).toContain('Daft+Punk'); // query includes the creator
   });
 
-  it('uses the show bucket for podcasts and audiobook bucket for audiobooks', async () => {
-    mockSpotify({ shows: { items: [{ external_urls: { spotify: 'https://open.spotify.com/show/9' } }] } });
+  it('searches type=show for podcasts and type=audiobook for audiobooks', async () => {
+    let calls = mockSpotify({ shows: { items: [{ external_urls: { spotify: 'https://open.spotify.com/show/9' } }] } });
     expect(await configured().findUrl('podcast', 'The Daily', 'NYT')).toBe('https://open.spotify.com/show/9');
+    expect(searchUrl(calls)).toContain('type=show');
 
-    mockSpotify({ audiobooks: { items: [{ external_urls: { spotify: 'https://open.spotify.com/audiobook/7' } }] } });
+    vi.restoreAllMocks();
+    calls = mockSpotify({ audiobooks: { items: [{ external_urls: { spotify: 'https://open.spotify.com/audiobook/7' } }] } });
     expect(await configured().findUrl('audiobook', 'Becoming', 'Michelle Obama')).toBe(
       'https://open.spotify.com/audiobook/7',
     );
+    expect(searchUrl(calls)).toContain('type=audiobook');
   });
 
   it('returns null for books and when not configured (no network)', async () => {
