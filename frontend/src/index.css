@@ -1466,4 +1466,47 @@ body {
 
   .modal-scrim { animation: scrim-in 0.18s var(--ease-out) both; }
   .modal { animation: dialog-in 0.26s var(--ease-out) both; }
+
+  /* --- Home feed: list rhythm. The feed cards arrive with a brief, bounded
+     stagger (list-items-appearing, not section choreography). Capped so the
+     last card lands within ~300ms regardless of page size. --- */
+  .feed-list > .activity-card:nth-child(1) { animation-delay: 0s; }
+  .feed-list > .activity-card:nth-child(2) { animation-delay: 0.05s; }
+  .feed-list > .activity-card:nth-child(3) { animation-delay: 0.10s; }
+  .feed-list > .activity-card:nth-child(4) { animation-delay: 0.15s; }
+  .feed-list > .activity-card:nth-child(5) { animation-delay: 0.20s; }
+  .feed-list > .activity-card:nth-child(n + 6) { animation-delay: 0.25s; }
+
+  /* --- Like: the signature feedback moment. The heart pops when the card
+     enters the liked state and the label warms to the danger hue. --- */
+  @keyframes like-pop {
+    0% { transform: scale(1); }
+    45% { transform: scale(1.35); }
+    100% { transform: scale(1); }
+  }
+  .like-heart {
+    display: inline-block;
+    transition: transform 0.12s var(--ease-out);
+  }
+  .card-link--active .like-heart {
+    animation: like-pop 0.3s var(--ease-out);
+  }
+  .card-link:active .like-heart { transform: scale(0.88); }
+
+  /* --- Star rating: hover affordance. Hovering previews the fill up to the
+     pointer and lifts the hovered star. (Color is state, kept everywhere; the
+     scale is the motion gated here.) --- */
+  .activity-card__rating .star:hover { transform: scale(1.18); }
+
+  /* --- Reply thread: gentle reveal on open instead of a hard cut. --- */
+  .reply-thread { animation: rise-in 0.26s var(--ease-out) both; }
+
+  /* --- Button press: a small, tactile scale-down on activation. --- */
+  .btn:active:not(:disabled) { transform: scale(0.97); }
 }
+
+/* Star hover-fill is colour, not motion, so it lives outside the reduced-motion
+   guard: hovering the rating warms every star up to the pointer. */
+.activity-card__rating:hover .star { color: var(--star); }
+.activity-card__rating .star:hover ~ .star { color: var(--md-sys-color-outline); }
+.activity-card__rating .star { transition: transform 0.12s var(--ease-out), color 0.12s var(--ease-out); }
