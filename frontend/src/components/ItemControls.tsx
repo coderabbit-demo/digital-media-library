@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { SHELVES, type Shelf, type TrendingItemDTO } from '@dml/shared';
 import { useAddToLibrary, useLibraryShelves, libraryKey, shelfLabel } from '../services/library';
 import { useRecommend } from '../services/recommendations';
 import { useRatings, useSetRating, useClearRating, ratingKey } from '../services/ratings';
+import { itemQueryKey } from '../services/item';
 
 /** "I'm currently reading/listening to this" verb per media type. */
 function verb(mediaType: TrendingItemDTO['mediaType']): string {
@@ -34,29 +36,54 @@ export function ItemControls({ item, onStartActivity }: ItemControlsProps) {
   const clearRating = useClearRating();
   const myRating = ratings.get(ratingKey(item)) ?? 0;
 
+  // After any action, refresh the item query so the community sections
+  // (shelf counts, rating average/count) reflect the change, not just the
+  // personal controls fed by the library/ratings caches.
+  const qc = useQueryClient();
+  const refreshItem = () => {
+    void qc.invalidateQueries({ queryKey: itemQueryKey(item.mediaType, item.providerId) });
+  };
+
   const setShelf = (shelf: Shelf) => {
     addToLibrary.mutate(
       { item, shelf },
-      { onSuccess: () => shelf === 'current' && onStartActivity(item) },
+      {
+        onSuccess: () => {
+          refreshItem();
+          if (shelf === 'current') onStartActivity(item);
+        },
+      },
     );
   };
 
   const startActivity = () => {
     if (addToLibrary.isPending) return;
-    addToLibrary.mutate({ item, shelf: 'current' }, { onSuccess: () => onStartActivity(item) });
+    addToLibrary.mutate(
+      { item, shelf: 'current' },
+      {
+        onSuccess: () => {
+          refreshItem();
+          onStartActivity(item);
+        },
+      },
+    );
   };
 
   const rate = (stars: number) => {
-    if (stars === myRating) clearRating.mutate({ mediaType: item.mediaType, providerId: item.providerId });
+    if (stars === myRating)
+      clearRating.mutate({ mediaType: item.mediaType, providerId: item.providerId }, { onSuccess: refreshItem });
     else
-      setRating.mutate({
-        mediaType: item.mediaType,
-        providerId: item.providerId,
-        stars,
-        title: item.title,
-        creator: item.creator,
-        coverUrl: item.coverUrl,
-      });
+      setRating.mutate(
+        {
+          mediaType: item.mediaType,
+          providerId: item.providerId,
+          stars,
+          title: item.title,
+          creator: item.creator,
+          coverUrl: item.coverUrl,
+        },
+        { onSuccess: refreshItem },
+      );
   };
 
   return (
@@ -111,7 +138,14 @@ export function ItemControls({ item, onStartActivity }: ItemControlsProps) {
           type="button"
           className="btn btn-ghost"
           disabled={recommended || recommend.isPending}
-          onClick={() => recommend.mutate(item, { onSuccess: () => setRecommended(true) })}
+          onClick={() =>
+            recommend.mutate(item, {
+              onSuccess: () => {
+                setRecommended(true);
+                refreshItem();
+              },
+            })
+          }
         >
           {recommended ? 'Recommended ✓' : 'Recommend'}
         </button>

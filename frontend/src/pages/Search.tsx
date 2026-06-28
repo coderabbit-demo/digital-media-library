@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { DISCOVER_CATEGORIES, type DiscoverCategory, type TrendingItemDTO } from '@dml/shared';
 import { useSearch } from '../services/search';
@@ -32,6 +32,14 @@ export function Search() {
   const [category, setCategory] = useState<DiscoverCategory>(submittedCategory);
   const [input, setInput] = useState(submittedQuery);
   const [compose, setCompose] = useState<ComposeInitial | null>(null);
+
+  // Keep the form in sync when the submitted search changes via history
+  // navigation (back/forward between /search?… entries). Typing only changes the
+  // local inputs, not the submitted values, so this never fights the user.
+  useEffect(() => {
+    setCategory(submittedCategory);
+    setInput(submittedQuery);
+  }, [submittedCategory, submittedQuery]);
 
   const { data, isFetching, isError, refetch } = useSearch(submittedCategory, submittedQuery);
 

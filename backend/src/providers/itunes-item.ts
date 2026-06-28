@@ -4,6 +4,8 @@ import { fetchJson } from './http.js';
 import { stripHtml } from './text.js';
 
 interface ItunesResult {
+  wrapperType?: string;
+  kind?: string;
   collectionId?: number;
   trackId?: number;
   collectionName?: string;
@@ -36,6 +38,21 @@ export class ItunesItemProvider implements ItemProvider {
     this.name = `itunes-item-${mediaType}`;
   }
 
+  /** True when an iTunes result belongs to this adapter's media family. */
+  private matchesMediaType(r: ItunesResult): boolean {
+    switch (this.mediaType) {
+      case 'music':
+        // Albums come back as collections (kind "song" for individual tracks).
+        return r.wrapperType === 'collection' || r.kind === 'song';
+      case 'audiobook':
+        return r.wrapperType === 'audiobook';
+      case 'podcast':
+        // Podcast lookups return wrapperType "track" with kind "podcast"; key on
+        // kind so a music track (also wrapperType "track") isn't misclassified.
+        return r.kind === 'podcast';
+    }
+  }
+
   async getItem(providerId: string): Promise<ItemDetail | null> {
     const params = new URLSearchParams({ id: providerId, country: 'US' });
     const data = await fetchJson<ItunesResponse>(
@@ -45,6 +62,9 @@ export class ItunesItemProvider implements ItemProvider {
     const title = (r?.collectionName ?? r?.trackName)?.trim();
     const id = r?.collectionId ?? r?.trackId;
     if (!r || !title || id === undefined) return null;
+    // A valid iTunes id from another family must not be served under this route;
+    // verify the result's wrapperType/kind matches the requested media type.
+    if (!this.matchesMediaType(r)) return null;
     // Prefer a single explicit genre list; fall back to the primary genre.
     const genres = (r.genres?.length ? r.genres : r.primaryGenreName ? [r.primaryGenreName] : [])
       .map((g) => g.trim())

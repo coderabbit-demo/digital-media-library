@@ -42,6 +42,28 @@ describe('integration: item detail resilience & caching', () => {
     expect(body.stats.shelfCounts.current).toBe(1);
   });
 
+  it('falls back to last-known-good detail when the provider fails after a success', async () => {
+    const book = new FakeItemProvider(makeItemDetail('book', 'b1'));
+    t = await buildTestApp({
+      prisma: db.client,
+      cache,
+      itemProviders: { ...fakeItemProviders(), book },
+    });
+    const { cookie } = auth();
+
+    // Prime the cache (fresh + last-known-good).
+    await t.app.inject({ method: 'GET', url: '/api/items/book/b1', headers: { cookie } });
+    // Expire only the fresh window, then break the provider.
+    await cache.delByPrefix('item:fresh:');
+    book.fail = true;
+
+    const res = await t.app.inject({ method: 'GET', url: '/api/items/book/b1', headers: { cookie } });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.detailAvailable).toBe(true);
+    expect(body.item.title).toBe('book b1'); // served from last-known-good
+  });
+
   it('serves the second request detail from cache (one provider call)', async () => {
     const book = new FakeItemProvider(makeItemDetail('book', 'b1'));
     t = await buildTestApp({

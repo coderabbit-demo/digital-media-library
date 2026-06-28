@@ -14,7 +14,7 @@
 - **Rationale**: Item metadata rarely changes; aggressive caching cuts provider calls and makes the warm-cache path fast (SC-005). Stale-but-cached satisfies Principle III.
 - **Alternatives considered**: No cache (rejected — repeated provider hits, slow, quota); short TTL like trending (rejected — detail is stable, longer TTL is cheaper).
 
-## Decision: Single endpoint `GET /api/items/:mediaType/:providerId` → `{ item, stats }`
+## Decision: Single endpoint `GET /api/items/:mediaType/:providerId` → `{ item, detailAvailable, stats }`
 
 - **Decision**: One authenticated endpoint returns the detail plus community stats. Detail and stats are computed concurrently; **a provider-detail failure does not fail the request** — return `item: null` (or last-cached) with `detailAvailable: false` while still returning `stats`. Return 404 only when the item is unknown to both the provider and our DB (no ratings/shelves/activity and provider 404).
 - **Rationale**: Satisfies FR-012/SC-005 (community sections render during provider outages). One round-trip keeps the page simple and fast.

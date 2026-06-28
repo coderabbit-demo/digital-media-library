@@ -3,13 +3,18 @@ import type { CacheService } from './cache.js';
 import type { AppConfig } from '../config/index.js';
 import type { ItemDetail, ItemProvider } from '../providers/item-provider.js';
 
+/** Last-known-good detail is kept far longer than the fresh window (30 days). */
+const LKG_TTL_SECONDS = 60 * 60 * 24 * 30;
+
 /**
  * Item detail through the provider abstraction with cache-aside (Principle III).
- * Detail is stable, so it's cached aggressively (`ITEM_TTL_SECONDS`). Cache
- * access is best-effort; a Redis hiccup never fails an otherwise-good lookup.
- * A provider failure after a prior success falls back to the last-cached detail;
- * with no cached value, the failure propagates so the route can degrade to a
- * stats-only response.
+ * Detail is stable, so it's cached aggressively. Two keys mirror TrendingService:
+ * a short-lived `fresh` entry (`ITEM_TTL_SECONDS`) and a long-lived
+ * last-known-good (`lkg`) snapshot. When the fresh entry has expired and the
+ * provider then fails, the lkg snapshot is served (true stale fallback); only
+ * with no snapshot at all does the failure propagate (route degrades to
+ * stats-only). Cache access is best-effort — a Redis hiccup never fails an
+ * otherwise-good lookup.
  */
 export class ItemService {
   constructor(
@@ -19,22 +24,27 @@ export class ItemService {
   ) {}
 
   async getItem(mediaType: MediaType, providerId: string): Promise<ItemDetail | null> {
-    const cacheKey = `item:${mediaType}:${providerId}`;
-    const cached = await this.safeGet(cacheKey);
-    if (cached) return cached;
+    const freshKey = `item:fresh:${mediaType}:${providerId}`;
+    const lkgKey = `item:lkg:${mediaType}:${providerId}`;
+
+    const fresh = await this.safeGet(freshKey);
+    if (fresh) return fresh;
 
     let detail: ItemDetail | null;
     try {
       detail = await this.providers[mediaType].getItem(providerId);
     } catch (err) {
-      // Provider failed: serve last-known-good if we have it, else surface.
-      const stale = await this.safeGet(cacheKey);
+      // Provider failed: serve the last-known-good snapshot if we have one.
+      const stale = await this.safeGet(lkgKey);
       if (stale) return stale;
       throw err;
     }
 
     // Only cache hits; a genuine miss (null) stays uncached so a later fix is seen.
-    if (detail) await this.safeSet(cacheKey, detail);
+    if (detail) {
+      await this.safeSet(freshKey, detail, this.config.ITEM_TTL_SECONDS);
+      await this.safeSet(lkgKey, detail, LKG_TTL_SECONDS);
+    }
     return detail;
   }
 
@@ -46,9 +56,9 @@ export class ItemService {
     }
   }
 
-  private async safeSet(key: string, detail: ItemDetail): Promise<void> {
+  private async safeSet(key: string, detail: ItemDetail, ttlSeconds: number): Promise<void> {
     try {
-      await this.cache.set(key, detail, this.config.ITEM_TTL_SECONDS);
+      await this.cache.set(key, detail, ttlSeconds);
     } catch {
       // Ignore cache write failures; the result is still returned.
     }

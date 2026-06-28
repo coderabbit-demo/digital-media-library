@@ -116,6 +116,7 @@ components:
         shelfCounts: { $ref: '#/components/schemas/ShelfCountsDTO' }
         recentActivity:
           type: array
+          maxItems: 10
           items: { $ref: '#/components/schemas/ItemActivityDTO' }
 
     ItemPageDTO:
