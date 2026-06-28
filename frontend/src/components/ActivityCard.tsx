@@ -178,7 +178,10 @@ export function ActivityCard({ activity, onDelete, deleting = false }: ActivityC
             disabled={!persisted || toggleLike.isPending}
             onClick={() => toggleLike.mutate({ activityId: activity.id, liked: likedByMe })}
           >
-            {likedByMe ? '♥' : '♡'} {likeCount > 0 ? `Like (${likeCount})` : 'Like'}
+            <span className="like-heart" aria-hidden="true">
+              {likedByMe ? '♥' : '♡'}
+            </span>{' '}
+            {likeCount > 0 ? `Like (${likeCount})` : 'Like'}
           </button>
           <button
             type="button"
