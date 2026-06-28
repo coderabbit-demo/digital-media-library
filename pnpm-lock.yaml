@@ -87,15 +87,12 @@ importers:
       '@dml/shared':
         specifier: workspace:*
         version: link:../packages/shared
-      '@fontsource-variable/roboto-flex':
+      '@fontsource-variable/inter':
         specifier: ^5.2.8
         version: 5.2.8
       '@tanstack/react-query':
         specifier: ^5.59.0
         version: 5.101.1(react@18.3.1)
-      material-symbols:
-        specifier: ^0.45.4
-        version: 0.45.4
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -636,8 +633,8 @@ packages:
   '@fastify/proxy-addr@5.1.0':
     resolution: {integrity: sha512-INS+6gh91cLUjB+PVHfu1UqcB76Sqtpyp7bnL+FYojhjygvOPA9ctiD/JDKsyD9Xgu4hUhCSJBPig/w7duNajw==}
 
-  '@fontsource-variable/roboto-flex@5.2.8':
-    resolution: {integrity: sha512-Q9zbz+P2VrDeIxBu9YAIG+eYpLmQF5FIJEEwAWn8En9Lao1TOISnoYcywGV+jSv7LGsHEndCR8hveXPnvCBEQQ==}
+  '@fontsource-variable/inter@5.2.8':
+    resolution: {integrity: sha512-kOfP2D+ykbcX/P3IFnokOhVRNoTozo5/JxhAIVYLpea/UBmCQ/YWPBfWIDuBImXX/15KH+eKh4xpEUyS2sQQGQ==}
 
   '@grpc/grpc-js@1.14.4':
     resolution: {integrity: sha512-k9Dj3DV/itK9D06Y8f190Qgop7/Ui+D0njFV3LHMPwPT75DpXLQohE9Wmz0QElrJnzsjB7KPWiKJbOl7IPDArQ==}
@@ -1958,9 +1955,6 @@ packages:
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
 
-  material-symbols@0.45.4:
-    resolution: {integrity: sha512-yBdiCnRbXenVfovbQBqT+lBakq1Vc+XEL2/vZIBDeYTi+yuTog9OG7A9cLtM/KeDrldNJDrj6+F9eUFRlUrZOQ==}
-
   math-intrinsics@1.1.0:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
     engines: {node: '>= 0.4'}
@@ -3099,7 +3093,7 @@ snapshots:
       '@fastify/forwarded': 3.0.1
       ipaddr.js: 2.4.0
 
-  '@fontsource-variable/roboto-flex@5.2.8': {}
+  '@fontsource-variable/inter@5.2.8': {}
 
   '@grpc/grpc-js@1.14.4':
     dependencies:
@@ -4489,8 +4483,6 @@ snapshots:
   magic-string@0.30.21:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
-
-  material-symbols@0.45.4: {}
 
   math-intrinsics@1.1.0: {}
 

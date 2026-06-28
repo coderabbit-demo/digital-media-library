@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useLogout, useMe } from '../services/auth';
 import { Avatar } from './Avatar';
+import { Icon } from './Icon';
 
 /** Categories grouped under the "Discover" dropdown. */
 const DISCOVER_ITEMS = [
@@ -115,9 +116,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 isActive ? 'app-nav__link app-nav__link--icon app-nav__link--active' : 'app-nav__link app-nav__link--icon'
               }
             >
-              <span className="material-symbols-outlined" aria-hidden="true">
-                search
-              </span>
+              <Icon name="search" />
             </NavLink>
           </nav>
 
@@ -131,9 +130,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               aria-label="Sign out"
               title="Sign out"
             >
-              <span className="material-symbols-outlined" aria-hidden="true">
-                logout
-              </span>
+              <Icon name="logout" />
             </button>
           </div>
         </div>

@@ -3,9 +3,8 @@ import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { App } from './App';
-// Self-hosted fonts (bundled by Vite) — no third-party Google Fonts requests.
-import '@fontsource-variable/roboto-flex';
-import 'material-symbols/outlined.css';
+// Self-hosted variable font (bundled by Vite) — no third-party Google Fonts requests.
+import '@fontsource-variable/inter';
 import './index.css';
 
 const queryClient = new QueryClient({

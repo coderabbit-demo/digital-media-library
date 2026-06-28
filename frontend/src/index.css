@@ -1,104 +1,107 @@
 /* ==========================================================================
-   Material Design 3 (Material You) — token system + components
-   React + Vite SPA. Tokens follow the md.sys spec mapped to CSS custom
-   properties. Baseline purple scheme; light + dark via prefers-color-scheme.
-   Elevation is communicated with tonal surface color (not shadows) per MD3.
+   Impeccable design system — media-forward, system-adaptive (light + dark).
+   React + Vite SPA. Semantic OKLCH tokens; a single warm amber accent; neutral
+   surfaces so cover art and people carry the color. The legacy `--md-sys-*`
+   names remain as thin compatibility aliases over the new tokens (see :root).
    ========================================================================== */
 
 :root {
-  /* ---- Color: light scheme (MD3 baseline) ---- */
-  --md-sys-color-primary: #65558f;
-  --md-sys-color-on-primary: #ffffff;
-  --md-sys-color-primary-container: #e9ddff;
-  --md-sys-color-on-primary-container: #4d3d75;
-  --md-sys-color-secondary: #625b71;
-  --md-sys-color-on-secondary: #ffffff;
-  --md-sys-color-secondary-container: #e8def8;
-  --md-sys-color-on-secondary-container: #4a4459;
-  --md-sys-color-tertiary: #7e5260;
-  --md-sys-color-on-tertiary: #ffffff;
-  --md-sys-color-tertiary-container: #ffd9e3;
-  --md-sys-color-on-tertiary-container: #633b48;
-  --md-sys-color-error: #ba1a1a;
-  --md-sys-color-on-error: #ffffff;
-  --md-sys-color-error-container: #ffdad6;
-  --md-sys-color-on-error-container: #93000a;
+  /* ---- Impeccable base tokens — light (media-forward; warm amber accent) ---- */
+  --bg: oklch(1 0 0);
+  --surface: oklch(0.985 0 0);
+  --surface-2: oklch(0.955 0 0);
+  --ink: oklch(0.20 0 0);
+  --ink-muted: oklch(0.46 0 0);
+  --border: oklch(0.90 0 0);
+  --primary: oklch(0.80 0.144 80);      /* amber — fills */
+  --on-primary: oklch(0.24 0.04 80);    /* text on amber */
+  --primary-ink: oklch(0.52 0.12 72);   /* amber as text (AA on light) */
+  --accent-soft: oklch(0.93 0.05 82);   /* amber-tinted surface */
+  --danger: oklch(0.55 0.20 25);
+  --on-danger: oklch(1 0 0);
+  --danger-soft: oklch(0.94 0.05 25);
+  --star: oklch(0.74 0.15 80);
+  --ring: oklch(0.62 0.14 75);
 
-  --md-sys-color-surface: #fef7ff;
-  --md-sys-color-on-surface: #1d1b20;
-  --md-sys-color-on-surface-variant: #49454f;
-  --md-sys-color-surface-container-lowest: #ffffff;
-  --md-sys-color-surface-container-low: #f7f2fa;
-  --md-sys-color-surface-container: #f3edf7;
-  --md-sys-color-surface-container-high: #ece6f0;
-  --md-sys-color-surface-container-highest: #e6e0e9;
-  --md-sys-color-surface-dim: #ded8e1;
-  --md-sys-color-surface-bright: #fef7ff;
+  /* ---- Shape + motion ---- */
+  --r-sm: 8px;
+  --r: 12px;
+  --r-lg: 16px;
+  --r-full: 9999px;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 
-  --md-sys-color-outline: #79747e;
-  --md-sys-color-outline-variant: #cac4d0;
-  --md-sys-color-inverse-surface: #322f35;
-  --md-sys-color-inverse-on-surface: #f5eff7;
-  --md-sys-color-inverse-primary: #cfbdfe;
-  --md-sys-color-scrim: #000000;
+  /* ---- Compatibility aliases: MD3 token names → Impeccable tokens.
+     (Components still reference these names; they now resolve to the new system,
+     and dark mode flows through because the base tokens above are overridden.) ---- */
+  --md-sys-color-surface: var(--bg);
+  --md-sys-color-surface-dim: var(--bg);
+  --md-sys-color-surface-bright: var(--surface);
+  --md-sys-color-surface-container-lowest: var(--bg);
+  --md-sys-color-surface-container-low: var(--surface);
+  --md-sys-color-surface-container: var(--surface);
+  --md-sys-color-surface-container-high: var(--surface-2);
+  --md-sys-color-surface-container-highest: var(--surface-2);
+  --md-sys-color-surface-variant: var(--surface-2);
+  --md-sys-color-on-surface: var(--ink);
+  --md-sys-color-on-surface-variant: var(--ink-muted);
+  --md-sys-color-outline: var(--border);
+  --md-sys-color-outline-variant: var(--border);
+  --md-sys-color-primary: var(--primary-ink);
+  --md-sys-color-on-primary: var(--on-primary);
+  --md-sys-color-primary-container: var(--accent-soft);
+  --md-sys-color-on-primary-container: var(--primary-ink);
+  --md-sys-color-secondary: var(--ink-muted);
+  --md-sys-color-on-secondary: var(--bg);
+  --md-sys-color-secondary-container: var(--accent-soft);
+  --md-sys-color-on-secondary-container: var(--primary-ink);
+  --md-sys-color-tertiary: var(--primary-ink);
+  --md-sys-color-on-tertiary: var(--on-primary);
+  --md-sys-color-tertiary-container: var(--surface-2);
+  --md-sys-color-on-tertiary-container: var(--ink);
+  --md-sys-color-error: var(--danger);
+  --md-sys-color-on-error: var(--on-danger);
+  --md-sys-color-error-container: var(--danger-soft);
+  --md-sys-color-on-error-container: var(--ink);
+  --md-sys-color-inverse-surface: var(--ink);
+  --md-sys-color-inverse-on-surface: var(--bg);
+  --md-sys-color-inverse-primary: var(--primary);
+  --md-sys-color-scrim: #000;
 
-  /* ---- Typography ---- */
-  --md-sys-typescale-font: 'Roboto Flex', system-ui, -apple-system, sans-serif;
+  --md-sys-typescale-font: 'Inter Variable', system-ui, -apple-system, sans-serif;
   --md-ref-shadow-rgb: 0 0 0;
 
-  /* ---- Shape ---- */
   --md-sys-shape-corner-none: 0;
   --md-sys-shape-corner-extra-small: 4px;
-  --md-sys-shape-corner-small: 8px;
-  --md-sys-shape-corner-medium: 12px;
-  --md-sys-shape-corner-large: 16px;
-  --md-sys-shape-corner-extra-large: 28px;
-  --md-sys-shape-corner-full: 9999px;
+  --md-sys-shape-corner-small: var(--r-sm);
+  --md-sys-shape-corner-medium: var(--r);
+  --md-sys-shape-corner-large: var(--r-lg);
+  --md-sys-shape-corner-extra-large: 20px;
+  --md-sys-shape-corner-full: var(--r-full);
 
-  /* ---- Motion (easing) ---- */
-  --md-sys-motion-emphasized: cubic-bezier(0.2, 0, 0, 1);
-  --md-sys-motion-standard: cubic-bezier(0.2, 0, 0, 1);
+  --md-sys-motion-emphasized: var(--ease-out);
+  --md-sys-motion-standard: var(--ease-out);
 
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* ---- Color: dark scheme (MD3 baseline) ---- */
-    --md-sys-color-primary: #cfbdfe;
-    --md-sys-color-on-primary: #362a5d;
-    --md-sys-color-primary-container: #4d3d75;
-    --md-sys-color-on-primary-container: #e9ddff;
-    --md-sys-color-secondary: #ccc2db;
-    --md-sys-color-on-secondary: #332d41;
-    --md-sys-color-secondary-container: #4a4459;
-    --md-sys-color-on-secondary-container: #e8def8;
-    --md-sys-color-tertiary: #efb8c8;
-    --md-sys-color-on-tertiary: #4a2532;
-    --md-sys-color-tertiary-container: #633b48;
-    --md-sys-color-on-tertiary-container: #ffd9e3;
-    --md-sys-color-error: #ffb4ab;
-    --md-sys-color-on-error: #690005;
-    --md-sys-color-error-container: #93000a;
-    --md-sys-color-on-error-container: #ffdad6;
-
-    --md-sys-color-surface: #141218;
-    --md-sys-color-on-surface: #e6e0e9;
-    --md-sys-color-on-surface-variant: #cac4d0;
-    --md-sys-color-surface-container-lowest: #0f0d13;
-    --md-sys-color-surface-container-low: #1d1b20;
-    --md-sys-color-surface-container: #211f26;
-    --md-sys-color-surface-container-high: #2b2930;
-    --md-sys-color-surface-container-highest: #36343b;
-    --md-sys-color-surface-dim: #141218;
-    --md-sys-color-surface-bright: #3b383e;
-
-    --md-sys-color-outline: #938f99;
-    --md-sys-color-outline-variant: #49454f;
-    --md-sys-color-inverse-surface: #e6e0e9;
-    --md-sys-color-inverse-on-surface: #322f35;
-    --md-sys-color-inverse-primary: #65558f;
-
+    /* ---- Impeccable base — dark (signature): chroma-0 near-black + amber ---- */
+    --bg: oklch(0.15 0 0);
+    --surface: oklch(0.20 0 0);
+    --surface-2: oklch(0.255 0 0);
+    --ink: oklch(0.97 0 0);
+    --ink-muted: oklch(0.72 0 0);
+    --border: oklch(0.31 0 0);
+    --primary: oklch(0.80 0.144 80);
+    --on-primary: oklch(0.18 0.03 80);
+    --primary-ink: oklch(0.84 0.13 82);   /* amber text on near-black (AA) */
+    --accent-soft: oklch(0.30 0.05 80);
+    --danger: oklch(0.70 0.17 25);
+    --on-danger: oklch(0.16 0 0);
+    --danger-soft: oklch(0.30 0.08 25);
+    --star: oklch(0.84 0.15 82);
+    --ring: oklch(0.80 0.144 80);
     color-scheme: dark;
   }
 }
@@ -127,19 +130,11 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-.material-symbols-outlined {
-  font-family: 'Material Symbols Outlined';
-  font-weight: normal;
-  font-style: normal;
-  font-size: 24px;
-  line-height: 1;
-  letter-spacing: normal;
-  text-transform: none;
-  white-space: nowrap;
-  direction: ltr;
-  -webkit-font-feature-settings: 'liga';
-  -webkit-font-smoothing: antialiased;
-  user-select: none;
+/* Inline SVG icons (replaces the Material Symbols webfont). */
+.icon {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
 }
 
 /* ---- Type scale helpers ---- */
@@ -209,10 +204,11 @@ body {
   outline-offset: 2px;
 }
 
-/* Filled */
+/* Filled — the amber accent fill (use the bright --primary, not the text-amber) */
 .btn-primary {
-  background: var(--md-sys-color-primary);
-  color: var(--md-sys-color-on-primary);
+  background: var(--primary);
+  color: var(--on-primary);
+  font-weight: 600;
 }
 
 /* Text button */
@@ -253,7 +249,6 @@ body {
 .md3-icon-button:active::after { opacity: 0.12; }
 .md3-icon-button:focus-visible { outline: 2px solid var(--md-sys-color-primary); outline-offset: 2px; }
 .md3-icon-button:disabled { color: color-mix(in srgb, var(--md-sys-color-on-surface) 38%, transparent); cursor: not-allowed; }
-.md3-icon-button .material-symbols-outlined { font-size: 22px; }
 
 /* ==========================================================================
    FAB (Extended)
@@ -781,7 +776,6 @@ body {
 }
 .badge[data-media='music'] { background: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container); }
 .badge[data-media='audiobook'] { background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); }
-.badge .material-symbols-outlined { font-size: 16px; }
 
 .activity-card__title { margin: 8px 0 0; font-size: 1rem; font-weight: 500; }
 .activity-card__item-author { margin: 2px 0 0; color: var(--md-sys-color-on-surface-variant); font-size: 0.875rem; }
