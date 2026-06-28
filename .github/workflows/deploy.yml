@@ -1,31 +1,45 @@
 name: Deploy
 
-# Build & push the API image to Artifact Registry, deploy Cloud Run, and publish
-# the SPA to the hosting bucket. Manual by default; wire to `push: branches:[main]`
-# once GCP auth is configured. Requires repo/org config + secrets:
-#   vars: GCP_PROJECT_ID, GCP_REGION (us-central1), ARTIFACT_REPO, GCS_SPA_BUCKET,
-#         CLOUD_RUN_SERVICE, WORKLOAD_IDENTITY_PROVIDER, DEPLOY_SERVICE_ACCOUNT
+# Build & push the API + migration images to Artifact Registry, run migrations,
+# deploy Cloud Run, and publish the SPA to the hosting bucket + CDN.
+#
+# Auth is keyless via Workload Identity Federation. Requires repo variables:
+#   GCP_PROJECT_ID, GCP_REGION, ARTIFACT_REPO, GCS_SPA_BUCKET, CLOUD_RUN_SERVICE,
+#   CLOUD_RUN_MIGRATE_JOB, CDN_URL_MAP, WORKLOAD_IDENTITY_PROVIDER,
+#   DEPLOY_SERVICE_ACCOUNT
 on:
+  push:
+    branches: [main]
+    # Only deploy when shippable code changes (skip docs/specs-only commits).
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'packages/**'
+      - '.github/workflows/deploy.yml'
   workflow_dispatch:
     inputs:
       image_tag:
-        description: Image tag to build/deploy
-        default: latest
+        description: 'Image tag to build/deploy (default: commit SHA)'
+        required: false
 
 permissions:
   contents: read
   id-token: write # for google-github-actions/auth via Workload Identity Federation
 
+# Avoid overlapping prod deploys.
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      IMAGE: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.ARTIFACT_REPO }}/api:${{ inputs.image_tag }}
-      MIGRATE_IMAGE: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.ARTIFACT_REPO }}/migrate:${{ inputs.image_tag }}
+      # On push, tag by commit SHA; on manual run, honor the input (else SHA).
+      TAG: ${{ inputs.image_tag || github.sha }}
     steps:
       - uses: actions/checkout@v4
         with:
-          # Don't leave the workflow token in git config; build steps run here.
           persist-credentials: false
 
       - uses: google-github-actions/auth@v2
@@ -35,38 +49,40 @@ jobs:
 
       - uses: google-github-actions/setup-gcloud@v2
 
+      - name: Resolve image refs
+        run: |
+          BASE="${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.ARTIFACT_REPO }}"
+          echo "IMAGE=$BASE/api:$TAG" >> "$GITHUB_ENV"
+          echo "MIGRATE_IMAGE=$BASE/migrate:$TAG" >> "$GITHUB_ENV"
+
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ vars.GCP_REGION }}-docker.pkg.dev --quiet
 
-      # --- Backend API image (T051) ---
+      # --- Images (runner is linux/amd64, matching Cloud Run) ---
       - name: Build & push API image
         run: |
           docker build -f backend/Dockerfile -t "$IMAGE" .
           docker push "$IMAGE"
 
-      # --- Migration image + run migrations (before deploying new API code) ---
       - name: Build & push migration image
         run: |
           docker build -f backend/Dockerfile --target migrate -t "$MIGRATE_IMAGE" .
           docker push "$MIGRATE_IMAGE"
 
+      # --- Migrate (before rolling new API code) ---
       - name: Run database migrations (Cloud Run Job)
         run: |
           gcloud run jobs update ${{ vars.CLOUD_RUN_MIGRATE_JOB }} \
-            --image "$MIGRATE_IMAGE" \
-            --region ${{ vars.GCP_REGION }} --quiet
+            --image "$MIGRATE_IMAGE" --region ${{ vars.GCP_REGION }} --quiet
           gcloud run jobs execute ${{ vars.CLOUD_RUN_MIGRATE_JOB }} \
             --region ${{ vars.GCP_REGION }} --wait
 
       - name: Deploy Cloud Run
         run: |
           gcloud run deploy ${{ vars.CLOUD_RUN_SERVICE }} \
-            --image "$IMAGE" \
-            --region ${{ vars.GCP_REGION }} \
-            --quiet
+            --image "$IMAGE" --region ${{ vars.GCP_REGION }} --quiet
 
-      # --- SPA → hosting bucket + CDN (T052) ---
-      # Version comes from "packageManager" in package.json (pnpm@9.12.0).
+      # --- SPA → hosting bucket + CDN ---
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -81,5 +97,5 @@ jobs:
             --recursive --delete-unmatched-destination-objects
       - name: Invalidate CDN
         run: |
-          gcloud compute url-maps invalidate-cdn-cache ${{ vars.CLOUD_RUN_SERVICE }}-urlmap \
+          gcloud compute url-maps invalidate-cdn-cache ${{ vars.CDN_URL_MAP }} \
             --path "/*" --async || true
