@@ -215,6 +215,24 @@ variable "spotify_client_id" {
 # Logging
 # ---------------------------------------------------------------------------
 
+variable "billing_account" {
+  description = "Billing account ID (e.g. 01C35F-8476FA-6546D6) for the budget. Empty disables the budget. Requires a billing-account role to apply."
+  type        = string
+  default     = ""
+}
+
+variable "budget_amount" {
+  description = "Monthly budget amount in USD; alerts fire at 50/90/100% of actual + 100% forecasted."
+  type        = number
+  default     = 100
+}
+
+variable "budget_alert_email" {
+  description = "Email address to notify on budget thresholds (in addition to billing admins). Empty uses default IAM recipients only."
+  type        = string
+  default     = ""
+}
+
 variable "log_retention_days" {
   description = "Retention (days) for the dedicated Cloud Logging bucket."
   type        = number
