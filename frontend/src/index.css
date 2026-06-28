@@ -1175,6 +1175,29 @@ body {
 .home-filters {
   margin-bottom: 12px;
 }
+
+/* Recommendations "from person" filter — a compact select for the narrow right
+   column (chips would overflow with many recommenders). */
+.home-rec-userfilter {
+  display: block;
+  margin: 0 0 12px;
+}
+.home-rec-userfilter select {
+  width: 100%;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--r-sm);
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  font: inherit;
+  font-size: 0.8125rem;
+}
+
+/* Discover genre chips sit just below the page title. */
+.discover-genre-filter {
+  margin-top: 4px;
+}
 .badge--sm {
   font-size: 0.6875rem;
   padding: 1px 6px;

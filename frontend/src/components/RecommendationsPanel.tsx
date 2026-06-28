@@ -27,18 +27,29 @@ export function RecommendationsPanel() {
   const { data } = useHome();
   const removeRec = useRemoveRecommendation();
   const [filter, setFilter] = useState<MediaType | 'all'>('all');
+  const [user, setUser] = useState<string>('all');
 
   const all = data?.recommendations ?? [];
-  const recommendations = all.filter((r) => filter === 'all' || r.mediaType === filter);
+  const byMedia = all.filter((r) => filter === 'all' || r.mediaType === filter);
+
+  // People who've recommended within the current media filter — derived from the
+  // live data, so the list stays in sync as recommendations come and go. A stale
+  // selection (after the media filter changes) falls back to "anyone".
+  const recommenders = Array.from(new Map(byMedia.map((r) => [r.recommender.id, r.recommender])).values()).sort(
+    (a, b) => a.displayName.localeCompare(b.displayName),
+  );
+  const activeUser = recommenders.some((u) => u.id === user) ? user : 'all';
+  const recommendations = byMedia.filter((r) => activeUser === 'all' || r.recommender.id === activeUser);
 
   return (
     <div className="home-panel">
       <h2 className="home-panel__title">Recommendations</h2>
 
-      <div className="home-filters" role="tablist" aria-label="Filter by media type">
+      <div className="home-filters" role="group" aria-label="Filter by media type">
         <button
           type="button"
           className={`chip chip--sm${filter === 'all' ? ' chip--active' : ''}`}
+          aria-pressed={filter === 'all'}
           onClick={() => setFilter('all')}
         >
           All
@@ -48,6 +59,7 @@ export function RecommendationsPanel() {
             key={t}
             type="button"
             className={`chip chip--sm${filter === t ? ' chip--active' : ''}`}
+            aria-pressed={filter === t}
             onClick={() => setFilter(t)}
           >
             {TYPE_LABELS[t]}
@@ -55,13 +67,27 @@ export function RecommendationsPanel() {
         ))}
       </div>
 
+      {recommenders.length > 1 ? (
+        <label className="home-rec-userfilter">
+          <span className="sr-only">Filter recommendations by person</span>
+          <select value={activeUser} onChange={(e) => setUser(e.target.value)}>
+            <option value="all">Anyone</option>
+            {recommenders.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.displayName}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : null}
+
       {all.length === 0 ? (
         <p className="home-muted">
           No recommendations yet. When people recommend books, music, audiobooks, and
           podcasts, they’ll show up here.
         </p>
       ) : recommendations.length === 0 ? (
-        <p className="home-muted">No {TYPE_LABELS[filter as MediaType].toLowerCase()} recommendations yet.</p>
+        <p className="home-muted">No recommendations match these filters.</p>
       ) : (
         <ul className="home-media-list">
           {recommendations.map((rec) => (

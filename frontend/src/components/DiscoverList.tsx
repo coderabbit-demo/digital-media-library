@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { DiscoverCategory, TrendingItemDTO } from '@dml/shared';
 import { useDiscover } from '../services/discover';
 import { DiscoverItemCard } from './DiscoverItemCard';
@@ -30,6 +31,7 @@ function groupByGenre(items: TrendingItemDTO[]): { genre: string; items: Trendin
  */
 export function DiscoverList({ category, onStartActivity }: DiscoverListProps) {
   const { data, isLoading, isError, refetch } = useDiscover(category);
+  const [genre, setGenre] = useState<string>('all');
 
   if (isLoading) {
     return (
@@ -60,22 +62,64 @@ export function DiscoverList({ category, onStartActivity }: DiscoverListProps) {
   }
 
   const sections = groupByGenre(data.items);
+  // Genres are derived from the live data (they shift as trending changes), so the
+  // chips are always built from what's actually present. A stale selection (after
+  // the data or category changes) falls back to "all".
+  const genres = sections.map((s) => s.genre);
+  const activeGenre = genres.includes(genre) ? genre : 'all';
+  const visibleSections = activeGenre === 'all' ? sections : sections.filter((s) => s.genre === activeGenre);
+  // Items without a genre still belong in the "All" view; they'd otherwise be
+  // dropped whenever the payload mixes tagged and untagged items.
+  const ungrouped = data.items.filter((item) => !item.genre);
 
   return (
     <div>
       {data.stale ? <StaleBanner /> : null}
 
+      {genres.length > 1 ? (
+        <div className="wishlist-filters discover-genre-filter" role="group" aria-label="Filter by genre">
+          <button
+            type="button"
+            className={`chip${activeGenre === 'all' ? ' chip--active' : ''}`}
+            aria-pressed={activeGenre === 'all'}
+            onClick={() => setGenre('all')}
+          >
+            All
+          </button>
+          {genres.map((g) => (
+            <button
+              key={g}
+              type="button"
+              className={`chip${activeGenre === g ? ' chip--active' : ''}`}
+              aria-pressed={activeGenre === g}
+              onClick={() => setGenre(g)}
+            >
+              {g}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
       {sections.length > 0 ? (
-        sections.map((section) => (
-          <section key={section.genre} className="discover-section">
-            <h2 className="discover-section__title">{section.genre}</h2>
+        <>
+          {visibleSections.map((section) => (
+            <section key={section.genre} className="discover-section">
+              <h2 className="discover-section__title">{section.genre}</h2>
+              <div className="discover-grid">
+                {section.items.map((item) => (
+                  <DiscoverItemCard key={item.providerId} item={item} onStartActivity={onStartActivity} />
+                ))}
+              </div>
+            </section>
+          ))}
+          {activeGenre === 'all' && ungrouped.length > 0 ? (
             <div className="discover-grid">
-              {section.items.map((item) => (
+              {ungrouped.map((item) => (
                 <DiscoverItemCard key={item.providerId} item={item} onStartActivity={onStartActivity} />
               ))}
             </div>
-          </section>
-        ))
+          ) : null}
+        </>
       ) : (
         <div className="discover-grid">
           {data.items.map((item) => (
