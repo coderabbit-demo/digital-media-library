@@ -45,6 +45,11 @@ output "runtime_service_account" {
   value       = google_service_account.runtime.email
 }
 
+output "migrate_job_name" {
+  description = "Cloud Run Job that applies Prisma migrations. Run: gcloud run jobs execute <name> --region <region> --wait"
+  value       = google_cloud_run_v2_job.migrate.name
+}
+
 output "managed_cert_domain" {
   description = "Domain on the Google-managed TLS certificate (empty when no domain is configured)."
   value       = var.domain

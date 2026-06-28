@@ -35,5 +35,10 @@ domain = ""
 # Secret Manager (see README) and is NOT set here.
 google_client_id = "your-client-id.apps.googleusercontent.com"
 
+# --- Spotify (feature 007 item-page links) — optional ---
+# Non-secret client ID; the client SECRET is added out-of-band to Secret Manager
+# (${env}-spotify-client-secret). Leave empty to disable the "Listen on Spotify" links.
+spotify_client_id = ""
+
 # --- Logging ---
 log_retention_days = 30

@@ -173,6 +173,12 @@ variable "api_image_name" {
   default     = "api"
 }
 
+variable "migrate_image_name" {
+  description = "Image name for the Prisma migration runner (built from backend/Dockerfile --target migrate). Used by the one-off migration Cloud Run Job."
+  type        = string
+  default     = "migrate"
+}
+
 # ---------------------------------------------------------------------------
 # SPA hosting / Load Balancer / TLS
 # ---------------------------------------------------------------------------
@@ -189,6 +195,12 @@ variable "domain" {
 
 variable "google_client_id" {
   description = "Google OIDC client ID (not a secret; the client SECRET goes to Secret Manager)."
+  type        = string
+  default     = ""
+}
+
+variable "spotify_client_id" {
+  description = "Spotify Web API client ID for item-page 'Listen on Spotify' links (not a secret; the client SECRET goes to Secret Manager). Empty disables the links."
   type        = string
   default     = ""
 }

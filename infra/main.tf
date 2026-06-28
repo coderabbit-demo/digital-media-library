@@ -11,8 +11,9 @@ locals {
     env = var.env
   }
 
-  # Region-scoped Artifact Registry image reference for the Cloud Run service.
-  api_image = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.api.repository_id}/${var.api_image_name}:${var.image_tag}"
+  # Region-scoped Artifact Registry image references.
+  api_image     = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.api.repository_id}/${var.api_image_name}:${var.image_tag}"
+  migrate_image = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.api.repository_id}/${var.migrate_image_name}:${var.image_tag}"
 }
 
 # ---------------------------------------------------------------------------
@@ -144,7 +145,7 @@ resource "google_sql_database_instance" "main" {
     }
 
     backup_configuration {
-      enabled    = true
+      enabled = true
       # Point-in-time recovery requires WAL archiving; cheap and useful.
       point_in_time_recovery_enabled = true
     }
@@ -310,6 +311,22 @@ resource "google_cloud_run_v2_service" "api" {
         }
       }
 
+      # Spotify (feature 007 item-page links). Client ID is non-secret; the app
+      # only calls Spotify when the ID is set, so an unset ID disables the links.
+      env {
+        name  = "SPOTIFY_CLIENT_ID"
+        value = var.spotify_client_id
+      }
+      env {
+        name = "SPOTIFY_CLIENT_SECRET"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.spotify_client_secret.secret_id
+            version = "latest"
+          }
+        }
+      }
+
       # REDIS_URL only when Redis is enabled.
       dynamic "env" {
         for_each = var.enable_redis ? [1] : []
@@ -331,6 +348,53 @@ resource "google_cloud_run_v2_service" "api" {
     google_secret_manager_secret_iam_member.runtime_accessor,
     google_secret_manager_secret_version.database_url,
     google_secret_manager_secret_version.session_signing_key,
+  ]
+}
+
+# ---------------------------------------------------------------------------
+# Database migrations: one-off Cloud Run Job (Prisma `migrate deploy`)
+# ---------------------------------------------------------------------------
+# Runs inside the VPC (reaches private CloudSQL via the connector) using the
+# migration image (backend/Dockerfile --target migrate, which keeps the Prisma
+# CLI the slim API image prunes). Execute it before serving new traffic:
+#   gcloud run jobs execute ${env}-dml-migrate --region <region> --wait
+resource "google_cloud_run_v2_job" "migrate" {
+  name     = "${var.env}-dml-migrate"
+  location = var.region
+  labels   = local.common_labels
+
+  template {
+    template {
+      service_account = google_service_account.runtime.email
+      max_retries     = 1
+      timeout         = "600s"
+
+      vpc_access {
+        connector = google_vpc_access_connector.connector.id
+        egress    = "PRIVATE_RANGES_ONLY"
+      }
+
+      containers {
+        image = local.migrate_image
+
+        env {
+          name = "DATABASE_URL"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.database_url.secret_id
+              version = "latest"
+            }
+          }
+        }
+      }
+    }
+  }
+
+  depends_on = [
+    google_project_service.services,
+    google_secret_manager_secret_iam_member.runtime_accessor,
+    google_secret_manager_secret_version.database_url,
+    google_sql_database.app,
   ]
 }
 

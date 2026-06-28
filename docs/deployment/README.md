@@ -67,15 +67,15 @@ Frontend (build-time only):
 
 ## Database migrations (both methods)
 
-Prisma migrations are **not** run automatically by the app or the deploy workflow. Apply them as an explicit step against the production database before (or as part of) each release:
+Prisma migrations are **never** run by the app itself. Apply them against the production database before (or as part of) each release:
 
 ```bash
 # DATABASE_URL must point at the production DB (direct, non-pooled URL preferred for DDL)
 corepack pnpm --filter @dml/backend exec prisma migrate deploy
 ```
 
-- **GCP:** run via the Cloud SQL Auth Proxy from CI/a workstation, or as a one-off Cloud Run **Job** using the API image. See [gcp.md](./gcp.md#5-database-migrations).
-- **Vercel:** run in CI (or locally) against the Neon database before promoting. See [vercel.md](./vercel.md#5-database-migrations).
+- **GCP:** automated — a one-off Cloud Run **Job** (`${env}-dml-migrate`) runs `migrate deploy` inside the VPC, and the deploy workflow executes it before rolling the API. See [gcp.md](./gcp.md#5-database-migrations).
+- **Vercel:** run in CI (or locally) against the Neon **direct** URL before promoting. See [vercel.md](./vercel.md#5-database-migrations).
 
 ---
 
