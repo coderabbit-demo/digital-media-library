@@ -168,12 +168,14 @@ body {
   cursor: pointer;
   text-decoration: none;
   white-space: nowrap;
-  /* default = tonal (used by plain .btn, e.g. "Try again", "Load older") */
-  background: var(--md-sys-color-secondary-container);
-  color: var(--md-sys-color-on-secondary-container);
+  /* default = neutral tonal (e.g. "Try again", "Load older"). Amber is reserved
+     for the single primary action per view (.btn-primary), so the accent stays scarce. */
+  background: var(--surface-2);
+  color: var(--ink);
   transition:
-    background-color 0.2s var(--md-sys-motion-standard),
-    box-shadow 0.2s var(--md-sys-motion-standard);
+    background-color 0.18s var(--ease-out),
+    transform 0.18s var(--ease-out),
+    box-shadow 0.18s var(--ease-out);
   overflow: hidden;
 }
 
@@ -1099,12 +1101,12 @@ body {
   align-items: flex-start;
 }
 .home-media-item__cover {
-  width: 36px;
-  height: 48px;
+  width: 44px;
+  height: 62px;
   flex-shrink: 0;
   object-fit: cover;
-  border-radius: 4px;
-  background: var(--md-sys-color-surface-container-high);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
 }
 .home-media-item__cover--ph {
   display: flex;
@@ -1143,12 +1145,13 @@ body {
   margin-top: 6px;
 }
 .activity-card__cover {
-  width: 64px;
-  height: 92px;
+  width: 96px;
+  height: 140px;
   flex-shrink: 0;
   object-fit: contain;
-  border-radius: 4px;
-  background: var(--md-sys-color-surface-container-high);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  box-shadow: 0 2px 8px oklch(0 0 0 / 0.18);
 }
 .activity-card__item-main {
   flex: 1;
@@ -1332,4 +1335,41 @@ body {
   font-size: 1.125rem;
   font-weight: 500;
   color: var(--md-sys-color-on-surface);
+}
+
+/* ==========================================================================
+   Motion — purposeful and reduced-motion-safe (Impeccable).
+   Entrances only ENHANCE an already-visible default and run solely when motion
+   is welcome; hover/press lifts likewise. Under reduce, everything is static.
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes rise-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes dialog-in {
+    from { opacity: 0; transform: translateY(10px) scale(0.985); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes scrim-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .activity-card,
+  .discover-card {
+    animation: rise-in 0.32s var(--ease-out) both;
+  }
+  /* Gentle stagger across the first cards of a grid; later cards share one delay. */
+  .discover-grid > *:nth-child(2) { animation-delay: 0.03s; }
+  .discover-grid > *:nth-child(3) { animation-delay: 0.06s; }
+  .discover-grid > *:nth-child(4) { animation-delay: 0.09s; }
+  .discover-grid > *:nth-child(n + 5) { animation-delay: 0.12s; }
+
+  /* Card hover lift — art rises slightly toward the reader. */
+  .discover-card { transition: transform 0.18s var(--ease-out), box-shadow 0.18s var(--ease-out); }
+  .discover-card:hover { transform: translateY(-3px); box-shadow: 0 6px 18px oklch(0 0 0 / 0.18); }
+
+  .modal-scrim { animation: scrim-in 0.18s var(--ease-out) both; }
+  .modal { animation: dialog-in 0.26s var(--ease-out) both; }
 }
