@@ -126,7 +126,7 @@ export function Library() {
     <div className="discover-page">
       <div className="library-header">
         <h1 className="discover-page__title">My Library</h1>
-        {!isLoading && !isError && items.length > 0 ? (
+        {!isLoading && !isError ? (
           <span className="library-header__count">
             {items.length} {items.length === 1 ? 'item' : 'items'}
           </span>
