@@ -98,6 +98,14 @@ See [specs/001-auth-activity-feed/quickstart.md](specs/001-auth-activity-feed/qu
 for detailed validation scenarios and environment variables, and
 [infra/README.md](infra/README.md) for cloud provisioning notes.
 
+## Deployment
+
+Production deployment guides (with checklists) live in [docs/deployment/](docs/deployment/README.md):
+
+- **[GCP](docs/deployment/gcp.md)** (planned) — Cloud Run + CloudSQL + Memorystore, Terraform-managed (`infra/`).
+- **[Vercel](docs/deployment/vercel.md)** (new) — SPA + serverless API on Neon (Postgres) + Upstash (Redis).
+- A [shared env-var reference](docs/deployment/README.md#environment-variables-shared-reference) and migration steps apply to both.
+
 ## Contributing
 
 See [AGENTS.md](AGENTS.md) for conventions, the Spec Kit workflow, and guidance for
