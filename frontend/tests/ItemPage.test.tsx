@@ -17,8 +17,9 @@ function makePage(overrides: Partial<ItemPageDTO> = {}): ItemPageDTO {
       coverUrl: null,
       description: 'A lone astronaut must save the earth.',
       genres: ['Science Fiction', 'Adventure'],
-      providerUrl: 'https://example.com/b1',
+      providerUrl: 'https://books.google.com/books?id=b1',
       series: null,
+      spotifyUrl: null,
     },
     stats: {
       ratingAverage: 4.4,
@@ -68,6 +69,8 @@ describe('ItemPage', () => {
     expect(screen.getByText('Andy Weir')).toBeInTheDocument();
     expect(screen.getByText('Book')).toBeInTheDocument();
     expect(screen.getByText('Science Fiction')).toBeInTheDocument();
+    // The provider link names the actual provider (derived from the URL host).
+    expect(screen.getByRole('link', { name: 'View on Google Books' })).toBeInTheDocument();
   });
 
   it('truncates a long synopsis behind "Show more"', async () => {

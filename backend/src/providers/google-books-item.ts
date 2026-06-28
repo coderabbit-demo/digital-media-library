@@ -62,6 +62,7 @@ export class GoogleBooksItemProvider implements ItemProvider {
         info?.previewLink ??
         `https://books.google.com/books?id=${encodeURIComponent(v.id)}`,
       series: info?.seriesInfo?.bookDisplayNumber ? `Book ${info.seriesInfo.bookDisplayNumber}` : null,
+      spotifyUrl: null, // books have no Spotify link
     };
   }
 }

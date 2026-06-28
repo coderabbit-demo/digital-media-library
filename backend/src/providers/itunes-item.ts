@@ -80,6 +80,7 @@ export class ItunesItemProvider implements ItemProvider {
       genres,
       providerUrl: r.collectionViewUrl ?? r.trackViewUrl ?? null,
       series: null,
+      spotifyUrl: null, // enriched by ItemService when Spotify is configured
     };
   }
 }

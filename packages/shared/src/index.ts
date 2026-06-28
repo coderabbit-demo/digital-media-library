@@ -327,6 +327,8 @@ export interface ItemDetailDTO {
   providerUrl: string | null;
   /** Series/edition label when the provider offers one; null otherwise. */
   series: string | null;
+  /** "Listen on Spotify" deep link for music/podcast/audiobook; null otherwise. */
+  spotifyUrl: string | null;
 }
 
 /** Per-shelf counts of distinct users holding an item (feature 007). */
