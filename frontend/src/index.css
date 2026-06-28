@@ -22,6 +22,8 @@
   --danger-soft: oklch(0.94 0.05 25);
   --star: oklch(0.74 0.15 80);
   --ring: oklch(0.62 0.14 75);
+  --seg-track: var(--surface-2);   /* recessed segmented-filter track */
+  --seg-active: var(--bg);         /* lifted active segment (brighter than track) */
 
   /* ---- Shape + motion ---- */
   --r-sm: 8px;
@@ -102,6 +104,8 @@
     --danger-soft: oklch(0.30 0.08 25);
     --star: oklch(0.84 0.15 82);
     --ring: oklch(0.80 0.144 80);
+    /* In dark, elevation reads brighter — lift the active segment above the track. */
+    --seg-active: oklch(0.34 0 0);
     color-scheme: dark;
   }
 }
@@ -990,31 +994,85 @@ body {
   font-size: 0.75rem;
 }
 
-/* Wishlist media-type filter chips */
-.wishlist-filters {
+/* Segmented filter control: a recessed pill track holding chip "segments".
+   The active segment lifts onto a brighter surface with a soft shadow. One
+   mechanism shared by My Library and the home filters; sizes vary per context
+   (.chip--sm) but the look is identical. */
+.wishlist-filters,
+.home-filters {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-wrap: nowrap;
+  width: fit-content;
+  max-width: 100%;
+  gap: 2px;
+  padding: 4px;
   margin: 0 0 20px;
+  background: var(--seg-track);
+  border-radius: var(--r-full);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.wishlist-filters::-webkit-scrollbar,
+.home-filters::-webkit-scrollbar {
+  display: none;
 }
 .chip {
-  height: 32px;
-  padding: 0 14px;
-  border: 1px solid var(--md-sys-color-outline);
-  border-radius: var(--md-sys-shape-corner-small);
-  background: var(--md-sys-color-surface);
-  color: var(--md-sys-color-on-surface-variant);
+  flex: 0 0 auto;
+  height: 34px;
+  padding: 0 16px;
+  border: none;
+  border-radius: var(--r-full);
+  background: transparent;
+  color: var(--ink-muted);
+  font-family: inherit;
   font-size: 0.8125rem;
+  font-weight: 500;
+  white-space: nowrap;
   cursor: pointer;
+  transition:
+    color 0.15s var(--ease-out),
+    background-color 0.15s var(--ease-out),
+    box-shadow 0.15s var(--ease-out);
+}
+.chip:hover:not(.chip--active) {
+  color: var(--ink);
 }
 .chip--active {
-  background: var(--md-sys-color-secondary-container);
-  color: var(--md-sys-color-on-secondary-container);
-  border-color: transparent;
+  background: var(--seg-active);
+  color: var(--ink);
+  box-shadow:
+    0 1px 2px oklch(0 0 0 / 0.16),
+    0 1px 4px oklch(0 0 0 / 0.08);
 }
 .chip:focus-visible {
-  outline: 2px solid var(--md-sys-color-primary);
-  outline-offset: 2px;
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+/* My Library filter toolbar: one labeled row per filter dimension (shelf, media),
+   each label paired with its segmented track. Generous row rhythm; the label
+   gives the two tracks a clear hierarchy instead of two undifferentiated rows. */
+.library-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0 0 28px;
+}
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.filter-row__label {
+  flex: 0 0 auto;
+  min-width: 48px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+.library-filters .wishlist-filters {
+  margin: 0;
 }
 
 /* Per-item shelf selector on the My Library page */
@@ -1071,14 +1129,11 @@ body {
 
 /* Small chips + badges for home filters/labels */
 .chip--sm {
-  height: 26px;
-  padding: 0 10px;
+  height: 28px;
+  padding: 0 12px;
   font-size: 0.75rem;
 }
 .home-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
   margin-bottom: 12px;
 }
 .badge--sm {
