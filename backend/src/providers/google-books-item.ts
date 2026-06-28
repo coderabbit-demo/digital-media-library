@@ -14,6 +14,7 @@ interface GoogleVolume {
     seriesInfo?: { bookDisplayNumber?: string };
     infoLink?: string;
     canonicalVolumeLink?: string;
+    previewLink?: string;
     imageLinks?: { thumbnail?: string; smallThumbnail?: string };
   };
 }
@@ -53,7 +54,13 @@ export class GoogleBooksItemProvider implements ItemProvider {
       coverUrl: info?.imageLinks?.thumbnail ?? info?.imageLinks?.smallThumbnail ?? null,
       description: stripHtml(info?.description),
       genres: (info?.categories ?? []).map((c) => c.trim()).filter(Boolean),
-      providerUrl: info?.infoLink ?? info?.canonicalVolumeLink ?? null,
+      // Prefer the provider's own links, but always fall back to the canonical
+      // volume URL (the API sometimes omits infoLink/canonicalVolumeLink).
+      providerUrl:
+        info?.infoLink ??
+        info?.canonicalVolumeLink ??
+        info?.previewLink ??
+        `https://books.google.com/books?id=${encodeURIComponent(v.id)}`,
       series: info?.seriesInfo?.bookDisplayNumber ? `Book ${info.seriesInfo.bookDisplayNumber}` : null,
     };
   }
