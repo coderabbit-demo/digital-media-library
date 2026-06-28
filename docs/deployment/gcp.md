@@ -103,10 +103,12 @@ Build/push the migration image and run the job (the CI workflow does this automa
 
 ```bash
 REPO=$(cd infra && terraform output -raw artifact_registry_repo)
+JOB=$(cd infra && terraform output -raw migrate_job_name)
 docker build -f backend/Dockerfile --target migrate -t "$REPO/migrate:v1" .
 docker push "$REPO/migrate:v1"
-gcloud run jobs execute $(cd infra && terraform output -raw migrate_job_name) \
-  --region $REGION --wait
+# Point the job at the freshly-built image, then run it.
+gcloud run jobs update "$JOB" --image "$REPO/migrate:v1" --region $REGION --quiet
+gcloud run jobs execute "$JOB" --region $REGION --wait
 ```
 
 - [ ] Migration image built and pushed (tag matches `image_tag`)
