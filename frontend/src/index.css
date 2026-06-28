@@ -1501,8 +1501,13 @@ body {
   /* --- Reply thread: gentle reveal on open instead of a hard cut. --- */
   .reply-thread { animation: rise-in 0.26s var(--ease-out) both; }
 
-  /* --- Button press: a small, tactile scale-down on activation. --- */
-  .btn:active:not(:disabled) { transform: scale(0.97); }
+  /* --- Press feedback: a small, tactile scale-down on activation. Real buttons
+     and the tappable rating stars; text card-links keep the heart's own press
+     (above) rather than scaling link text, which reads off. --- */
+  .btn:active:not(:disabled),
+  .activity-card__rating .star:active:not(:disabled) {
+    transform: scale(0.97);
+  }
 }
 
 /* Star hover-fill is colour, not motion, so it lives outside the reduced-motion
