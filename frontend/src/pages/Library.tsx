@@ -75,9 +75,63 @@ export function Library() {
 
   const items = data?.items ?? [];
 
+  const renderCard = (item: LibraryItemDTO) => (
+    <article key={item.id} className="discover-card">
+      {item.coverUrl ? (
+        <img className="discover-card__cover" src={item.coverUrl} alt="" referrerPolicy="no-referrer" />
+      ) : (
+        <div className="discover-card__cover discover-card__cover--placeholder" aria-hidden="true">
+          {item.title.charAt(0).toUpperCase()}
+        </div>
+      )}
+      <div className="discover-card__body">
+        <p className="discover-card__title">{item.title}</p>
+        {item.itemAuthor ? <p className="discover-card__creator">{item.itemAuthor}</p> : null}
+        <div className="discover-card__actions">
+          <label className="library-shelf-select">
+            <span className="sr-only">Shelf for {item.title}</span>
+            <select value={item.shelf} disabled={move.isPending} onChange={(e) => onMove(item, e.target.value as Shelf)}>
+              {SHELVES.map((s) => (
+                <option key={s} value={s}>
+                  {shelfLabel(s, item.mediaType)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button type="button" className="btn btn-primary discover-card__cta" onClick={() => markCurrent(item)}>
+            I’m {verb(item.mediaType)} this
+          </button>
+          <button
+            type="button"
+            className="btn btn-ghost discover-card__wishlist"
+            disabled={remove.isPending}
+            onClick={() => remove.mutate(item.id)}
+          >
+            Remove
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+
+  // "All" view reads as a Goodreads-style collection: items grouped into shelf
+  // sections (active shelves first), each with a count. A specific shelf shows a
+  // flat grid, since the chosen filter chip already names it.
+  const SECTION_ORDER: Shelf[] = ['current', 'want', 'done', 'dnf'];
+  const sections = SECTION_ORDER.map((s) => ({ shelf: s, items: items.filter((i) => i.shelf === s) })).filter(
+    (g) => g.items.length > 0,
+  );
+
   return (
     <div className="discover-page">
-      <h1 className="discover-page__title">My Library</h1>
+      <div className="library-header">
+        <h1 className="discover-page__title">My Library</h1>
+        {!isLoading && !isError && items.length > 0 ? (
+          <span className="library-header__count">
+            {items.length} {items.length === 1 ? 'item' : 'items'}
+          </span>
+        ) : null}
+      </div>
 
       <div className="library-filters">
         <div className="filter-row">
@@ -151,51 +205,18 @@ export function Library() {
           <h2>Nothing here yet</h2>
           <p>Add items from Discover or Search, then organize them across your shelves.</p>
         </div>
+      ) : shelf === 'all' ? (
+        sections.map((group) => (
+          <section key={group.shelf} className="library-section" aria-label={SHELF_TAB_LABELS[group.shelf]}>
+            <h2 className="library-section__title">
+              {SHELF_TAB_LABELS[group.shelf]}
+              <span className="library-section__count">{group.items.length}</span>
+            </h2>
+            <div className="discover-grid">{group.items.map(renderCard)}</div>
+          </section>
+        ))
       ) : (
-        <div className="discover-grid">
-          {items.map((item) => (
-            <article key={item.id} className="discover-card">
-              {item.coverUrl ? (
-                <img className="discover-card__cover" src={item.coverUrl} alt="" referrerPolicy="no-referrer" />
-              ) : (
-                <div className="discover-card__cover discover-card__cover--placeholder" aria-hidden="true">
-                  {item.title.charAt(0).toUpperCase()}
-                </div>
-              )}
-              <div className="discover-card__body">
-                <p className="discover-card__title">{item.title}</p>
-                {item.itemAuthor ? <p className="discover-card__creator">{item.itemAuthor}</p> : null}
-                <div className="discover-card__actions">
-                  <label className="library-shelf-select">
-                    <span className="sr-only">Shelf for {item.title}</span>
-                    <select
-                      value={item.shelf}
-                      disabled={move.isPending}
-                      onChange={(e) => onMove(item, e.target.value as Shelf)}
-                    >
-                      {SHELVES.map((s) => (
-                        <option key={s} value={s}>
-                          {shelfLabel(s, item.mediaType)}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <button type="button" className="btn btn-primary discover-card__cta" onClick={() => markCurrent(item)}>
-                    I’m {verb(item.mediaType)} this
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-ghost discover-card__wishlist"
-                    disabled={remove.isPending}
-                    onClick={() => remove.mutate(item.id)}
-                  >
-                    Remove
-                  </button>
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
+        <div className="discover-grid">{items.map(renderCard)}</div>
       )}
 
       <ComposeDialog open={compose !== null} initial={compose ?? undefined} onClose={() => setCompose(null)} />
