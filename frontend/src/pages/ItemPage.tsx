@@ -25,6 +25,21 @@ const MEDIA_BADGE: Record<MediaType, string> = {
 /** Characters of synopsis shown before "Show more". */
 const DESC_PREVIEW = 320;
 
+/** Friendly provider name for the "View on …" link, derived from the URL host. */
+function providerName(url: string): string {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, '');
+    if (host.includes('books.google') || host.includes('google')) return 'Google Books';
+    if (host.includes('music.apple')) return 'Apple Music';
+    if (host.includes('podcasts.apple')) return 'Apple Podcasts';
+    if (host.includes('books.apple')) return 'Apple Books';
+    if (host.includes('apple')) return 'Apple';
+    return host;
+  } catch {
+    return 'provider';
+  }
+}
+
 /** Build the controls' item payload from provider detail (genres → first genre). */
 function toTrendingItem(item: ItemDetailDTO): TrendingItemDTO {
   return {
@@ -158,7 +173,7 @@ export function ItemPage() {
                 <div className="item-links">
                   {previewUrl ? (
                     <a className="card-link" href={previewUrl} target="_blank" rel="noreferrer noopener">
-                      View on provider
+                      View on {providerName(previewUrl)}
                     </a>
                   ) : null}
                   {spotifyUrl ? (
