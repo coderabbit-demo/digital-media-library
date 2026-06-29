@@ -95,3 +95,4 @@ temp/
 *.tmp
 *.bak
 .tool-versions
+.vscode/settings.json
