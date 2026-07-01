@@ -4,19 +4,20 @@ A multi-user web app for discovering trending books, music, audiobooks, and
 podcasts and sharing what you're currently reading or listening to — a
 Goodreads-style activity feed where the community's updates appear on the home page.
 
-> **Status**: Early development. Built spec-first with [GitHub Spec Kit](https://github.com/github/spec-kit).
-> The first feature (authentication + activity feed) is **implemented** — backend API,
-> SPA, shared types, and Terraform infra are in place. Unit + contract tests pass;
-> integration (Testcontainers), e2e (Playwright), and cloud deploy require a
-> provisioned environment.
+> **Status**: Actively developed, spec-first with [GitHub Spec Kit](https://github.com/github/spec-kit).
+> Features **001–006 are merged** (authentication + activity feed, app shell & home,
+> Discover, Search & recommendations, My Library, Conversations); **007 (item detail
+> page) is implemented and in review**. See the [Features](#features) table for detail.
+> Unit + contract tests pass; integration (Testcontainers), e2e (Playwright), and
+> cloud deploy require a provisioned environment.
 
 ## What it does (vision)
 
 - **Sign in with Google** — no passwords; a profile is created on first sign-in.
 - **Activity feed** — a home-page feed of what users are currently reading/listening to.
-- **Trending content** *(planned)* — trending books, music, audiobooks, and
-  podcasts from external providers, cached to stay fast and within API quotas.
-- **Comments** *(planned)* — discussion on feed updates.
+- **Trending content** *(shipped — Discover, feature 003)* — trending books, music,
+  audiobooks, and podcasts from external providers, cached to stay fast and within API quotas.
+- **Comments** *(shipped — Conversations, feature 006)* — threaded discussion on feed updates.
 
 ## Architecture
 
@@ -25,7 +26,7 @@ Goodreads-style activity feed where the community's updates appear on the home p
 | Frontend | React + Vite single-page app (SPA) |
 | Backend | Stateless Fastify (Node.js 22 / TypeScript) API on **Google Cloud Run** |
 | Database | **CloudSQL for PostgreSQL** (source of truth) via Prisma |
-| Cache | **Memorystore for Redis** (feed cache now; external-provider cache later) |
+| Cache | **Memorystore for Redis** — feed, provider-response, and item-detail caches + rate-limit counters |
 | Auth | **Google OAuth 2.0 / OIDC**, server-side sessions via signed httpOnly cookie |
 | Hosting | SPA on Cloud Storage + Cloud CDN behind an HTTPS load balancer (single origin) |
 | Infra | **Terraform** in [`infra/`](infra/) — region `us-central1` |
@@ -33,6 +34,30 @@ Goodreads-style activity feed where the community's updates appear on the home p
 
 The project's non-negotiable principles live in the
 [constitution](.specify/memory/constitution.md).
+
+### Providers & caching
+
+External content is fetched **only** through the provider abstraction in
+[`backend/src/providers/`](backend/src/providers/) — feature code never calls a
+provider SDK or endpoint directly (Constitution Principle III). Three interface roles:
+
+- **`ContentProvider`** ([`content-provider.ts`](backend/src/providers/content-provider.ts)) — trending lists for Discover.
+- **`SearchProvider`** ([`search-provider.ts`](backend/src/providers/search-provider.ts)) — query-based search.
+- **`ItemProvider`** ([`item-provider.ts`](backend/src/providers/item-provider.ts)) — by-id item-detail lookup (feature 007).
+
+Concrete adapters: **Google Books**, **iTunes**, **Apple Music / Podcasts /
+Audiobooks**, **Spotify** (the item page's "Listen on Spotify" links), **NYT
+Books**, and a **composite-books** adapter that merges NYT + Google Books.
+
+Every provider-backed service uses **cache-aside with stale fallback** (via
+[`backend/src/services/cache.ts`](backend/src/services/cache.ts)): a fresh value
+is served from Redis; on a miss the provider is called and the result cached with
+an explicit TTL; if the provider then fails, the last-known-good cached value is
+served (stale) so the UI degrades gracefully instead of erroring.
+
+**Persisted data** (Prisma — [`backend/prisma/schema.prisma`](backend/prisma/schema.prisma))
+is eight models: `UserProfile`, `Activity`, `Reply`, `Rating`, `ActivityLike`,
+`Recommendation`, `LibraryItem`, `Session`.
 
 ## Process & tooling
 

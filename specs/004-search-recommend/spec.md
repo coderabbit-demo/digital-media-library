@@ -4,7 +4,7 @@
 
 **Created**: 2026-06-26
 
-**Status**: Ready for implementation
+**Status**: Implemented
 
 **Input**: Split from the original content-discovery spec. Media search plus a
 user-driven recommendation system that populates the home-page recommendations

@@ -26,7 +26,10 @@ the binding principles.
 5. **All infra is Terraform.** Never provision GCP resources by hand; change
    `infra/`. (Tech Constraints.)
 6. **External providers go through the cache + abstraction layer** — never call a
-   provider SDK/endpoint directly from feature code. (Principle III.)
+   provider SDK/endpoint directly from feature code. (Principle III.) The layer
+   lives in [`backend/src/providers/`](backend/src/providers/) (interfaces
+   `content-provider.ts`, `search-provider.ts`, `item-provider.ts`), with
+   cache-aside + stale fallback in [`backend/src/services/cache.ts`](backend/src/services/cache.ts).
 
 ## Workflow & tooling
 
@@ -57,7 +60,8 @@ pnpm --filter @dml/backend exec prisma generate
 pnpm dev            # API :8080 + SPA :5173
 pnpm lint && pnpm typecheck && pnpm build
 pnpm test:unit && pnpm test:contract   # offline
-pnpm test:integration                  # needs Docker
+pnpm test:integration                  # needs Docker (provisioned Postgres/Redis)
+pnpm test:e2e                          # Playwright e2e; needs a provisioned env (run `pnpm --filter @dml/frontend exec playwright install` first)
 ```
 
 ## Conventions
