@@ -4,7 +4,7 @@
 
 **Created**: 2026-06-26
 
-**Status**: Draft
+**Status**: Implemented
 
 **Input**: Split from the original content-discovery spec. Establishes the
 authenticated application shell (app-wide auth gate + category navigation) and the

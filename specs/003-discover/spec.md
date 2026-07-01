@@ -4,7 +4,7 @@
 
 **Created**: 2026-06-26
 
-**Status**: Draft
+**Status**: Implemented
 
 **Input**: Split from the original content-discovery spec. Per-category Discover
 views of trending content from external providers. **Introduces the provider

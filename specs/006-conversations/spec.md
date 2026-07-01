@@ -4,7 +4,7 @@
 
 **Created**: 2026-06-26
 
-**Status**: Draft
+**Status**: Implemented
 
 **Input**: User description: "Conversations on activity updates — (1) an optional author comment/note on an update when posting, shown with the update; (2) other users can reply to an update and reply to replies, forming Twitter-style threaded conversations; replies show author, text, relative time; visible to all authenticated users; users delete their own replies; plain-text only; rate-limited like posts. The previously-deferred 'comments on feed updates' feature. Out of scope: likes/reactions, edit-after-post, @mentions, notifications."
 

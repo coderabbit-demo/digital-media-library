@@ -4,7 +4,7 @@
 
 **Created**: 2026-06-26
 
-**Status**: Draft
+**Status**: Implemented
 
 **Input**: User description: "Google account login/registration plus a Goodreads-style activity feed. Authenticated users sign in with their Google account; on first sign-in a profile is created. The home page shows a feed of activity updates describing what users are currently reading or listening to (books, music, audiobooks). Users can post their own 'currently reading/listening' activity updates and see updates from others. Scope: authentication and the activity feed only. Out of scope for this feature (planned later): trending-content discovery from external providers, and commenting on feed updates."
 

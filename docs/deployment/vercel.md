@@ -64,7 +64,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
 ```
 
 - [ ] **➕ add** `api/[...path].ts` (above)
-- [ ] Ensure the function uses the Node.js runtime (default for `.ts` in `api/`) and Node 22 (`"engines": { "node": "22.x" }` in the root `package.json`, or Vercel Project Settings → Node version)
+- [ ] Ensure the function uses the Node.js runtime (default for `.ts` in `api/`) and Node 22 — the root `package.json` already declares `"engines": { "node": ">=22" }`; set Vercel Project Settings → Node version to 22.x to match
 - [ ] Bump the function memory/timeout if cold starts are slow (Project Settings → Functions)
 
 ## 4. Project config ➕ add

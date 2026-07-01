@@ -4,7 +4,7 @@
 
 **Created**: 2026-06-26
 
-**Status**: Ready for implementation
+**Status**: Implemented
 
 **Input**: Split from the original content-discovery spec, then refactored from a
 flat "Wishlist" into **"My Library"** — a Goodreads-style, per-user collection

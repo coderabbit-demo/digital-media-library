@@ -4,7 +4,7 @@
 
 **Created**: 2026-06-28
 
-**Status**: Draft
+**Status**: Implemented (in review)
 
 **Input**: User description: "Goodreads-style item detail page. A dedicated, deep-linkable page for a single media item (book, music, audiobook, or podcast) reached by clicking an item's cover or title from Discover, Search, My Library, and feed activity cards … community sections computed from our own database … Out of scope: separate long-form reviews, multiple editions, external purchase links, providers requiring user-auth or API keys."
 
